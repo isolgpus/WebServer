@@ -1,0 +1,21 @@
+package io.kiw.template.web.infrastructure;
+
+import io.vertx.core.http.Cookie;
+
+public interface VertxContext {
+    Cookie getRequestCookie(String key);
+
+    String getQueryParam(String key);
+
+    void addResponseHeader(String key, String value);
+
+    void addResponseCookie(Cookie value);
+
+    String getRequestBody();
+
+    void setStatusCode(int statusCode);
+
+    void end(String bodyResponse);
+
+    String getRequestHeader(String key);
+}
