@@ -16,6 +16,8 @@ public class StubVertxContext implements VertxContext {
     private final Map<String, Cookie> responseCookies = new LinkedHashMap<>();
     private String responseBody;
     private int statusCode = 200;
+    private Map<String, Object> state = new LinkedHashMap<>();
+    private boolean finished = false;
 
     public StubVertxContext(String requestBody, Map<String, String> queryParams, Map<String, String> requestHeaders, Map<String, Cookie> requestCookies) {
 
@@ -59,11 +61,27 @@ public class StubVertxContext implements VertxContext {
     @Override
     public void end(String responseBody) {
         this.responseBody = responseBody;
+        this.finished = true;
     }
 
     @Override
     public String getRequestHeader(String key) {
         return this.requestHeaders.get(key);
+    }
+
+    @Override
+    public void next() {
+
+    }
+
+    @Override
+    public void put(String key, Object successValue) {
+        this.state.put(key, successValue);
+    }
+
+    @Override
+    public Object get(String key) {
+        return this.state.get(key);
     }
 
     public StubHttpResponse getResponse() {
@@ -76,5 +94,9 @@ public class StubVertxContext implements VertxContext {
             stubHttpResponse.withCookie(cookie.getKey(), cookie.getValue());
         }
         return stubHttpResponse;
+    }
+
+    public boolean hasFinished() {
+        return finished;
     }
 }

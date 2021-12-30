@@ -51,4 +51,19 @@ public class VertxContextImpl implements VertxContext {
     public String getRequestHeader(String key) {
         return this.ctx.request().getHeader(key);
     }
+
+    @Override
+    public void next() {
+        this.ctx.next();
+    }
+
+    @Override
+    public void put(String key, Object successValue) {
+        this.ctx.put(key, successValue);
+    }
+
+    @Override
+    public Object get(String key) {
+        return this.ctx.get(key);
+    }
 }

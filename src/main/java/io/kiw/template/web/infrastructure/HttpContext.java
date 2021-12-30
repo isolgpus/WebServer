@@ -3,7 +3,7 @@ package io.kiw.template.web.infrastructure;
 import io.vertx.core.http.Cookie;
 
 public class HttpContext {
-    private final VertxContext ctx;
+    final VertxContext ctx;
 
     public HttpContext(VertxContext ctx) {
 

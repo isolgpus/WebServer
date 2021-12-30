@@ -5,6 +5,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 public abstract class VertxJsonRoute <T extends JsonRequest> extends TypeReference<T> {
 
 
-    public abstract Object handle(T jsonRequest, HttpContext httpContext);
+    public abstract Flow handle(FlowControl<T> e);
 
 }
