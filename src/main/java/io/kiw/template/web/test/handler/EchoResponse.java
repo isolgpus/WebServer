@@ -1,6 +1,8 @@
 package io.kiw.template.web.test.handler;
 
-public class EchoResponse {
+import io.kiw.template.web.infrastructure.JsonResponse;
+
+public class EchoResponse implements JsonResponse {
     public final int intExample;
     public final String stringExample;
     public final String queryExample;

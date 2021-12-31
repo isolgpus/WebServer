@@ -1,9 +1,11 @@
 package io.kiw.template.web.test;
 
-import io.kiw.template.web.infrastructure.*;
+import io.kiw.template.web.infrastructure.Flow;
+import io.kiw.template.web.infrastructure.FlowInstruction;
+import io.kiw.template.web.infrastructure.Method;
+import io.kiw.template.web.infrastructure.RouterWrapper;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 public class StubRouter extends RouterWrapper {
@@ -17,7 +19,8 @@ public class StubRouter extends RouterWrapper {
     StubHttpResponse handle(StubRequest stubRequest, Method post) {
         StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies);
         Flow flow = this.routes.get(new RouteKey(stubRequest.path, post));
-        for (FlowInstruction applicationInstruction : flow.getApplicationInstructions()) {
+        for (Object what : flow.getApplicationInstructions()) {
+            FlowInstruction applicationInstruction = (FlowInstruction)what;
             this.handle(applicationInstruction, context);
             if(context.hasFinished())
             {

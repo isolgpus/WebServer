@@ -1,13 +1,16 @@
 package io.kiw.template.web.test.handler;
 
-import io.kiw.template.web.infrastructure.*;
+import io.kiw.template.web.infrastructure.Flow;
+import io.kiw.template.web.infrastructure.FlowControl;
+import io.kiw.template.web.infrastructure.HttpResult;
+import io.kiw.template.web.infrastructure.VertxJsonRoute;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.impl.CookieImpl;
 
-public class PostEchoHandler extends VertxJsonRoute<EchoRequest> {
+public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse> {
 
     @Override
-    public Flow handle(FlowControl<EchoRequest> e) {
+    public Flow<EchoResponse> handle(FlowControl<EchoRequest> e) {
         return e.complete((echoRequest, httpContext) -> {
             if(echoRequest.responseHeaderExample != null)
             {

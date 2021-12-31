@@ -17,7 +17,7 @@ public class RoutesRegister {
         this.router = router;
     }
 
-    public <T extends JsonRequest> void registerJsonRoute(String path, Method method, VertxJsonRoute<T> vertxJsonRoute) {
+    public <T extends JsonRequest, R extends JsonResponse> void registerJsonRoute(String path, Method method, VertxJsonRoute<T, R> vertxJsonRoute) {
 
         FlowControl<T> flowControl = new FlowControl<>(new ArrayList<>());
         flowControl.map((request, ctx) -> {

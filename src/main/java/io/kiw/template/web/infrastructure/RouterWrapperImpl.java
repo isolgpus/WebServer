@@ -14,7 +14,9 @@ public class RouterWrapperImpl extends RouterWrapper {
     public void route(String path, Method method, String consumes, String produces, Flow flow) {
         Route route = router.route(method.getVertxMethod(), path).consumes(consumes).produces(produces);
 
-        for (FlowInstruction applicationInstruction : flow.getApplicationInstructions()) {
+
+        for (Object what : flow.getApplicationInstructions()) {
+            FlowInstruction applicationInstruction = (FlowInstruction) what;
             if(applicationInstruction.isBlocking)
             {
                 route.blockingHandler(ctx -> handle(applicationInstruction, new VertxContextImpl(ctx)));
@@ -24,6 +26,7 @@ public class RouterWrapperImpl extends RouterWrapper {
                 route.handler(ctx -> handle(applicationInstruction, new VertxContextImpl(ctx)));
             }
         }
+
 
     }
 

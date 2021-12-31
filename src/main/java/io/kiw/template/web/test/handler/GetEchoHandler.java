@@ -3,10 +3,10 @@ package io.kiw.template.web.test.handler;
 import io.kiw.template.web.infrastructure.*;
 import io.vertx.core.http.Cookie;
 
-public class GetEchoHandler extends VertxJsonRoute<EmptyRequest> {
+public class GetEchoHandler extends VertxJsonRoute<EmptyRequest, EchoResponse> {
 
     @Override
-    public Flow handle(FlowControl<EmptyRequest> flowControl) {
+    public Flow<EchoResponse> handle(FlowControl<EmptyRequest> flowControl) {
         return
             flowControl
                 .complete((number, httpContext) -> {

@@ -21,9 +21,9 @@ public class FlowControl<IN> {
         return new FlowControl<>(instructionChain);
     }
 
-    public <OUT> Flow complete(FlowHandler<IN, OUT> flowHandler)
+    public <OUT extends JsonResponse> Flow<OUT> complete(FlowHandler<IN, OUT> flowHandler)
     {
         instructionChain.add(new FlowInstruction<>(false, flowHandler, true));
-        return new Flow(instructionChain);
+        return new Flow<>(instructionChain);
     }
 }

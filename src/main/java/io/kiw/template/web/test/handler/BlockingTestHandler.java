@@ -1,17 +1,19 @@
 package io.kiw.template.web.test.handler;
 
-import io.kiw.template.web.infrastructure.*;
+import io.kiw.template.web.infrastructure.Flow;
+import io.kiw.template.web.infrastructure.FlowControl;
+import io.kiw.template.web.infrastructure.VertxJsonRoute;
 
 import static io.kiw.template.web.infrastructure.HttpResult.success;
 
-public class BlockingTestHandler extends VertxJsonRoute<BlockingRequest> {
+public class BlockingTestHandler extends VertxJsonRoute<BlockingRequest, BlockingTestResponse> {
 
     @Override
-    public Flow handle(FlowControl<BlockingRequest> flowControl) {
+    public Flow<BlockingTestResponse> handle(FlowControl<BlockingRequest> flowControl) {
         return
             flowControl
-                .map((blockingRequest, httpRequest) -> success(blockingRequest.numberToMultiply))
-                .blockingMap((numberToMultiply, httpRequest) -> success(numberToMultiply * 2))
+                .map((blockingRequest, httpContext) -> success(blockingRequest.numberToMultiply))
+                .blockingMap((numberToMultiply, httpContext) -> success(numberToMultiply * 2))
                 .complete((multipliedNumber, httpContext) -> success(new BlockingTestResponse(multipliedNumber)));
     }
 }
