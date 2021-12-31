@@ -1,20 +1,22 @@
 package io.kiw.template.web.test;
 
-import io.kiw.template.web.test.handler.BlockingTestHandler;
-import io.kiw.template.web.test.handler.GetEchoHandler;
-import io.kiw.template.web.test.handler.PostEchoHandler;
 import io.kiw.template.web.infrastructure.Method;
 import io.kiw.template.web.infrastructure.RoutesRegister;
+import io.kiw.template.web.test.handler.BlockingTestHandler;
+import io.kiw.template.web.test.handler.FailingTestHandler;
+import io.kiw.template.web.test.handler.GetEchoHandler;
+import io.kiw.template.web.test.handler.PostEchoHandler;
 
 public class TestApplicationClient {
 
     private final StubRouter router = new StubRouter();
-    private final RoutesRegister routesRegister = new RoutesRegister(router);
 
     public TestApplicationClient() {
+        RoutesRegister routesRegister = new RoutesRegister(router);
         routesRegister.registerJsonRoute("/echo", Method.POST, new PostEchoHandler());
         routesRegister.registerJsonRoute("/echo", Method.GET, new GetEchoHandler());
         routesRegister.registerJsonRoute("/blocking", Method.POST, new BlockingTestHandler());
+        routesRegister.registerJsonRoute("/failing", Method.POST, new FailingTestHandler());
 
     }
 

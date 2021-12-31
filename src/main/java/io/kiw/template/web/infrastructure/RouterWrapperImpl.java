@@ -16,7 +16,7 @@ public class RouterWrapperImpl extends RouterWrapper {
 
 
         for (Object what : flow.getApplicationInstructions()) {
-            FlowInstruction applicationInstruction = (FlowInstruction) what;
+            MapInstruction applicationInstruction = (MapInstruction) what;
             if(applicationInstruction.isBlocking)
             {
                 route.blockingHandler(ctx -> handle(applicationInstruction, new VertxContextImpl(ctx)));

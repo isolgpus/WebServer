@@ -1,7 +1,7 @@
 package io.kiw.template.web.test;
 
 import io.kiw.template.web.infrastructure.Flow;
-import io.kiw.template.web.infrastructure.FlowInstruction;
+import io.kiw.template.web.infrastructure.MapInstruction;
 import io.kiw.template.web.infrastructure.Method;
 import io.kiw.template.web.infrastructure.RouterWrapper;
 
@@ -20,7 +20,7 @@ public class StubRouter extends RouterWrapper {
         StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies);
         Flow flow = this.routes.get(new RouteKey(stubRequest.path, post));
         for (Object what : flow.getApplicationInstructions()) {
-            FlowInstruction applicationInstruction = (FlowInstruction)what;
+            MapInstruction applicationInstruction = (MapInstruction)what;
             this.handle(applicationInstruction, context);
             if(context.hasFinished())
             {

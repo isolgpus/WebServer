@@ -19,8 +19,8 @@ public class RoutesRegister {
 
     public <T extends JsonRequest, R extends JsonResponse> void registerJsonRoute(String path, Method method, VertxJsonRoute<T, R> vertxJsonRoute) {
 
-        FlowControl<T> flowControl = new FlowControl<>(new ArrayList<>());
-        flowControl.map((request, ctx) -> {
+        HttpControlStream<T> httpControlStream = new HttpControlStream<>(new ArrayList<>());
+        httpControlStream.flatMap((request, ctx) -> {
             ctx.addResponseHeader("Content-Type", "application/json");
 
             if (method.canHaveABody() && ctx.ctx.getRequestBody() == null) {
@@ -37,7 +37,7 @@ public class RoutesRegister {
             }
         });
 
-        Flow flow = vertxJsonRoute.handle(flowControl);
+        Flow flow = vertxJsonRoute.handle(httpControlStream);
 
 
         router.route(path, method, "*/json", "application/json", flow);

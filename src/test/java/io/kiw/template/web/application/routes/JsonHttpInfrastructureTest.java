@@ -14,8 +14,8 @@ import static org.junit.Assert.assertEquals;
 
 public class JsonHttpInfrastructureTest {
 
-    TestApplicationClient testApplicationClient;
-    public static final String DEFAULT_POST_RESPONSE = json(
+    private TestApplicationClient testApplicationClient;
+    private static final String DEFAULT_POST_RESPONSE = json(
             entry("intExample", 0),
             entry("stringExample", null),
             entry("queryExample", null),
@@ -241,6 +241,14 @@ public class JsonHttpInfrastructureTest {
                 .body(json(entry("numberToMultiply", 22))));
 
         assertEquals(response(json(entry("multipliedNumber", 44))), response);
+    }
 
+    @Test
+    public void shouldReturnWithErrorOnBadRequest() {
+        StubHttpResponse response = testApplicationClient.post(
+            request("/failing")
+                .body(json(entry("numberToMultiply", 22))));
+
+        assertEquals(response(json(entry("message", "intentionally failed"))).withStatusCode(400), response);
     }
 }

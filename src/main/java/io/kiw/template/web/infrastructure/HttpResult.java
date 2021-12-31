@@ -4,11 +4,11 @@ public class HttpResult<S> {
 
 
     private final boolean successful;
-    public final S successValue;
-    public final MessageResponse errorMessageValue;
-    public final int statusCode;
+    final S successValue;
+    final MessageResponse errorMessageValue;
+    final int statusCode;
 
-    public HttpResult(boolean successful, S successValue, MessageResponse errorMessageValue, int statusCode) {
+    private HttpResult(boolean successful, S successValue, MessageResponse errorMessageValue, int statusCode) {
         this.successful = successful;
 
         this.successValue = successValue;
@@ -24,7 +24,7 @@ public class HttpResult<S> {
         return new HttpResult<>(true, success, null, 200);
     }
 
-    public boolean isSuccessful() {
+    boolean isSuccessful() {
         return successful;
     }
 }
