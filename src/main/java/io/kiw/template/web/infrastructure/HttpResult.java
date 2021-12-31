@@ -24,6 +24,10 @@ public class HttpResult<S> {
         return new HttpResult<>(true, success, null, 200);
     }
 
+    public static HttpResult<Void> success() {
+        return null;
+    }
+
     boolean isSuccessful() {
         return successful;
     }

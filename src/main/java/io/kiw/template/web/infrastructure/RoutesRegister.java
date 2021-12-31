@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 
+import static io.kiw.template.web.infrastructure.Method.POST;
+
 public class RoutesRegister {
 
     private final RouterWrapper router;
@@ -19,7 +21,7 @@ public class RoutesRegister {
 
     public <T extends JsonRequest, R extends JsonResponse> void registerJsonRoute(String path, Method method, VertxJsonRoute<T, R> vertxJsonRoute) {
 
-        HttpControlStream<T> httpControlStream = new HttpControlStream<>(new ArrayList<>());
+        HttpControlStream<T> httpControlStream = new HttpControlStream<>(new ArrayList<>(), true);
         httpControlStream.flatMap((request, ctx) -> {
             ctx.addResponseHeader("Content-Type", "application/json");
 
@@ -45,4 +47,10 @@ public class RoutesRegister {
 
     }
 
+    public void registerJsonFilter(final String path, VertxJsonFilter jsonFilter) {
+        Flow flow = jsonFilter.handle(new HttpControlStream<>(new ArrayList<>(), false));
+
+
+        router.route(path, POST, "*/json", "application/json", flow);
+    }
 }
