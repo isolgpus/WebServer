@@ -233,4 +233,14 @@ public class JsonHttpInfrastructureTest {
         assertEquals(response(DEFAULT_POST_RESPONSE)
                 .withCookie("responseCookieExample", new CookieImpl("responseCookieExample", "responseCookieTest")), response);
     }
+
+    @Test
+    public void shouldMapThroughABlockingCall() {
+        StubHttpResponse response = testApplicationClient.post(
+            request("/blocking")
+                .body(json(entry("numberToMultiply", 22))));
+
+        assertEquals(response(json(entry("multipliedNumber", 44))), response);
+
+    }
 }

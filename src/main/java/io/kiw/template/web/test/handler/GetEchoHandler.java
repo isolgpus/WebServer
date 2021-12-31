@@ -9,8 +9,6 @@ public class GetEchoHandler extends VertxJsonRoute<EmptyRequest> {
     public Flow handle(FlowControl<EmptyRequest> flowControl) {
         return
             flowControl
-                .handle((emptyRequest, httpContext) -> HttpResult.success("fuff"))
-                .blocking((fuff, state) -> HttpResult.success(123))
                 .complete((number, httpContext) -> {
                     Cookie requestCookieExample = httpContext.getRequestCookie("requestCookieExample");
 

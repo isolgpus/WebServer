@@ -9,13 +9,13 @@ public class FlowControl<IN> {
         this.instructionChain = instructionChain;
     }
 
-    public <OUT> FlowControl<OUT> handle(FlowHandler<IN, OUT> flowHandler)
+    public <OUT> FlowControl<OUT> map(FlowHandler<IN, OUT> flowHandler)
     {
         instructionChain.add(new FlowInstruction<>(false, flowHandler, false));
         return new FlowControl<>(instructionChain);
     }
 
-    public <OUT> FlowControl<OUT> blocking(FlowHandler<IN, OUT> flowHandler)
+    public <OUT> FlowControl<OUT> blockingMap(FlowHandler<IN, OUT> flowHandler)
     {
         instructionChain.add(new FlowInstruction<>(true, flowHandler, false));
         return new FlowControl<>(instructionChain);

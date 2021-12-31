@@ -20,7 +20,7 @@ public class RoutesRegister {
     public <T extends JsonRequest> void registerJsonRoute(String path, Method method, VertxJsonRoute<T> vertxJsonRoute) {
 
         FlowControl<T> flowControl = new FlowControl<>(new ArrayList<>());
-        flowControl.handle((request, ctx) -> {
+        flowControl.map((request, ctx) -> {
             ctx.addResponseHeader("Content-Type", "application/json");
 
             if (method.canHaveABody() && ctx.ctx.getRequestBody() == null) {

@@ -1,5 +1,6 @@
 package io.kiw.template.web.test;
 
+import io.kiw.template.web.test.handler.BlockingTestHandler;
 import io.kiw.template.web.test.handler.GetEchoHandler;
 import io.kiw.template.web.test.handler.PostEchoHandler;
 import io.kiw.template.web.infrastructure.Method;
@@ -13,6 +14,7 @@ public class TestApplicationClient {
     public TestApplicationClient() {
         routesRegister.registerJsonRoute("/echo", Method.POST, new PostEchoHandler());
         routesRegister.registerJsonRoute("/echo", Method.GET, new GetEchoHandler());
+        routesRegister.registerJsonRoute("/blocking", Method.POST, new BlockingTestHandler());
 
     }
 
