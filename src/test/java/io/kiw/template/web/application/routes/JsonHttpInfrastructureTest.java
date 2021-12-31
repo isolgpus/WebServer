@@ -55,7 +55,7 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadQueryParamsInPost() {
-        StubHttpResponse response = testApplicationClient.post(
+        StubHttpResponse response = testApplicationClient.put(
                 request("/echo")
                         .body("{}")
                         .queryParam("queryExample", "hi"));
@@ -94,6 +94,50 @@ public class JsonHttpInfrastructureTest {
         assertEquals(
                 response(expectedResponse),
                 response);
+    }
+
+    @Test
+    public void shouldReadRequestHeaderParamsOnPut() {
+        StubHttpResponse response = testApplicationClient.put(
+            request("/echo")
+                .body("{}")
+                .queryParam("queryExample", "hi")
+                .headerParam("requestHeaderExample", "test"));
+
+        final String expectedResponse = json(
+            entry("intExample", 0),
+            entry("stringExample", null),
+            entry("queryExample", "hi"),
+            entry("requestHeaderExample", "test"),
+            entry("requestCookieExample", null)
+
+        );
+
+        assertEquals(
+            response(expectedResponse),
+            response);
+    }
+
+    @Test
+    public void shouldReadRequestHeaderParamsOnDelete() {
+        StubHttpResponse response = testApplicationClient.delete(
+            request("/echo")
+                .body("{}")
+                .queryParam("queryExample", "hi")
+                .headerParam("requestHeaderExample", "test"));
+
+        final String expectedResponse = json(
+            entry("intExample", 0),
+            entry("stringExample", null),
+            entry("queryExample", "hi"),
+            entry("requestHeaderExample", "test"),
+            entry("requestCookieExample", null)
+
+        );
+
+        assertEquals(
+            response(expectedResponse),
+            response);
     }
 
     @Test

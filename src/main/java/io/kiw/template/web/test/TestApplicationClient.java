@@ -13,16 +13,32 @@ public class TestApplicationClient {
 
     public TestApplicationClient() {
         RoutesRegister routesRegister = new RoutesRegister(router);
+        registerRoutes(routesRegister);
+
+    }
+
+    public static void registerRoutes(RoutesRegister routesRegister) {
         routesRegister.registerJsonRoute("/echo", Method.POST, new PostEchoHandler());
+        routesRegister.registerJsonRoute("/echo", Method.PUT, new PostEchoHandler());
+        routesRegister.registerJsonRoute("/echo", Method.DELETE, new PostEchoHandler());
         routesRegister.registerJsonRoute("/echo", Method.GET, new GetEchoHandler());
         routesRegister.registerJsonRoute("/blocking", Method.POST, new BlockingTestHandler());
         routesRegister.registerJsonRoute("/failing", Method.POST, new FailingTestHandler());
-
     }
 
     public StubHttpResponse post(StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.POST);
+    }
+
+    public StubHttpResponse put(StubRequest stubRequest) {
+
+        return router.handle(stubRequest, Method.PUT);
+    }
+
+    public StubHttpResponse delete(StubRequest stubRequest) {
+
+        return router.handle(stubRequest, Method.DELETE);
     }
 
     public StubHttpResponse get(StubRequest stubRequest) {

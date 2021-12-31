@@ -14,7 +14,7 @@ public class FailingTestHandler extends VertxJsonRoute<BlockingRequest, Blocking
     public Flow<BlockingTestResponse> handle(HttpControlStream<BlockingRequest> httpControlStream) {
         return
             httpControlStream
-                .flatMap((blockingRequest, httpContext) -> success(blockingRequest.numberToMultiply))
+                .map((blockingRequest, httpContext) -> blockingRequest.numberToMultiply)
                 .flatMap((numberToMultiply, httpContext) -> {
                     if(2 * 2 == 4)
                     {
