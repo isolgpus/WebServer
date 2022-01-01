@@ -13,11 +13,11 @@ public class TestApplicationClient {
 
     public TestApplicationClient() {
         RoutesRegister routesRegister = new RoutesRegister(router);
-        registerRoutes(routesRegister);
+        registerRoutes(routesRegister, new MyApplicationState());
 
     }
 
-    public static void registerRoutes(RoutesRegister routesRegister) {
+    public static void registerRoutes(RoutesRegister routesRegister, MyApplicationState myApplicationState) {
         routesRegister.registerJsonFilter("/root/*", new TestFilter("rootFilter"));
         routesRegister.registerJsonFilter("/root/filter/*", new TestFilter("pathFilter"));
         routesRegister.registerJsonFilter("/root/somethingElse/*", new TestFilter("otherFilter"));
@@ -29,6 +29,7 @@ public class TestApplicationClient {
         routesRegister.registerJsonRoute("/echo", Method.GET, new GetEchoHandler());
         routesRegister.registerJsonRoute("/blocking", Method.POST, new BlockingTestHandler());
         routesRegister.registerJsonRoute("/failing", Method.POST, new FailingTestHandler());
+        routesRegister.registerJsonRoute("/state", Method.POST, new StateTestHandler(myApplicationState));
     }
 
     public StubHttpResponse post(StubRequest stubRequest) {
