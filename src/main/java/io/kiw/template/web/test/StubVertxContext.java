@@ -2,7 +2,6 @@ package io.kiw.template.web.test;
 
 import io.kiw.template.web.infrastructure.VertxContext;
 import io.vertx.core.http.Cookie;
-import io.vertx.core.http.impl.CookieImpl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -91,7 +90,7 @@ public class StubVertxContext implements VertxContext {
         }
 
         for (Map.Entry<String, Cookie> cookie : this.responseCookies.entrySet()) {
-            stubHttpResponse.withCookie(cookie.getKey(), cookie.getValue());
+            stubHttpResponse.withCookie(cookie.getValue());
         }
         return stubHttpResponse;
     }

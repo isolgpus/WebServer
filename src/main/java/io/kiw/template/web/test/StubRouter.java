@@ -5,28 +5,32 @@ import io.kiw.template.web.infrastructure.MapInstruction;
 import io.kiw.template.web.infrastructure.Method;
 import io.kiw.template.web.infrastructure.RouterWrapper;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 
 public class StubRouter extends RouterWrapper {
-    private Map<RouteKey, Flow> routes = new LinkedHashMap<>();
+    private PathMatcher routes = new PathMatcher();
 
     @Override
     public void route(String path, Method method, String consumes, String provides, Flow flow) {
-        routes.put(new RouteKey(path, method), flow);
+        routes.putRoute(path, method, flow);
     }
 
-    StubHttpResponse handle(StubRequest stubRequest, Method post) {
+    StubHttpResponse handle(StubRequest stubRequest, Method method) {
         StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies);
-        Flow flow = this.routes.get(new RouteKey(stubRequest.path, post));
-        for (Object what : flow.getApplicationInstructions()) {
-            MapInstruction applicationInstruction = (MapInstruction)what;
-            this.handle(applicationInstruction, context);
-            if(context.hasFinished())
-            {
-                break;
+        List<Flow> flows = this.routes.get(stubRequest.path, method);
+
+        for (Flow flow : flows) {
+            for (Object what : flow.getApplicationInstructions()) {
+                MapInstruction applicationInstruction = (MapInstruction)what;
+                this.handle(applicationInstruction, context);
+                if(context.hasFinished())
+                {
+                    break;
+                }
             }
+
         }
+
 
         return context.getResponse();
     }

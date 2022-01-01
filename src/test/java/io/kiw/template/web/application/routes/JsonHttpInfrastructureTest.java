@@ -275,7 +275,7 @@ public class JsonHttpInfrastructureTest {
                         .body(json(entry("responseCookieExample", "responseCookieTest"))));
 
         assertEquals(response(DEFAULT_POST_RESPONSE)
-                .withCookie("responseCookieExample", new CookieImpl("responseCookieExample", "responseCookieTest")), response);
+                .withCookie(new CookieImpl("responseCookieExample", "responseCookieTest")), response);
     }
 
     @Test
@@ -294,5 +294,22 @@ public class JsonHttpInfrastructureTest {
                 .body(json(entry("numberToMultiply", 22))));
 
         assertEquals(response(json(entry("message", "intentionally failed"))).withStatusCode(400), response);
+    }
+
+
+    @Test
+    public void shouldApplyFilterBeforeHandle() {
+        StubHttpResponse response = testApplicationClient.post(
+            request("/root/filter/test")
+                .body(json()));
+
+
+        assertEquals(
+            response(json(entry("filterMessage", "hit handler")))
+            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
+            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            response
+        );
+
     }
 }

@@ -1,7 +1,6 @@
 package io.kiw.template.web.test;
 
 import io.vertx.core.http.Cookie;
-import io.vertx.core.http.impl.CookieImpl;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -59,8 +58,8 @@ public class StubHttpResponse {
         return this;
     }
 
-    public StubHttpResponse withCookie(String key, Cookie value) {
-        this.responseCookies.put(key, value.getValue());
+    public StubHttpResponse withCookie(Cookie value) {
+        this.responseCookies.put(value.getName(), value.getValue());
         return this;
     }
 }

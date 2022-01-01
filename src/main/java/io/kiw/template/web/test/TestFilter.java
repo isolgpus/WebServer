@@ -10,11 +10,17 @@ public class TestFilter implements VertxJsonFilter
 {
 
 
+    private String cookieKey;
+
+    public TestFilter(String testFilter) {
+        cookieKey = testFilter;
+    }
+
     @Override
     public Flow handle(HttpControlStream<Void> e) {
         return e.complete((request, httpContext) -> {
-            httpContext.addResponseCookie(new CookieImpl("testFilter", "hitfilter"));
-            return HttpResult.success(null);
+            httpContext.addResponseCookie(new CookieImpl(cookieKey, "hitfilter"));
+            return HttpResult.success();
         });
     }
 }

@@ -18,8 +18,10 @@ public class TestApplicationClient {
     }
 
     public static void registerRoutes(RoutesRegister routesRegister) {
-        routesRegister.registerJsonFilter("/filter/*", new TestFilter());
-        routesRegister.registerJsonRoute("/filter/test", Method.POST, new TestFilterHandler());
+        routesRegister.registerJsonFilter("/root/*", new TestFilter("rootFilter"));
+        routesRegister.registerJsonFilter("/root/filter/*", new TestFilter("pathFilter"));
+        routesRegister.registerJsonFilter("/root/somethingElse/*", new TestFilter("otherFilter"));
+        routesRegister.registerJsonRoute("/root/filter/test", Method.POST, new TestFilterHandler());
 
         routesRegister.registerJsonRoute("/echo", Method.POST, new PostEchoHandler());
         routesRegister.registerJsonRoute("/echo", Method.PUT, new PostEchoHandler());
