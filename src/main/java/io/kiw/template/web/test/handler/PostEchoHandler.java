@@ -4,14 +4,15 @@ import io.kiw.template.web.infrastructure.Flow;
 import io.kiw.template.web.infrastructure.HttpControlStream;
 import io.kiw.template.web.infrastructure.HttpResult;
 import io.kiw.template.web.infrastructure.VertxJsonRoute;
+import io.kiw.template.web.test.MyApplicationState;
 import io.vertx.core.http.Cookie;
 import io.vertx.core.http.impl.CookieImpl;
 
-public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse> {
+public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, MyApplicationState> {
 
     @Override
-    public Flow<EchoResponse> handle(HttpControlStream<EchoRequest> e) {
-        return e.complete((echoRequest, httpContext) -> {
+    public Flow<EchoResponse> handle(HttpControlStream<EchoRequest, MyApplicationState> e) {
+        return e.complete((echoRequest, httpContext, myApplicationState) -> {
             if(echoRequest.responseHeaderExample != null)
             {
                 httpContext.addResponseHeader("responseHeaderExample", echoRequest.responseHeaderExample);

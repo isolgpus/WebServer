@@ -8,9 +8,9 @@ public abstract class RouterWrapper {
 
     protected abstract void route(String path, Method method, String consumes, String provides, Flow flow);
 
-    public void handle(MapInstruction applicationInstruction, VertxContext vertxContext) {
+    public void handle(MapInstruction applicationInstruction, VertxContext vertxContext, Object applicationState) {
         HttpContext httpContext = new HttpContext(vertxContext);
-        HttpResult result = applicationInstruction.consumer.handle(vertxContext.get("state"), httpContext);
+        HttpResult result = applicationInstruction.consumer.handle(vertxContext.get("state"), httpContext, applicationState);
 
         if (result.isSuccessful()) {
             if (applicationInstruction.lastStep) {

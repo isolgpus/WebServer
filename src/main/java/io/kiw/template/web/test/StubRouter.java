@@ -22,7 +22,7 @@ public class StubRouter extends RouterWrapper {
         for (Flow flow : flows) {
             for (Object what : flow.getApplicationInstructions()) {
                 MapInstruction applicationInstruction = (MapInstruction)what;
-                this.handle(applicationInstruction, context);
+                this.handle(applicationInstruction, context, flow.getApplicationState());
                 if(context.hasFinished())
                 {
                     break;

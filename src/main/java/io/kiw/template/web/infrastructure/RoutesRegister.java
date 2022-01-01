@@ -19,10 +19,10 @@ public class RoutesRegister {
         this.router = router;
     }
 
-    public <T extends JsonRequest, R extends JsonResponse> void registerJsonRoute(String path, Method method, VertxJsonRoute<T, R> vertxJsonRoute) {
+    public <IN extends JsonRequest, OUT extends JsonResponse, APP> void registerJsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute) {
 
-        HttpControlStream<T> httpControlStream = new HttpControlStream<>(new ArrayList<>(), true);
-        httpControlStream.flatMap((request, ctx) -> {
+        HttpControlStream<IN, APP> httpControlStream = new HttpControlStream<>(new ArrayList<>(), true, applicationState);
+        httpControlStream.flatMap((request, ctx, as) -> {
             ctx.addResponseHeader("Content-Type", "application/json");
 
             if (method.canHaveABody() && ctx.ctx.getRequestBody() == null) {
@@ -31,7 +31,7 @@ public class RoutesRegister {
 
             try
             {
-                T jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.ctx.getRequestBody(), vertxJsonRoute) : null;
+                IN jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.ctx.getRequestBody(), vertxJsonRoute) : null;
                 return HttpResult.success(jsonRequest);
             }
             catch (JsonProcessingException e) {
@@ -47,8 +47,9 @@ public class RoutesRegister {
 
     }
 
-    public void registerJsonFilter(final String path, VertxJsonFilter jsonFilter) {
-        Flow flow = jsonFilter.handle(new HttpControlStream<>(new ArrayList<>(), false));
+    public <APP> void registerJsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter) {
+        HttpControlStream<Void, APP> objectAPPHttpControlStream = new HttpControlStream<>(new ArrayList<>(), false, applicationState);
+        Flow flow = jsonFilter.handle(objectAPPHttpControlStream);
 
 
         router.route(path, POST, "*/json", "application/json", flow);

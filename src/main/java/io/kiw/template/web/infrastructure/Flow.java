@@ -4,9 +4,12 @@ import java.util.List;
 
 public class Flow<T extends JsonResponse> {
     private final List<MapInstruction> instructions;
-    Flow(List<MapInstruction> instructions) {
+    private final Object applicationState;
+
+    Flow(List<MapInstruction> instructions, Object applicationState) {
 
         this.instructions = instructions;
+        this.applicationState = applicationState;
     }
 
     public List<MapInstruction> getApplicationInstructions() {
@@ -14,4 +17,7 @@ public class Flow<T extends JsonResponse> {
     }
 
 
+    public Object getApplicationState() {
+        return applicationState;
+    }
 }

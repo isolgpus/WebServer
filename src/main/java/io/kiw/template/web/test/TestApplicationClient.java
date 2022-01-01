@@ -20,18 +20,18 @@ public class TestApplicationClient {
     public static MyApplicationState registerRoutes(RoutesRegister routesRegister) {
         MyApplicationState myApplicationState = new MyApplicationState();
 
-        routesRegister.registerJsonFilter("/root/*", new TestFilter("rootFilter"));
-        routesRegister.registerJsonFilter("/root/filter/*", new TestFilter("pathFilter"));
-        routesRegister.registerJsonFilter("/root/somethingElse/*", new TestFilter("otherFilter"));
-        routesRegister.registerJsonRoute("/root/filter/test", Method.POST, new TestFilterHandler());
+        routesRegister.registerJsonFilter("/root/*", myApplicationState, new TestFilter("rootFilter"));
+        routesRegister.registerJsonFilter("/root/filter/*", myApplicationState, new TestFilter("pathFilter"));
+        routesRegister.registerJsonFilter("/root/somethingElse/*", myApplicationState, new TestFilter("otherFilter"));
+        routesRegister.registerJsonRoute("/root/filter/test", Method.POST, myApplicationState, new TestFilterHandler());
 
-        routesRegister.registerJsonRoute("/echo", Method.POST, new PostEchoHandler());
-        routesRegister.registerJsonRoute("/echo", Method.PUT, new PostEchoHandler());
-        routesRegister.registerJsonRoute("/echo", Method.DELETE, new PostEchoHandler());
-        routesRegister.registerJsonRoute("/echo", Method.GET, new GetEchoHandler());
-        routesRegister.registerJsonRoute("/blocking", Method.POST, new BlockingTestHandler());
-        routesRegister.registerJsonRoute("/failing", Method.POST, new FailingTestHandler());
-        routesRegister.registerJsonRoute("/state", Method.POST, new StateTestHandler(myApplicationState));
+        routesRegister.registerJsonRoute("/echo", Method.POST, myApplicationState, new PostEchoHandler());
+        routesRegister.registerJsonRoute("/echo", Method.PUT, myApplicationState, new PostEchoHandler());
+        routesRegister.registerJsonRoute("/echo", Method.DELETE, myApplicationState, new PostEchoHandler());
+        routesRegister.registerJsonRoute("/echo", Method.GET, myApplicationState, new GetEchoHandler());
+        routesRegister.registerJsonRoute("/blocking", Method.POST, myApplicationState, new BlockingTestHandler());
+        routesRegister.registerJsonRoute("/failing", Method.POST, myApplicationState, new FailingTestHandler());
+        routesRegister.registerJsonRoute("/state", Method.POST, myApplicationState, new StateTestHandler());
         return myApplicationState;
     }
 
