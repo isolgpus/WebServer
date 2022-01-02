@@ -8,8 +8,6 @@ import io.vertx.core.http.impl.CookieImpl;
 
 public class TestFilter implements VertxJsonFilter<MyApplicationState>
 {
-
-
     private String cookieKey;
 
     public TestFilter(String testFilter) {

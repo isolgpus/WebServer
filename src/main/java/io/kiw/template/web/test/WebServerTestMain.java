@@ -8,6 +8,6 @@ public class WebServerTestMain {
         WebServer<MyApplicationState> webServer = WebServer.start(8080,
             TestApplicationClient::registerRoutes);
 
-        webServer.run(myApplicationState -> myApplicationState.setLongValue(82876));
+        webServer.apply(82876, (immutableState, myApplicationState) -> myApplicationState.setLongValue(immutableState));
     }
 }
