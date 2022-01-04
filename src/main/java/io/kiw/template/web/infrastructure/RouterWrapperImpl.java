@@ -3,10 +3,13 @@ package io.kiw.template.web.infrastructure;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 
+import java.util.function.Consumer;
+
 public class RouterWrapperImpl extends RouterWrapper {
     private final Router router;
 
-    public RouterWrapperImpl(Router router) {
+    public RouterWrapperImpl(Router router, Consumer<Throwable> errorHandler) {
+        super(errorHandler);
         this.router = router;
     }
 
