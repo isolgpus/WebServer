@@ -6,7 +6,7 @@ import io.kiw.template.web.infrastructure.Method;
 public class DocumentationExampleMain {
     public static void main(String[] args) {
 
-        WebServer.start(8080,
+        WebServer.start(
             routesRegister -> {
                 AppState appState = new AppState();
 

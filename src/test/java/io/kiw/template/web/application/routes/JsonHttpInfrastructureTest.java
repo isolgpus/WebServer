@@ -214,7 +214,7 @@ public class JsonHttpInfrastructureTest {
         StubHttpResponse response = testApplicationClient.post(request("/echo"));
 
         final String expectedResponse = json(
-                entry("message", "Invalid request")
+                entry("message", "Invalid json request")
         );
 
         assertEquals(response(expectedResponse).withStatusCode(400), response);
@@ -311,5 +311,54 @@ public class JsonHttpInfrastructureTest {
             response
         );
 
+    }
+
+    @Test
+    public void shouldHandleMalformedJsonRequest() {
+        StubHttpResponse response = testApplicationClient.post(
+            request("/throw")
+                .body("<not json at all>"));
+
+        assertEquals(
+            response(json(entry("message", "Invalid json request"))).withStatusCode(400),
+            response
+        );
+    }
+
+    @Test
+    public void shouldHandleItWhenThrowingAnExceptionWithinTheHandler() {
+        StubHttpResponse response = testApplicationClient.post(
+            request("/throw")
+                .body(json(entry("where", "complete"))));
+
+
+        assertEquals(
+            response(json(entry("message", "Something went wrong"))).withStatusCode(500),
+            response
+        );
+    }
+
+    @Test
+    public void shouldHandleItWhenThrowingAnExceptionInMapHandler() {
+        StubHttpResponse response = testApplicationClient.post(
+            request("/throw")
+                .body(json(entry("where", "map"))));
+
+        assertEquals(
+            response(json(entry("message", "Something went wrong"))).withStatusCode(500),
+            response
+        );
+    }
+
+    @Test
+    public void shouldHandleItWhenThrowingAnExceptionInBlockingHandler() {
+        StubHttpResponse response = testApplicationClient.post(
+            request("/throw")
+                .body(json(entry("where", "blocking"))));
+
+        assertEquals(
+            response(json(entry("message", "Something went wrong"))).withStatusCode(500),
+            response
+        );
     }
 }

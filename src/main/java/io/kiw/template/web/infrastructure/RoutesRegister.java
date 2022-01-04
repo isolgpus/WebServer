@@ -26,7 +26,7 @@ public class RoutesRegister {
             ctx.addResponseHeader("Content-Type", "application/json");
 
             if (method.canHaveABody() && ctx.ctx.getRequestBody() == null) {
-                return HttpResult.error(400, new MessageResponse("Invalid request"));
+                return HttpResult.error(400, new MessageResponse("Invalid json request"));
             }
 
             try
@@ -35,7 +35,7 @@ public class RoutesRegister {
                 return HttpResult.success(jsonRequest);
             }
             catch (JsonProcessingException e) {
-                return HttpResult.error(500, new MessageResponse("something went wrong"));
+                return HttpResult.error(400, new MessageResponse("Invalid json request"));
             }
         });
 

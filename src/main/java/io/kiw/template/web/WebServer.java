@@ -17,14 +17,18 @@ public class WebServer<APP> {
         this.applicationState = applicationState;
     }
 
-    public static <APP> WebServer<APP> start(int portNumber, ApplicationRoutesRegister<APP> routesRegisterConsumer) {
+    public static <APP> WebServer<APP> start(ApplicationRoutesRegister<APP> routesRegisterConsumer) {
+        return start(routesRegisterConsumer, new WebServerConfig());
+    }
+
+    public static <APP> WebServer<APP> start(ApplicationRoutesRegister<APP> routesRegisterConsumer, WebServerConfig webServerConfig) {
         Vertx vertx = Vertx.vertx();
         HttpServer httpServer = vertx.createHttpServer();
         Router router = Router.router(vertx);
 
         APP applicationState = RoutesRegistrar.register(router, routesRegisterConsumer);
 
-        httpServer.requestHandler(router).listen(portNumber);
+        httpServer.requestHandler(router).listen(webServerConfig.getPort());
         return new WebServer<>(vertx, applicationState);
     }
 

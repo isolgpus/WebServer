@@ -10,7 +10,14 @@ public abstract class RouterWrapper {
 
     public void handle(MapInstruction applicationInstruction, VertxContext vertxContext, Object applicationState) {
         HttpContext httpContext = new HttpContext(vertxContext);
-        HttpResult result = applicationInstruction.consumer.handle(vertxContext.get("state"), httpContext, applicationState);
+        HttpResult result;
+        try {
+            result = applicationInstruction.consumer.handle(vertxContext.get("state"), httpContext, applicationState);
+        } catch (Exception e) {
+            vertxContext.setStatusCode(500);
+            vertxContext.end("{\"message\":\"Something went wrong\"}");
+            return;
+        }
 
         if (result.isSuccessful()) {
             if (applicationInstruction.lastStep) {
@@ -18,7 +25,7 @@ public abstract class RouterWrapper {
                     vertxContext.end(this.objectMapper.writeValueAsString(result.successValue));
                 } catch (JsonProcessingException e) {
                     vertxContext.setStatusCode(500);
-                    vertxContext.end("{\"message\": \"Something went wrong\"}");
+                    vertxContext.end("{\"message\":\"Something went wrong\"}");
                 }
             } else {
                 vertxContext.put("state", result.successValue);
@@ -30,7 +37,7 @@ public abstract class RouterWrapper {
                 vertxContext.end(this.objectMapper.writeValueAsString(result.errorMessageValue));
             } catch (JsonProcessingException e) {
                 vertxContext.setStatusCode(500);
-                vertxContext.end("{\"message\": \"Something went wrong\"}");
+                vertxContext.end("{\"message\":\"Something went wrong\"}");
             }
         }
     }
