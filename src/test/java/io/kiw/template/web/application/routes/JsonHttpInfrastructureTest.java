@@ -289,6 +289,15 @@ public class JsonHttpInfrastructureTest {
     }
 
     @Test
+    public void shouldMapThroughABlockingCompleteCall() {
+        StubHttpResponse response = testApplicationClient.post(
+                request("/blockingComplete")
+                        .body(json(entry("numberToMultiply", 22))));
+
+        assertEquals(response(json(entry("multipliedNumber", 44))), response);
+    }
+
+    @Test
     public void shouldReturnWithErrorOnBadRequest() {
         StubHttpResponse response = testApplicationClient.post(
             request("/failing")
