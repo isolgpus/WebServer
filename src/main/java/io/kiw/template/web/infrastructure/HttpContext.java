@@ -14,6 +14,10 @@ public class HttpContext {
         return ctx.getQueryParam(key);
     }
 
+    public MapValidator getQueryParamValidator() {
+        return ctx.getQueryParamValidator();
+    }
+
     public String getRequestHeader(String key) {
         return ctx.getRequestHeader(key);
     }
