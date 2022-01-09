@@ -76,4 +76,35 @@ public class MapValidator {
         }
         return HttpResult.success(validationResultMapper.map((IN1)this.validatedValues.get(0), (IN2)this.validatedValues.get(1), (IN3)this.validatedValues.get(2), (IN4)this.validatedValues.get(3)));
     }
+
+    public <IN1, IN2, IN3, IN4, IN5, OUT> HttpResult<OUT> toHttpResult(ValidationResultMapper5<IN1, IN2, IN3, IN4, IN5, OUT> validationResultMapper) {
+
+        if(validationErrors.size() > 0)
+        {
+            return HttpResult.error(400, new MessageResponse("There were unexpected validation errors", this.validationErrors));
+        }
+        return HttpResult.success(validationResultMapper.map(
+                (IN1)this.validatedValues.get(0),
+                (IN2)this.validatedValues.get(1),
+                (IN3)this.validatedValues.get(2),
+                (IN4)this.validatedValues.get(3),
+                (IN5)this.validatedValues.get(4))
+        );
+    }
+
+    public <IN1, IN2, IN3, IN4, IN5, IN6, OUT> HttpResult<OUT> toHttpResult(ValidationResultMapper6<IN1, IN2, IN3, IN4, IN5, IN6, OUT> validationResultMapper) {
+
+        if(validationErrors.size() > 0)
+        {
+            return HttpResult.error(400, new MessageResponse("There were unexpected validation errors", this.validationErrors));
+        }
+        return HttpResult.success(validationResultMapper.map(
+                        (IN1)this.validatedValues.get(0),
+                        (IN2)this.validatedValues.get(1),
+                        (IN3)this.validatedValues.get(2),
+                        (IN4)this.validatedValues.get(3),
+                        (IN5)this.validatedValues.get(4),
+                        (IN6)this.validatedValues.get(5))
+        );
+    }
 }

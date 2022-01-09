@@ -52,7 +52,26 @@ public class OptionalEntryValidator<IN> {
         {
             return new OptionalEntryValidator<>(mapValidator, this.key, Optional.empty(), this.validationError, false);
         }
+    }
 
+    public <OUT> OptionalEntryValidator<OUT> attemptFlatMap(final Function<IN, Optional<OUT>> mapper, final String errorMessage)
+    {
+        if(isHealthy && this.value.isPresent())
+        {
+            try
+            {
+                final Optional<OUT> apply = this.value.flatMap(mapper);
+                return new OptionalEntryValidator<>(mapValidator, this.key, apply, this.validationError, true);
+            }
+            catch (Exception e)
+            {
+                return new OptionalEntryValidator<>(mapValidator, this.key, Optional.empty(), Optional.of(errorMessage), false);
+            }
+        }
+        else
+        {
+            return new OptionalEntryValidator<>(mapValidator, this.key, Optional.empty(), this.validationError, false);
+        }
     }
 
     public MapValidator next() {
