@@ -29,7 +29,7 @@ public class QueryParamValidationTest {
                         .queryParam("rangedInt", "55"));
 
         assertEquals(
-                response(json(entry("required", "IAMREQUIRED"), entry("rangedInt", 55))).withStatusCode(200),
+                response(json(entry("required", "IAMREQUIRED"), entry("rangedInt", 55), entry("defaultedInt", 22))).withStatusCode(200),
                 response
         );
     }
@@ -51,6 +51,53 @@ public class QueryParamValidationTest {
         );
     }
 
+    @Test
+    public void shouldComplainWhenMapIsInvalid() {
+        StubHttpResponse response = testApplicationClient.get(
+                request("/validateQueryParams")
+                        .queryParam("rangedInt", "bob"));
+
+        assertEquals(
+                response(
+                        json(
+                                entry("message", "There were unexpected validation errors"),
+                                entry("messages", jsonObject(entry("required", "is required"), entry("rangedInt", "is not a valid number")))
+                        )
+                ).withStatusCode(400),
+                response
+        );
+    }
+
+    @Test
+    public void shouldComplainWhenValidateIsInvalid() {
+        StubHttpResponse response = testApplicationClient.get(
+                request("/validateQueryParams")
+                        .queryParam("rangedInt", "19"));
+
+        assertEquals(
+                response(
+                        json(
+                                entry("message", "There were unexpected validation errors"),
+                                entry("messages", jsonObject(entry("required", "is required"), entry("rangedInt", "is not in expected range 20 - 78")))
+                        )
+                ).withStatusCode(400),
+                response
+        );
+    }
+
+    @Test
+    public void shouldMapAnOptionalParamWhenValidateIsInvalid() {
+        StubHttpResponse response = testApplicationClient.get(
+                request("/validateQueryParams")
+                        .queryParam("required", "IAMREQUIRED")
+                        .queryParam("rangedInt", "55")
+                        .queryParam("optionalInt", "99"));
+
+        assertEquals(
+                response(json(entry("required", "IAMREQUIRED"), entry("rangedInt", 55), entry("defaultedInt", 22), entry("optionalInt", 99))).withStatusCode(200),
+                response
+        );
+    }
 
     @After
     public void invariantAssertions()

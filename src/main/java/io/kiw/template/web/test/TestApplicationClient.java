@@ -80,8 +80,9 @@ public class TestApplicationClient {
     public void assertNoMoreErrors() {
         if(seenErrors.size() > 0)
         {
+            seenErrors.stream().forEach(Throwable::printStackTrace);
             throw new AssertionError("Expected no more errors\n" +
-                    "Found " + seenErrors.stream().map(Throwable::getMessage).collect(Collectors.toList()));
+                    "Found " + seenErrors.stream().map(t -> t.getClass().getName()).collect(Collectors.toList()));
         }
     }
 }

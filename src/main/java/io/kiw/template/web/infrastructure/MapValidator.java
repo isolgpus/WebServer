@@ -17,6 +17,23 @@ public class MapValidator {
         return entryValidator.validate(Objects::nonNull, "is required");
     }
 
+    public EntryValidator<String> optional(String key, String defaultValue) {
+        String value = valueRetriever.apply(key);
+        if(value == null)
+        {
+            value = defaultValue;
+        }
+        EntryValidator<String> entryValidator = new EntryValidator<>(this, key, value, Optional.empty(), true);
+        return entryValidator;
+    }
+
+    public OptionalEntryValidator<String> optional(String key) {
+        Optional<String> value = Optional.ofNullable(valueRetriever.apply(key));
+
+        OptionalEntryValidator<String> entryValidator = new OptionalEntryValidator<>(this, key, value, Optional.empty(), true);
+        return entryValidator;
+    }
+
     public void addValidationError(String key, String validationError) {
         this.validationErrors.put(key, validationError);
     }
@@ -40,5 +57,23 @@ public class MapValidator {
             return HttpResult.error(400, new MessageResponse("There were unexpected validation errors", this.validationErrors));
         }
         return HttpResult.success(validationResultMapper.map((IN1)this.validatedValues.get(0), (IN2)this.validatedValues.get(1)));
+    }
+
+    public <IN1, IN2, IN3, OUT> HttpResult<OUT> toHttpResult(ValidationResultMapper3<IN1, IN2, IN3, OUT> validationResultMapper) {
+
+        if(validationErrors.size() > 0)
+        {
+            return HttpResult.error(400, new MessageResponse("There were unexpected validation errors", this.validationErrors));
+        }
+        return HttpResult.success(validationResultMapper.map((IN1)this.validatedValues.get(0), (IN2)this.validatedValues.get(1), (IN3)this.validatedValues.get(2)));
+    }
+
+    public <IN1, IN2, IN3, IN4, OUT> HttpResult<OUT> toHttpResult(ValidationResultMapper4<IN1, IN2, IN3, IN4, OUT> validationResultMapper) {
+
+        if(validationErrors.size() > 0)
+        {
+            return HttpResult.error(400, new MessageResponse("There were unexpected validation errors", this.validationErrors));
+        }
+        return HttpResult.success(validationResultMapper.map((IN1)this.validatedValues.get(0), (IN2)this.validatedValues.get(1), (IN3)this.validatedValues.get(2), (IN4)this.validatedValues.get(3)));
     }
 }
