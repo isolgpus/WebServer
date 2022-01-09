@@ -13,7 +13,7 @@ public class MapValidator {
     }
 
     public EntryValidator<String> required(String key) {
-        EntryValidator<String> entryValidator = new EntryValidator<>(this, key, valueRetriever.apply(key), Optional.empty(), true);
+        EntryValidator<String> entryValidator = new EntryValidator<>(this, key, valueRetriever.apply(key), Optional.empty());
         return entryValidator.validate(Objects::nonNull, "is required");
     }
 
@@ -23,15 +23,13 @@ public class MapValidator {
         {
             value = defaultValue;
         }
-        EntryValidator<String> entryValidator = new EntryValidator<>(this, key, value, Optional.empty(), true);
-        return entryValidator;
+        return new EntryValidator<>(this, key, value, Optional.empty());
     }
 
     public OptionalEntryValidator<String> optional(String key) {
         Optional<String> value = Optional.ofNullable(valueRetriever.apply(key));
 
-        OptionalEntryValidator<String> entryValidator = new OptionalEntryValidator<>(this, key, value, Optional.empty(), true);
-        return entryValidator;
+        return new OptionalEntryValidator<>(this, key, value, Optional.empty(), true);
     }
 
     public void addValidationError(String key, String validationError) {

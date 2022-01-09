@@ -8,26 +8,24 @@ public class EntryValidator<IN> {
     private final MapValidator mapValidator;
     private final IN value;
     private final Optional<String> validationError;
-    private final boolean isHealthy;
     private final String key;
 
-    EntryValidator(MapValidator mapValidator, final String key, IN value, Optional<String> validationError, boolean isHealthy) {
+    EntryValidator(MapValidator mapValidator, final String key, IN value, Optional<String> validationError) {
         this.mapValidator = mapValidator;
         this.value = value;
         this.key = key;
         this.validationError = validationError;
-        this.isHealthy = isHealthy;
     }
 
 
     public EntryValidator<IN> validate(final Predicate<IN> check, final String errorMessage)
     {
-        if(isHealthy)
+        if(validationError.isEmpty())
         {
             boolean result = check.test(this.value);
             if(!result)
             {
-                return new EntryValidator<>(mapValidator, this.key, this.value, Optional.of(errorMessage), false);
+                return new EntryValidator<>(mapValidator, this.key, this.value, Optional.of(errorMessage));
             }
         }
 
@@ -36,21 +34,21 @@ public class EntryValidator<IN> {
 
     public <OUT> EntryValidator<OUT> attemptMap(final Function<IN, OUT> mapper, final String errorMessage)
     {
-        if(isHealthy)
+        if(validationError.isEmpty())
         {
             try
             {
                 final OUT apply = mapper.apply(this.value);
-                return new EntryValidator<>(mapValidator, this.key, apply, this.validationError, true);
+                return new EntryValidator<>(mapValidator, this.key, apply, this.validationError);
             }
             catch (Exception e)
             {
-                return new EntryValidator<>(mapValidator, this.key, null, Optional.of(errorMessage), false);
+                return new EntryValidator<>(mapValidator, this.key, null, Optional.of(errorMessage));
             }
         }
         else
         {
-            return new EntryValidator<>(mapValidator, this.key, null, this.validationError, false);
+            return new EntryValidator<>(mapValidator, this.key, null, this.validationError);
         }
 
     }
