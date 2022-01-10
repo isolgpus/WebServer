@@ -34,27 +34,4 @@ public class HttpResult<S> {
         return successful;
     }
 
-    public <OUT> HttpResult<OUT> map(Function<S, OUT> mapper)
-    {
-        if(successful)
-        {
-            return HttpResult.success(mapper.apply(this.successValue));
-        }
-        else
-        {
-            return HttpResult.error(this.statusCode, errorMessageValue);
-        }
-    }
-
-    public <OUT> HttpResult<OUT> flatmap(Function<S, HttpResult<OUT>> mapper)
-    {
-        if(successful)
-        {
-            return mapper.apply(this.successValue);
-        }
-        else
-        {
-            return HttpResult.error(this.statusCode, errorMessageValue);
-        }
-    }
 }
