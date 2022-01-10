@@ -10,11 +10,11 @@ public class HttpContext {
         this.ctx = ctx;
     }
 
-    public MapValidator getQueryParamValidator() {
+    public MapValidator<String> getQueryParamValidator() {
         return ctx.getQueryParamValidator();
     }
 
-    public MapValidator getRequestHeaderValidator() {
+    public MapValidator<String> getRequestHeaderValidator() {
         return ctx.getRequestHeaderValidator();
     }
 

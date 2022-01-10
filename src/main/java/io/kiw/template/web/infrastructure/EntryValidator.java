@@ -4,13 +4,13 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class EntryValidator<IN> {
-    private final MapValidator mapValidator;
+public class EntryValidator<IN, T> {
+    private final MapValidator<T> mapValidator;
     private final IN value;
     private final Optional<String> validationError;
     private final String key;
 
-    EntryValidator(MapValidator mapValidator, final String key, IN value, Optional<String> validationError) {
+    EntryValidator(MapValidator<T> mapValidator, final String key, IN value, Optional<String> validationError) {
         this.mapValidator = mapValidator;
         this.value = value;
         this.key = key;
@@ -18,7 +18,7 @@ public class EntryValidator<IN> {
     }
 
 
-    public EntryValidator<IN> validate(final Predicate<IN> check, final String errorMessage)
+    public EntryValidator<IN, T> validate(final Predicate<IN> check, final String errorMessage)
     {
         if(validationError.isEmpty())
         {
@@ -32,7 +32,7 @@ public class EntryValidator<IN> {
         return this;
     }
 
-    public <OUT> EntryValidator<OUT> attemptMap(final Function<IN, OUT> mapper, final String errorMessage)
+    public <OUT> EntryValidator<OUT, T> attemptMap(final Function<IN, OUT> mapper, final String errorMessage)
     {
         if(validationError.isEmpty())
         {
@@ -53,7 +53,7 @@ public class EntryValidator<IN> {
 
     }
 
-    public MapValidator next() {
+    public MapValidator<T> next() {
         validationError.ifPresent(e -> this.mapValidator.addValidationError(key, e));
         this.mapValidator.addValidatedValue(key, value);
         return this.mapValidator;

@@ -3,23 +3,23 @@ package io.kiw.template.web.infrastructure;
 import java.util.*;
 import java.util.function.Function;
 
-public class MapValidator {
-    private final Function<String, String> valueRetriever;
+public class MapValidator<T> {
+    private final Function<String, T> valueRetriever;
     private final List<Object> validatedValues = new ArrayList<>();
     protected final Map<String, Object> validatedValuesMap = new LinkedHashMap<>();
     private final Map<String, String> validationErrors = new LinkedHashMap<>();
 
-    public MapValidator(Function<String, String> valueRetriever) {
+    public MapValidator(Function<String, T> valueRetriever) {
         this.valueRetriever = valueRetriever;
     }
 
-    public EntryValidator<String> required(String key) {
-        EntryValidator<String> entryValidator = new EntryValidator<>(this, key, valueRetriever.apply(key), Optional.empty());
+    public EntryValidator<T, T> required(String key) {
+        EntryValidator<T, T> entryValidator = new EntryValidator<>(this, key, valueRetriever.apply(key), Optional.empty());
         return entryValidator.validate(Objects::nonNull, "is required");
     }
 
-    public EntryValidator<String> optional(String key, String defaultValue) {
-        String value = valueRetriever.apply(key);
+    public EntryValidator<T, T> optional(String key, T defaultValue) {
+        T value = valueRetriever.apply(key);
         if(value == null)
         {
             value = defaultValue;
@@ -27,8 +27,8 @@ public class MapValidator {
         return new EntryValidator<>(this, key, value, Optional.empty());
     }
 
-    public OptionalEntryValidator<String> optional(String key) {
-        Optional<String> value = Optional.ofNullable(valueRetriever.apply(key));
+    public OptionalEntryValidator<T, T> optional(String key) {
+        Optional<T> value = Optional.ofNullable(valueRetriever.apply(key));
 
         return new OptionalEntryValidator<>(this, key, value, Optional.empty(), true);
     }

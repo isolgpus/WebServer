@@ -4,14 +4,14 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-public class OptionalEntryValidator<IN> {
-    private final MapValidator mapValidator;
+public class OptionalEntryValidator<IN, T> {
+    private final MapValidator<T> mapValidator;
     private final Optional<IN> value;
     private final Optional<String> validationError;
     private final boolean isHealthy;
     private final String key;
 
-    OptionalEntryValidator(MapValidator mapValidator, final String key, Optional<IN> value, Optional<String> validationError, boolean isHealthy) {
+    OptionalEntryValidator(MapValidator<T> mapValidator, final String key, Optional<IN> value, Optional<String> validationError, boolean isHealthy) {
         this.mapValidator = mapValidator;
         this.value = value;
         this.key = key;
@@ -20,7 +20,7 @@ public class OptionalEntryValidator<IN> {
     }
 
 
-    public OptionalEntryValidator<IN> validate(final Predicate<IN> check, final String errorMessage)
+    public OptionalEntryValidator<IN, T> validate(final Predicate<IN> check, final String errorMessage)
     {
         if(isHealthy && this.value.isPresent())
         {
@@ -34,7 +34,7 @@ public class OptionalEntryValidator<IN> {
         return this;
     }
 
-    public <OUT> OptionalEntryValidator<OUT> attemptMap(final Function<IN, OUT> mapper, final String errorMessage)
+    public <OUT> OptionalEntryValidator<OUT, T> attemptMap(final Function<IN, OUT> mapper, final String errorMessage)
     {
         if(isHealthy && this.value.isPresent())
         {
@@ -54,7 +54,7 @@ public class OptionalEntryValidator<IN> {
         }
     }
 
-    public <OUT> OptionalEntryValidator<OUT> attemptFlatMap(final Function<IN, Optional<OUT>> mapper, final String errorMessage)
+    public <OUT> OptionalEntryValidator<OUT, T> attemptFlatMap(final Function<IN, Optional<OUT>> mapper, final String errorMessage)
     {
         if(isHealthy && this.value.isPresent())
         {
@@ -74,7 +74,7 @@ public class OptionalEntryValidator<IN> {
         }
     }
 
-    public MapValidator next() {
+    public MapValidator<T> next() {
         validationError.ifPresent(e -> this.mapValidator.addValidationError(key, e));
         this.mapValidator.addValidatedValue(key, value);
         return this.mapValidator;
