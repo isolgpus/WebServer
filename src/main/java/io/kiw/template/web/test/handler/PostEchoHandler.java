@@ -12,24 +12,30 @@ public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, M
 
     @Override
     public Flow<EchoResponse> handle(HttpControlStream<EchoRequest, MyApplicationState> e) {
-        return e.complete((echoRequest, httpContext, myApplicationState) -> {
-            if(echoRequest.responseHeaderExample != null)
-            {
-                httpContext.addResponseHeader("responseHeaderExample", echoRequest.responseHeaderExample);
-            }
+        return e
+                .flatMap(EchoHelper::mapQueryParams)
+                .flatMap(EchoHelper::mapHeaders)
+                .complete((request, httpContext, applicationState) -> {
 
-            if(echoRequest.responseCookieExample != null)
-            {
-                httpContext.addResponseCookie(new CookieImpl("responseCookieExample", echoRequest.responseCookieExample));
-            }
-            Cookie requestCookieExample = httpContext.getRequestCookie("requestCookieExample");
-            return HttpResult.success(new EchoResponse(
-                echoRequest.intExample,
-                echoRequest.stringExample,
-                httpContext.getQueryParam("queryExample"),
-                httpContext.getRequestHeader("requestHeaderExample"),
-                requestCookieExample != null ? requestCookieExample.getValue() :  null));
-        });
+                    EchoRequest echoRequest = request.echoRequest;
+                    if (echoRequest.responseHeaderExample != null) {
+                        httpContext.addResponseHeader("responseHeaderExample", echoRequest.responseHeaderExample);
+                    }
+
+                    if (echoRequest.responseCookieExample != null) {
+                        httpContext.addResponseCookie(new CookieImpl("responseCookieExample", echoRequest.responseCookieExample));
+                    }
+                    Cookie requestCookieExample = httpContext.getRequestCookie("requestCookieExample");
+                    return HttpResult.success(new EchoResponse(
+                            echoRequest.intExample,
+                            echoRequest.stringExample,
+                            request.queryExample,
+                            request.requestHeaderExample,
+                            requestCookieExample != null ? requestCookieExample.getValue() : null));
+                });
     }
+
+
+
 
 }
