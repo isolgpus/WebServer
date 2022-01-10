@@ -55,7 +55,7 @@ public class EntryValidator<IN> {
 
     public MapValidator next() {
         validationError.ifPresent(e -> this.mapValidator.addValidationError(key, e));
-        this.mapValidator.addValidatedValue(value);
+        this.mapValidator.addValidatedValue(key, value);
         return this.mapValidator;
     }
 }
