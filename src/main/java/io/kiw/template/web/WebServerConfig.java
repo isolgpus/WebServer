@@ -1,9 +1,13 @@
 package io.kiw.template.web;
 
 public class WebServerConfig {
-    private int port;
+    public final int port;
+    public final int defaultTimeoutMillis;
 
-    public int getPort() {
-        return port;
+    public WebServerConfig(int port, int defaultTimeoutMillis) {
+
+        this.port = port;
+        this.defaultTimeoutMillis = defaultTimeoutMillis;
     }
+
 }

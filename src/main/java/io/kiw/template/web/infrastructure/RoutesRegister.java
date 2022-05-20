@@ -3,6 +3,8 @@ package io.kiw.template.web.infrastructure;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.kiw.template.web.test.handler.RouteConfig;
+import io.kiw.template.web.test.handler.RouteConfigBuilder;
 
 import java.util.ArrayList;
 
@@ -19,7 +21,10 @@ public class RoutesRegister {
         this.router = router;
     }
 
-    public <IN extends JsonRequest, OUT extends JsonResponse, APP> void registerJsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute) {
+    public <IN extends JsonRequest, OUT extends JsonResponse, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute) {
+        jsonRoute(path,method, applicationState, vertxJsonRoute, new RouteConfigBuilder().build());
+    }
+    public <IN extends JsonRequest, OUT extends JsonResponse, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute, RouteConfig routeConfig) {
 
         HttpControlStream<IN, APP> httpControlStream = new HttpControlStream<>(new ArrayList<>(), true, applicationState);
         httpControlStream.flatMap((request, ctx, as) -> {
@@ -42,16 +47,20 @@ public class RoutesRegister {
         Flow flow = vertxJsonRoute.handle(httpControlStream);
 
 
-        router.route(path, method, "*/json", "application/json", flow);
+        router.route(path, method, "*/json", "application/json", flow, routeConfig);
 
 
     }
 
-    public <APP> void registerJsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter) {
+    public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter) {
+       jsonFilter(path, applicationState, jsonFilter, new RouteConfigBuilder().build());
+    }
+
+    public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter, RouteConfig routeConfig) {
         HttpControlStream<Void, APP> objectAPPHttpControlStream = new HttpControlStream<>(new ArrayList<>(), false, applicationState);
         Flow flow = jsonFilter.handle(objectAPPHttpControlStream);
 
 
-        router.route(path, POST, "*/json", "application/json", flow);
+        router.route(path, POST, "*/json", "application/json", flow, routeConfig);
     }
 }

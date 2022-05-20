@@ -24,12 +24,17 @@ public class VertxContextImpl implements VertxContext {
 
     @Override
     public void addResponseHeader(String key, String value) {
-        this.ctx.response().putHeader(key, value);
+        if(!hasEnded())
+        {
+            this.ctx.response().putHeader(key, value);
+        }
     }
 
     @Override
     public void addResponseCookie(Cookie value) {
-        this.ctx.response().addCookie(value);
+        if(!hasEnded()) {
+            this.ctx.response().addCookie(value);
+        }
     }
 
     @Override
@@ -39,12 +44,17 @@ public class VertxContextImpl implements VertxContext {
 
     @Override
     public void setStatusCode(int statusCode) {
-        this.ctx.response().setStatusCode(statusCode);
+        if(!hasEnded())
+        {
+            this.ctx.response().setStatusCode(statusCode);
+        }
     }
 
     @Override
     public void end(String bodyResponse) {
-        this.ctx.end(bodyResponse);
+        if(!hasEnded()) {
+            this.ctx.end(bodyResponse);
+        }
     }
 
     @Override
@@ -65,5 +75,10 @@ public class VertxContextImpl implements VertxContext {
     @Override
     public Object get(String key) {
         return this.ctx.get(key);
+    }
+
+    @Override
+    public boolean hasEnded() {
+        return (boolean)this.ctx.data().getOrDefault("CONTEXT_DEAD", false);
     }
 }

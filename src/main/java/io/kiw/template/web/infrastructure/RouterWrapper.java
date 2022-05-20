@@ -2,14 +2,16 @@ package io.kiw.template.web.infrastructure;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.kiw.template.web.test.handler.RouteConfig;
 
 public abstract class RouterWrapper {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
-    protected abstract void route(String path, Method method, String consumes, String provides, Flow flow);
+    protected abstract void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig);
 
     public void handle(MapInstruction applicationInstruction, VertxContext vertxContext, Object applicationState) {
         HttpContext httpContext = new HttpContext(vertxContext);
+
         HttpResult result;
         try {
             result = applicationInstruction.consumer.handle(vertxContext.get("state"), httpContext, applicationState);

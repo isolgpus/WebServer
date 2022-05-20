@@ -24,4 +24,6 @@ public interface VertxContext {
     void put(String key, Object successValue);
 
     Object get(String key);
+
+    boolean hasEnded();
 }

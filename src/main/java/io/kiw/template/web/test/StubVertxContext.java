@@ -83,6 +83,11 @@ public class StubVertxContext implements VertxContext {
         return this.state.get(key);
     }
 
+    @Override
+    public boolean hasEnded() {
+        return false;
+    }
+
     public StubHttpResponse getResponse() {
         StubHttpResponse stubHttpResponse = new StubHttpResponse(responseBody).withStatusCode(statusCode);
         for (Map.Entry<String, String> header : this.responseHeaders.entrySet()) {

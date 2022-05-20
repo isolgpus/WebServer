@@ -6,9 +6,9 @@ import io.vertx.ext.web.handler.BodyHandler;
 
 public class RoutesRegistrar {
 
-    public static <R> R register(Router router, ApplicationRoutesRegister<R> routesRegisterConsumer) {
+    public static <R> R register(Router router, ApplicationRoutesRegister<R> routesRegisterConsumer, int defaultTimeoutMillis) {
         router.route().handler(BodyHandler.create());
-        RoutesRegister routesRegister = new RoutesRegister(new RouterWrapperImpl(router));
+        RoutesRegister routesRegister = new RoutesRegister(new RouterWrapperImpl(router, defaultTimeoutMillis));
         return routesRegisterConsumer.registerRoutes(routesRegister);
 
     }

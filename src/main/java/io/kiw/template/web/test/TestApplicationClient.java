@@ -2,10 +2,7 @@ package io.kiw.template.web.test;
 
 import io.kiw.template.web.infrastructure.Method;
 import io.kiw.template.web.infrastructure.RoutesRegister;
-import io.kiw.template.web.test.handler.BlockingTestHandler;
-import io.kiw.template.web.test.handler.FailingTestHandler;
-import io.kiw.template.web.test.handler.GetEchoHandler;
-import io.kiw.template.web.test.handler.PostEchoHandler;
+import io.kiw.template.web.test.handler.*;
 
 public class TestApplicationClient {
 
@@ -18,22 +15,24 @@ public class TestApplicationClient {
     }
 
     public static MyApplicationState registerRoutes(RoutesRegister routesRegister) {
-        MyApplicationState myApplicationState = new MyApplicationState();
+        MyApplicationState state = new MyApplicationState();
 
-        routesRegister.registerJsonFilter("/root/*", myApplicationState, new TestFilter("rootFilter"));
-        routesRegister.registerJsonFilter("/root/filter/*", myApplicationState, new TestFilter("pathFilter"));
-        routesRegister.registerJsonFilter("/root/somethingElse/*", myApplicationState, new TestFilter("otherFilter"));
-        routesRegister.registerJsonRoute("/root/filter/test", Method.POST, myApplicationState, new TestFilterHandler());
+        routesRegister.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
+        routesRegister.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+        routesRegister.jsonFilter("/root/somethingElse/*", state, new TestFilter("otherFilter"));
+        routesRegister.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
 
-        routesRegister.registerJsonRoute("/echo", Method.POST, myApplicationState, new PostEchoHandler());
-        routesRegister.registerJsonRoute("/echo", Method.PUT, myApplicationState, new PostEchoHandler());
-        routesRegister.registerJsonRoute("/echo", Method.DELETE, myApplicationState, new PostEchoHandler());
-        routesRegister.registerJsonRoute("/echo", Method.GET, myApplicationState, new GetEchoHandler());
-        routesRegister.registerJsonRoute("/blocking", Method.POST, myApplicationState, new BlockingTestHandler());
-        routesRegister.registerJsonRoute("/failing", Method.POST, myApplicationState, new FailingTestHandler());
-        routesRegister.registerJsonRoute("/state", Method.POST, myApplicationState, new StateTestHandler());
-        routesRegister.registerJsonRoute("/throw", Method.POST, myApplicationState, new ThrowTestHandler());
-        return myApplicationState;
+        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+        routesRegister.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
+        routesRegister.jsonRoute("/echo", Method.DELETE, state, new PostEchoHandler());
+        routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        routesRegister.jsonRoute("/blocking", Method.POST, state, new BlockingTestHandler());
+        routesRegister.jsonRoute("/failing", Method.POST, state, new FailingTestHandler());
+        routesRegister.jsonRoute("/state", Method.POST, state, new StateTestHandler());
+        routesRegister.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
+        routesRegister.jsonRoute("/timeout", Method.POST, state, new TimeoutTestHandler(),
+            new RouteConfigBuilder().timeout(200).build());
+        return state;
     }
 
     public StubHttpResponse post(StubRequest stubRequest) {

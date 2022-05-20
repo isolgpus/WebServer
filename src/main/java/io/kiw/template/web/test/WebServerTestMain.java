@@ -6,8 +6,11 @@ public class WebServerTestMain {
     public static void main(String[] args) {
 
         WebServer<MyApplicationState> webServer = WebServer.start(
-            TestApplicationClient::registerRoutes);
+            TestApplicationClient::registerRoutes, new WebServiceConfigBuilder()
+                .setPort(8080)
+                .setDefaultBlockingTimeoutMillis(5000)
+                .build());
 
-        webServer.apply(82876, (immutableState, myApplicationState) -> myApplicationState.setLongValue(immutableState));
+        webServer.apply(82876, (event, myApplicationState) -> myApplicationState.setLongValue(event));
     }
 }

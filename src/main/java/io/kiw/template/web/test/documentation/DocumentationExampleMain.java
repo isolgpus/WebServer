@@ -10,7 +10,7 @@ public class DocumentationExampleMain {
             routesRegister -> {
                 AppState appState = new AppState();
 
-                routesRegister.registerJsonRoute("/hello/world", Method.POST, appState.helloWorldState, new HelloWorldHandler());
+                routesRegister.jsonRoute("/hello/world", Method.POST, appState.helloWorldState, new HelloWorldHandler());
                 return appState;
             });
 

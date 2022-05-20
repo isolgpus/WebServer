@@ -4,6 +4,7 @@ import io.kiw.template.web.infrastructure.Flow;
 import io.kiw.template.web.infrastructure.MapInstruction;
 import io.kiw.template.web.infrastructure.Method;
 import io.kiw.template.web.infrastructure.RouterWrapper;
+import io.kiw.template.web.test.handler.RouteConfig;
 
 import java.util.List;
 
@@ -11,7 +12,7 @@ public class StubRouter extends RouterWrapper {
     private PathMatcher routes = new PathMatcher();
 
     @Override
-    public void route(String path, Method method, String consumes, String provides, Flow flow) {
+    public void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig) {
         routes.putRoute(path, method, flow);
     }
 
