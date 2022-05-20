@@ -4,9 +4,15 @@ import io.kiw.template.web.infrastructure.Method;
 import io.kiw.template.web.infrastructure.RoutesRegister;
 import io.kiw.template.web.test.handler.*;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
+
 public class TestApplicationClient {
 
-    private final StubRouter router = new StubRouter();
+    List<Exception> seenExceptions = new ArrayList<>();
+    private final StubRouter router = new StubRouter(seenExceptions::add);
 
     public TestApplicationClient() {
         RoutesRegister routesRegister = new RoutesRegister(router);
@@ -52,5 +58,26 @@ public class TestApplicationClient {
 
     public StubHttpResponse get(StubRequest stubRequest) {
         return router.handle(stubRequest, Method.GET);
+    }
+
+    public List<Exception> getSeenExceptions() {
+        return seenExceptions;
+    }
+
+    public void assertException(String message) {
+        Iterator<Exception> iterator = this.seenExceptions.iterator();
+        while(iterator.hasNext())
+        {
+            Exception exception = iterator.next();
+
+            if(exception.getMessage().equals(message))
+            {
+                iterator.remove();
+                return;
+            }
+        }
+
+        throw new AssertionError("Unable to find exception in seen exceptions " + seenExceptions.stream()
+            .map(Throwable::getMessage).collect(Collectors.toList()));
     }
 }

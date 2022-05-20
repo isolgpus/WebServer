@@ -7,9 +7,14 @@ import io.kiw.template.web.infrastructure.RouterWrapper;
 import io.kiw.template.web.test.handler.RouteConfig;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class StubRouter extends RouterWrapper {
     private PathMatcher routes = new PathMatcher();
+
+    public StubRouter(Consumer<Exception> exceptionHandler) {
+        super(exceptionHandler);
+    }
 
     @Override
     public void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig) {

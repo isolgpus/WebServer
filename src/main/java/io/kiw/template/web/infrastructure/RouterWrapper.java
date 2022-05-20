@@ -4,7 +4,16 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kiw.template.web.test.handler.RouteConfig;
 
+import java.util.function.Consumer;
+
 public abstract class RouterWrapper {
+
+    private final Consumer<Exception> exceptionHandler;
+
+    public RouterWrapper(Consumer<Exception> exceptionHandler) {
+        this.exceptionHandler = exceptionHandler;
+    }
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     protected abstract void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig);
@@ -16,8 +25,7 @@ public abstract class RouterWrapper {
         try {
             result = applicationInstruction.consumer.handle(vertxContext.get("state"), httpContext, applicationState);
         } catch (Exception e) {
-            vertxContext.setStatusCode(500);
-            vertxContext.end("{\"message\":\"Something went wrong\"}");
+            handleException(vertxContext, e);
             return;
         }
 
@@ -26,8 +34,7 @@ public abstract class RouterWrapper {
                 try {
                     vertxContext.end(this.objectMapper.writeValueAsString(result.successValue));
                 } catch (JsonProcessingException e) {
-                    vertxContext.setStatusCode(500);
-                    vertxContext.end("{\"message\":\"Something went wrong\"}");
+                    handleException(vertxContext, e);
                 }
             } else {
                 vertxContext.put("state", result.successValue);
@@ -38,9 +45,14 @@ public abstract class RouterWrapper {
                 vertxContext.setStatusCode(result.statusCode);
                 vertxContext.end(this.objectMapper.writeValueAsString(result.errorMessageValue));
             } catch (JsonProcessingException e) {
-                vertxContext.setStatusCode(500);
-                vertxContext.end("{\"message\":\"Something went wrong\"}");
+                handleException(vertxContext, e);
             }
         }
+    }
+
+    private void handleException(VertxContext vertxContext, Exception e) {
+        exceptionHandler.accept(e);
+        vertxContext.setStatusCode(500);
+        vertxContext.end("{\"message\":\"Something went wrong\"}");
     }
 }

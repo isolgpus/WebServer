@@ -4,11 +4,14 @@ import io.kiw.template.web.test.handler.RouteConfig;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
 
+import java.util.function.Consumer;
+
 public class RouterWrapperImpl extends RouterWrapper {
     private final Router router;
     private final int defaultTimeoutMillis;
 
-    public RouterWrapperImpl(Router router, int defaultTimeoutMillis) {
+    public RouterWrapperImpl(Router router, int defaultTimeoutMillis, Consumer<Exception> exceptionHandler) {
+        super(exceptionHandler);
         this.router = router;
         this.defaultTimeoutMillis = defaultTimeoutMillis;
     }
