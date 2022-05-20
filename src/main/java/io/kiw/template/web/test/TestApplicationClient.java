@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 
 public class TestApplicationClient {
 
-    List<Exception> seenExceptions = new ArrayList<>();
+    private List<Exception> seenExceptions = new ArrayList<>();
     private final StubRouter router = new StubRouter(seenExceptions::add);
 
     public TestApplicationClient() {
@@ -60,8 +60,12 @@ public class TestApplicationClient {
         return router.handle(stubRequest, Method.GET);
     }
 
-    public List<Exception> getSeenExceptions() {
-        return seenExceptions;
+    public void assertNoMoreExceptions(){
+        if(!this.seenExceptions.isEmpty())
+        {
+            throw new AssertionError("Expected to find no exceptions but found " + seenExceptions.stream()
+                .map(Throwable::getMessage).collect(Collectors.toList()));
+        }
     }
 
     public void assertException(String message) {

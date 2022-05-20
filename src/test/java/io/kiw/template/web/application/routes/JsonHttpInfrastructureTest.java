@@ -7,8 +7,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collections;
-
 import static io.kiw.template.web.test.StubHttpResponse.response;
 import static io.kiw.template.web.test.StubRequest.request;
 import static io.kiw.template.web.test.TestHelper.entry;
@@ -34,7 +32,7 @@ public class JsonHttpInfrastructureTest {
 
     @After
     public void tearDown() throws Exception {
-        assertEquals(Collections.emptyList(), testApplicationClient.getSeenExceptions());
+        testApplicationClient.assertNoMoreExceptions();
     }
 
     @Test
