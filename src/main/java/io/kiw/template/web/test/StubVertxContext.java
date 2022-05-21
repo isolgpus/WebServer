@@ -1,6 +1,5 @@
 package io.kiw.template.web.test;
 
-import io.kiw.template.web.infrastructure.MapValidator;
 import io.kiw.template.web.infrastructure.VertxContext;
 import io.vertx.core.http.Cookie;
 
@@ -82,11 +81,6 @@ public class StubVertxContext implements VertxContext {
     @Override
     public Object get(String key) {
         return this.state.get(key);
-    }
-
-    @Override
-    public MapValidator getQueryParamValidator() {
-        return new MapValidator(this.queryParams::get);
     }
 
     public StubHttpResponse getResponse() {

@@ -66,9 +66,4 @@ public class VertxContextImpl implements VertxContext {
     public Object get(String key) {
         return this.ctx.get(key);
     }
-
-    @Override
-    public MapValidator getQueryParamValidator() {
-        return new MapValidator((key) -> this.ctx.request().getParam(key));
-    }
 }

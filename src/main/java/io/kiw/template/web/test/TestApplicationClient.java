@@ -37,7 +37,6 @@ public class TestApplicationClient {
         routesRegister.registerJsonRoute("/state", Method.POST, myApplicationState, new StateTestHandler());
         routesRegister.registerJsonRoute("/throw", Method.POST, myApplicationState, new ThrowTestHandler());
         routesRegister.registerJsonRoute("/blockingComplete", Method.POST, myApplicationState, new BlockingCompleteTestHandler());
-        routesRegister.registerJsonRoute("/validateQueryParams", Method.GET, myApplicationState, new ValidateQueryParamsHandler());
         return myApplicationState;
     }
 
