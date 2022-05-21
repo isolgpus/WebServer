@@ -27,7 +27,7 @@ public abstract class RouterWrapper {
 
         HttpResult result;
         try {
-            result = applicationInstruction.consumer.handle(vertxContext.get("state"), httpContext, applicationState);
+            result = applicationInstruction.handle(vertxContext.get("state"), httpContext, applicationState);
         } catch (Exception e) {
             handleException(vertxContext, e);
             return;
