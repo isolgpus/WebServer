@@ -1,6 +1,7 @@
 package io.kiw.template.web.infrastructure;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.kiw.template.web.test.handler.RouteConfig;
@@ -15,7 +16,9 @@ public abstract class RouterWrapper {
         this.exceptionHandler = exceptionHandler;
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+    private final ObjectMapper objectMapper = new ObjectMapper()
+        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     protected abstract void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig);
 

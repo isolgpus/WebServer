@@ -3,6 +3,7 @@ package io.kiw.template.web.infrastructure;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import io.kiw.template.web.test.handler.RouteConfig;
 import io.kiw.template.web.test.handler.RouteConfigBuilder;
 import io.vertx.core.buffer.Buffer;
@@ -16,7 +17,8 @@ public class RoutesRegister {
 
     private final RouterWrapper router;
     private final ObjectMapper objectMapper = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     public RoutesRegister(RouterWrapper router) {
 

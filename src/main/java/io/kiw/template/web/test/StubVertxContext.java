@@ -4,7 +4,6 @@ import io.kiw.template.web.infrastructure.VertxContext;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -13,6 +12,7 @@ public class StubVertxContext implements VertxContext {
     private final Map<String, String> queryParams;
     private final Map<String, String> requestHeaders;
     private final Map<String, Cookie> requestCookies;
+    private final Map<String, Buffer> fileUploads;
     private final Map<String, String> responseHeaders = new LinkedHashMap<>();
     private final Map<String, Cookie> responseCookies = new LinkedHashMap<>();
     private String responseBody;
@@ -20,12 +20,13 @@ public class StubVertxContext implements VertxContext {
     private Map<String, Object> state = new LinkedHashMap<>();
     private boolean finished = false;
 
-    public StubVertxContext(String requestBody, Map<String, String> queryParams, Map<String, String> requestHeaders, Map<String, Cookie> requestCookies) {
+    public StubVertxContext(String requestBody, Map<String, String> queryParams, Map<String, String> requestHeaders, Map<String, Cookie> requestCookies, Map<String, Buffer> fileUploads) {
 
         this.requestBody = requestBody;
         this.queryParams = queryParams;
         this.requestHeaders = requestHeaders;
         this.requestCookies = requestCookies;
+        this.fileUploads = fileUploads;
     }
 
 
@@ -92,7 +93,7 @@ public class StubVertxContext implements VertxContext {
 
     @Override
     public Map<String, Buffer> resolveUploadedFiles() {
-        return new HashMap<>();
+        return fileUploads;
     }
 
     public StubHttpResponse getResponse() {

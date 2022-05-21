@@ -9,8 +9,7 @@ import org.junit.Test;
 
 import static io.kiw.template.web.test.StubHttpResponse.response;
 import static io.kiw.template.web.test.StubRequest.request;
-import static io.kiw.template.web.test.TestHelper.entry;
-import static io.kiw.template.web.test.TestHelper.json;
+import static io.kiw.template.web.test.TestHelper.*;
 import static org.junit.Assert.assertEquals;
 
 public class JsonHttpInfrastructureTest {
@@ -372,5 +371,19 @@ public class JsonHttpInfrastructureTest {
         );
 
         testApplicationClient.assertException("app error in blocking");
+    }
+
+    @Test
+    public void shouldUploadAFile() {
+
+        StubHttpResponse response = testApplicationClient.post(
+            request("/upload")
+                .fileUpload("file1", "some bytes")
+                .fileUpload("file2", "even more bytes"));
+
+        assertEquals(
+            response(json(entry("results", object(entry("file1", 10), entry("file2", 15))))),
+            response
+        );
     }
 }

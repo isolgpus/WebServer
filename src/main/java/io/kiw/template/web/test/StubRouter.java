@@ -22,7 +22,7 @@ public class StubRouter extends RouterWrapper {
     }
 
     StubHttpResponse handle(StubRequest stubRequest, Method method) {
-        StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies);
+        StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies, stubRequest.fileUploads);
         List<Flow> flows = this.routes.get(stubRequest.path, method);
 
         for (Flow flow : flows) {
