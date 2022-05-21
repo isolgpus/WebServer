@@ -26,7 +26,7 @@ public class WebServer<APP> {
         HttpServer httpServer = vertx.createHttpServer();
         Router router = Router.router(vertx);
 
-        APP applicationState = RoutesRegistrar.register(router, routesRegisterConsumer, webServerConfig.getErrorHandler());
+        APP applicationState = RoutesRegistrar.register(router, routesRegisterConsumer);
 
         httpServer.requestHandler(router).listen(webServerConfig.getPort());
         return new WebServer<>(vertx, applicationState);

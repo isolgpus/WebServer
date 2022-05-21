@@ -7,15 +7,9 @@ import io.kiw.template.web.test.handler.FailingTestHandler;
 import io.kiw.template.web.test.handler.GetEchoHandler;
 import io.kiw.template.web.test.handler.PostEchoHandler;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
-
 public class TestApplicationClient {
 
-    public final List<Throwable> seenErrors = new ArrayList<>();
-    private final StubRouter router = new StubRouter(seenErrors::add);
+    private final StubRouter router = new StubRouter();
 
     public TestApplicationClient() {
         RoutesRegister routesRegister = new RoutesRegister(router);
@@ -59,30 +53,5 @@ public class TestApplicationClient {
 
     public StubHttpResponse get(StubRequest stubRequest) {
         return router.handle(stubRequest, Method.GET);
-    }
-
-    public void assertErrorSeen(String message) {
-        Iterator<Throwable> seenErrorIterator = seenErrors.iterator();
-        while(seenErrorIterator.hasNext())
-        {
-            Throwable seenError = seenErrorIterator.next();
-            if(seenError.getMessage().contains(message))
-            {
-                seenErrorIterator.remove();
-            }
-            else
-            {
-                throw new AssertionError("Failed in find an exception containing error '" + message + "'\n" +
-                        "Found " + seenErrors.stream().map(Throwable::getMessage).collect(Collectors.toList()));
-            }
-        }
-    }
-
-    public void assertNoMoreErrors() {
-        if(seenErrors.size() > 0)
-        {
-            throw new AssertionError("Expected no more errors\n" +
-                    "Found " + seenErrors.stream().map(Throwable::getMessage).collect(Collectors.toList()));
-        }
     }
 }

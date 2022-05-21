@@ -11,19 +11,19 @@ public class ThrowTestHandler extends VertxJsonRoute<ThrowRequest, ThrowResponse
         return e.map((request, b, c) -> request.where).map((where,b,c) -> {
             if("map".equals(where))
             {
-                throw new RuntimeException("app error thrown in map");
+                throw new RuntimeException("app error");
             }
             return where;
         }).blockingMap((where, httpContext) -> {
             if("blocking".equals(where))
             {
-                throw new RuntimeException("app error thrown in blocking");
+                throw new RuntimeException("app error");
             }
             return where;
         }).complete((where, httpContext, app) -> {
             if("complete".equals(where))
             {
-                throw new RuntimeException("app error thrown in complete");
+                throw new RuntimeException("app error");
             }
             return HttpResult.success(new ThrowResponse());
         });

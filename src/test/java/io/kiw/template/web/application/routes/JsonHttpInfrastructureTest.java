@@ -3,7 +3,6 @@ package io.kiw.template.web.application.routes;
 import io.kiw.template.web.test.StubHttpResponse;
 import io.kiw.template.web.test.TestApplicationClient;
 import io.vertx.core.http.impl.CookieImpl;
-import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -337,7 +336,6 @@ public class JsonHttpInfrastructureTest {
             response(json(entry("message", "Something went wrong"))).withStatusCode(500),
             response
         );
-        testApplicationClient.assertErrorSeen("app error thrown in complete");
     }
 
     @Test
@@ -350,7 +348,6 @@ public class JsonHttpInfrastructureTest {
             response(json(entry("message", "Something went wrong"))).withStatusCode(500),
             response
         );
-        testApplicationClient.assertErrorSeen("app error thrown in map");
     }
 
     @Test
@@ -363,14 +360,5 @@ public class JsonHttpInfrastructureTest {
             response(json(entry("message", "Something went wrong"))).withStatusCode(500),
             response
         );
-        testApplicationClient.assertErrorSeen("app error thrown in blocking");
-
-    }
-
-    @After
-    public void invariantAssertions()
-    {
-        testApplicationClient.assertNoMoreErrors();
-
     }
 }
