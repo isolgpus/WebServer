@@ -108,7 +108,7 @@ public class QueryParamValidationTest {
                         .queryParam("optionalFlatMapInt", "99"));
 
         assertEquals(
-                response(json(entry("required", "IAMREQUIRED"), entry("rangedInt", 55), entry("defaultedInt", 22), entry("flatMapOptionalInt", 99))).withStatusCode(200),
+                response(json(entry("required", "IAMREQUIRED"), entry("rangedInt", 55), entry("defaultedInt", 22), entry("optionalFlatMapInt", 99))).withStatusCode(200),
                 response
         );
     }
