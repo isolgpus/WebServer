@@ -45,10 +45,4 @@ public class HttpControlStream<IN, APP> {
         instructionChain.add(new MapInstruction<>(false, httpControlStreamFlatMapper, canFinishSuccessfully));
         return new Flow<>(instructionChain, applicationState);
     }
-
-    public <OUT extends JsonResponse> Flow<OUT>  blockingComplete(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
-    {
-        instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, canFinishSuccessfully));
-        return new Flow<>(instructionChain, applicationState);
-    }
 }

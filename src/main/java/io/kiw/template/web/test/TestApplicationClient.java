@@ -2,7 +2,10 @@ package io.kiw.template.web.test;
 
 import io.kiw.template.web.infrastructure.Method;
 import io.kiw.template.web.infrastructure.RoutesRegister;
-import io.kiw.template.web.test.handler.*;
+import io.kiw.template.web.test.handler.BlockingTestHandler;
+import io.kiw.template.web.test.handler.FailingTestHandler;
+import io.kiw.template.web.test.handler.GetEchoHandler;
+import io.kiw.template.web.test.handler.PostEchoHandler;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -36,7 +39,6 @@ public class TestApplicationClient {
         routesRegister.registerJsonRoute("/failing", Method.POST, myApplicationState, new FailingTestHandler());
         routesRegister.registerJsonRoute("/state", Method.POST, myApplicationState, new StateTestHandler());
         routesRegister.registerJsonRoute("/throw", Method.POST, myApplicationState, new ThrowTestHandler());
-        routesRegister.registerJsonRoute("/blockingComplete", Method.POST, myApplicationState, new BlockingCompleteTestHandler());
         return myApplicationState;
     }
 
