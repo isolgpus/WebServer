@@ -8,18 +8,16 @@ public class GetEchoHandler extends VertxJsonRoute<EmptyRequest, EchoResponse, M
 
     @Override
     public Flow<EchoResponse> handle(HttpControlStream<EmptyRequest, MyApplicationState> httpControlStream) {
-        return httpControlStream
-                .flatMap(EchoHelper::mapQueryParams)
-                .flatMap(EchoHelper::mapHeaders)
-                .complete((request, httpContext, myApplicationState) ->
-                {
+        return
+            httpControlStream
+                .complete((number, httpContext, myApplicationState) -> {
                     Cookie requestCookieExample = httpContext.getRequestCookie("requestCookieExample");
 
                     return HttpResult.success(new EchoResponse(188,
-                            "You invoked a GET",
-                            request.queryExample,
-                            request.requestHeaderExample,
-                            requestCookieExample != null ? requestCookieExample.getValue() : null));
+                        "You invoked a GET",
+                        httpContext.getQueryParam("queryExample"),
+                        httpContext.getRequestHeader("requestHeaderExample"),
+                        requestCookieExample != null ? requestCookieExample.getValue() : null));
                 });
     }
 }

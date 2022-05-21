@@ -89,11 +89,6 @@ public class StubVertxContext implements VertxContext {
         return new MapValidator(this.queryParams::get);
     }
 
-    @Override
-    public MapValidator getRequestHeaderValidator() {
-        return new MapValidator(this.requestHeaders::get);
-    }
-
     public StubHttpResponse getResponse() {
         StubHttpResponse stubHttpResponse = new StubHttpResponse(responseBody).withStatusCode(statusCode);
         for (Map.Entry<String, String> header : this.responseHeaders.entrySet()) {

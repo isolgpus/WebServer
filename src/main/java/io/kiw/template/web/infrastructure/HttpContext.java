@@ -10,12 +10,16 @@ public class HttpContext {
         this.ctx = ctx;
     }
 
+    public String getQueryParam(String key) {
+        return ctx.getQueryParam(key);
+    }
+
     public MapValidator getQueryParamValidator() {
         return ctx.getQueryParamValidator();
     }
 
-    public MapValidator getRequestHeaderValidator() {
-        return ctx.getRequestHeaderValidator();
+    public String getRequestHeader(String key) {
+        return ctx.getRequestHeader(key);
     }
 
     public Cookie getRequestCookie(String key) {

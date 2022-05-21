@@ -26,6 +26,4 @@ public interface VertxContext {
     Object get(String key);
 
     MapValidator getQueryParamValidator();
-
-    MapValidator getRequestHeaderValidator();
 }
