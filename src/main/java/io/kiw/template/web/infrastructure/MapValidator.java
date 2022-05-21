@@ -6,7 +6,6 @@ import java.util.function.Function;
 public class MapValidator {
     private final Function<String, String> valueRetriever;
     private final List<Object> validatedValues = new ArrayList<>();
-    protected final Map<String, Object> validatedValuesMap = new LinkedHashMap<>();
     private final Map<String, String> validationErrors = new LinkedHashMap<>();
 
     public MapValidator(Function<String, String> valueRetriever) {
@@ -37,9 +36,8 @@ public class MapValidator {
         this.validationErrors.put(key, validationError);
     }
 
-    public void addValidatedValue(String key, Object value) {
+    public void addValidatedValue(Object value) {
         this.validatedValues.add(value);
-        this.validatedValuesMap.put(key, value);
     }
 
     public <IN, OUT> HttpResult<OUT> toHttpResult(ValidationResultMapper<IN, OUT> validationResultMapper) {
@@ -106,13 +104,5 @@ public class MapValidator {
                         (IN5)this.validatedValues.get(4),
                         (IN6)this.validatedValues.get(5))
         );
-    }
-
-    public <OUT> HttpResult<OUT> mapToHttpResult(ValidationResultMapper<Map<String, Object>, OUT> validationResultMapper) {
-        if(validationErrors.size() > 0)
-        {
-            return HttpResult.error(400, new MessageResponse("There were unexpected validation errors", this.validationErrors));
-        }
-        return HttpResult.success(validationResultMapper.map(this.validatedValuesMap));
     }
 }

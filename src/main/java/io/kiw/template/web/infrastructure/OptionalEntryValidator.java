@@ -76,7 +76,7 @@ public class OptionalEntryValidator<IN> {
 
     public MapValidator next() {
         validationError.ifPresent(e -> this.mapValidator.addValidationError(key, e));
-        this.mapValidator.addValidatedValue(key, value);
+        this.mapValidator.addValidatedValue(value);
         return this.mapValidator;
     }
 }
