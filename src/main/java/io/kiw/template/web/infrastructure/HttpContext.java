@@ -1,6 +1,9 @@
 package io.kiw.template.web.infrastructure;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
+
+import java.util.Map;
 
 public class HttpContext {
     final VertxContext ctx;
@@ -28,5 +31,9 @@ public class HttpContext {
 
     public void addResponseCookie(Cookie value) {
         ctx.addResponseCookie(value);
+    }
+
+    public Map<String, Buffer> resolveUploadedFiles() {
+        return this.ctx.resolveUploadedFiles();
     }
 }

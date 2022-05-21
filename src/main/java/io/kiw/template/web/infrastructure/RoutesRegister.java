@@ -5,8 +5,10 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kiw.template.web.test.handler.RouteConfig;
 import io.kiw.template.web.test.handler.RouteConfigBuilder;
+import io.vertx.core.buffer.Buffer;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import static io.kiw.template.web.infrastructure.Method.POST;
 
@@ -62,5 +64,20 @@ public class RoutesRegister {
 
 
         router.route(path, POST, "*/json", "application/json", flow, routeConfig);
+    }
+
+    public  <OUT extends JsonResponse, APP>  void uploadFile(String path, Method method, APP applicationState, VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {
+
+        HttpControlStream<Map<String, Buffer>, APP> httpControlStream = new HttpControlStream<>(new ArrayList<>(), true, applicationState);
+
+        HttpControlStream<Map<String, Buffer>, APP> fileUploadStream = httpControlStream.blockingFlatMap((request, ctx) -> {
+            ctx.addResponseHeader("Content-Type", "application/json");
+
+            Map<String, Buffer> uploadedFile = ctx.resolveUploadedFiles();
+            return HttpResult.success(uploadedFile);
+        });
+        Flow flow = fileUploaderHandler.handle(fileUploadStream);
+
+        router.route(path, method, "multipart/form-data", "application/json", flow, new RouteConfigBuilder().build());
     }
 }

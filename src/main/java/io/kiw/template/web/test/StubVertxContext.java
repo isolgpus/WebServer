@@ -1,8 +1,10 @@
 package io.kiw.template.web.test;
 
 import io.kiw.template.web.infrastructure.VertxContext;
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -86,6 +88,11 @@ public class StubVertxContext implements VertxContext {
     @Override
     public boolean hasEnded() {
         return false;
+    }
+
+    @Override
+    public Map<String, Buffer> resolveUploadedFiles() {
+        return new HashMap<>();
     }
 
     public StubHttpResponse getResponse() {

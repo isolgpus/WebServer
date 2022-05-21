@@ -38,6 +38,8 @@ public class TestApplicationClient {
         routesRegister.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
         routesRegister.jsonRoute("/timeout", Method.POST, state, new TimeoutTestHandler(),
             new RouteConfigBuilder().timeout(200).build());
+
+        routesRegister.uploadFile("/upload", Method.POST, state, new FileUploaderHandler());
         return state;
     }
 

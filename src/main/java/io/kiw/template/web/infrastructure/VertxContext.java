@@ -1,6 +1,9 @@
 package io.kiw.template.web.infrastructure;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
+
+import java.util.Map;
 
 public interface VertxContext {
     Cookie getRequestCookie(String key);
@@ -26,4 +29,7 @@ public interface VertxContext {
     Object get(String key);
 
     boolean hasEnded();
+
+    Map<String, Buffer> resolveUploadedFiles();
+
 }

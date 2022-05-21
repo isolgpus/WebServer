@@ -1,7 +1,12 @@
 package io.kiw.template.web.infrastructure;
 
+import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
+import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
+
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class VertxContextImpl implements VertxContext {
     private final RoutingContext ctx;
@@ -80,5 +85,12 @@ public class VertxContextImpl implements VertxContext {
     @Override
     public boolean hasEnded() {
         return (boolean)this.ctx.data().getOrDefault("CONTEXT_DEAD", false);
+    }
+
+
+    @Override
+    public Map<String, Buffer> resolveUploadedFiles() {
+        return this.ctx.fileUploads().stream()
+            .collect(Collectors.toMap(FileUpload::fileName, a -> ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName())));
     }
 }
