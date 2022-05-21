@@ -2,12 +2,11 @@ package io.kiw.template.web.infrastructure;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 
 import java.util.function.Consumer;
 
 public abstract class RouterWrapper {
-    private final ObjectMapper objectMapper = new ObjectMapper().configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);;
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final Consumer<Throwable> errorHandler;
 
     public RouterWrapper(Consumer<Throwable> errorHandler) {
