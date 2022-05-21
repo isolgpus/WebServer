@@ -86,7 +86,7 @@ public class QueryParamValidationTest {
     }
 
     @Test
-    public void shouldMapAnOptionalParam() {
+    public void shouldMapAnOptionalParamWhenValidateIsInvalid() {
         StubHttpResponse response = testApplicationClient.get(
                 request("/validateQueryParams")
                         .queryParam("required", "IAMREQUIRED")
@@ -95,34 +95,6 @@ public class QueryParamValidationTest {
 
         assertEquals(
                 response(json(entry("required", "IAMREQUIRED"), entry("rangedInt", 55), entry("defaultedInt", 22), entry("optionalInt", 99))).withStatusCode(200),
-                response
-        );
-    }
-
-    @Test
-    public void shouldFlatMapAnOptionalParamWhenValidate() {
-        StubHttpResponse response = testApplicationClient.get(
-                request("/validateQueryParams")
-                        .queryParam("required", "IAMREQUIRED")
-                        .queryParam("rangedInt", "55")
-                        .queryParam("optionalFlatMapInt", "99"));
-
-        assertEquals(
-                response(json(entry("required", "IAMREQUIRED"), entry("rangedInt", 55), entry("defaultedInt", 22), entry("optionalFlatMapInt", 99))).withStatusCode(200),
-                response
-        );
-    }
-
-    @Test
-    public void shouldFlatMapAnIgnoreEmptyOptionalParamWhenValidate() {
-        StubHttpResponse response = testApplicationClient.get(
-                request("/validateQueryParams")
-                        .queryParam("required", "IAMREQUIRED")
-                        .queryParam("rangedInt", "55")
-                        .queryParam("optionalToEmptyFlatMapInt", "99"));
-
-        assertEquals(
-                response(json(entry("required", "IAMREQUIRED"), entry("rangedInt", 55), entry("defaultedInt", 22))).withStatusCode(200),
                 response
         );
     }
