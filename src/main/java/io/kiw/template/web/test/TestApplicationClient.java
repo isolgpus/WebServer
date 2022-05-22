@@ -37,6 +37,8 @@ public class TestApplicationClient {
         routesRegister.jsonRoute("/state", Method.POST, state, new StateTestHandler());
         routesRegister.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
         routesRegister.jsonRoute("/blockingComplete", Method.POST, state, new BlockingCompleteTestHandler());
+        routesRegister.jsonRoute("/timing", Method.POST, state, new TimeoutTestHandler());
+        routesRegister.uploadFile("/upload", Method.POST, state, new FileUploaderHandler());
         return state;
     }
 
