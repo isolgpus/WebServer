@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.kiw.template.web.test.handler.RouteConfig;
 import io.kiw.template.web.test.handler.RouteConfigBuilder;
 import io.vertx.core.buffer.Buffer;
+import io.kiw.result.Validatable;
+import io.kiw.result.Validation;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -25,35 +27,44 @@ public class RoutesRegister {
         this.router = router;
     }
 
-    public <IN extends JsonRequest, OUT extends JsonResponse, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute) {
-        jsonRoute(path,method, applicationState, vertxJsonRoute, new RouteConfigBuilder().build());
+    public <IN, OUT extends JsonResponse, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute) {
+        jsonRoute(path, method, applicationState, vertxJsonRoute, new RouteConfigBuilder().build());
     }
-    public <IN extends JsonRequest, OUT extends JsonResponse, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute, RouteConfig routeConfig) {
-
-        HttpControlStream<IN, APP> httpControlStream = new HttpControlStream<>(new ArrayList<>(), true, applicationState);
-        httpControlStream.flatMap((request, ctx, as) -> {
-            ctx.addResponseHeader("Content-Type", "application/json");
-
-            if (method.canHaveABody() && ctx.ctx.getRequestBody() == null) {
-                return HttpResult.error(400, new MessageResponse("Invalid json request"));
-            }
-
-            try
-            {
-                IN jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.ctx.getRequestBody(), vertxJsonRoute) : null;
-                return HttpResult.success(jsonRequest);
-            }
-            catch (JsonProcessingException e) {
-                return HttpResult.error(400, new MessageResponse("Invalid json request"));
-            }
-        });
-
-        Flow flow = vertxJsonRoute.handle(httpControlStream);
 
 
-        router.route(path, method, "*/json", "application/json", flow, routeConfig);
+    public <IN, OUT extends JsonResponse, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute, RouteConfig routeConfig) {
+
+        HttpResponseStream<IN, APP> httpResponseStream = new HttpResponseStream<>(new ArrayList<>(), true, applicationState)
+            .flatMap((request, ctx, as) -> {
+                ctx.addResponseHeader("Content-Type", "application/json");
+
+                if (method.canHaveABody() && ctx.ctx.getRequestBody() == null) {
+                    return HttpResult.error(400, new ErrorMessageResponse("Invalid json request"));
+                }
+
+                try {
+                    IN jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.ctx.getRequestBody(), vertxJsonRoute) : null;
+                    return HttpResult.success(jsonRequest);
+                } catch (JsonProcessingException e) {
+                    return HttpResult.error(400, new ErrorMessageResponse("Invalid json request"));
+                }
+            }).flatMap(((request, httpContext, as) -> {
+                    if (request instanceof Validatable) {
+                        return Validation.validate("request", (Validatable) request)
+                            .fold(e ->
+                                    HttpResult.error(400, new ErrorMessageResponse("There were validation errors", e.buildErrorMap())),
+                                (success) -> HttpResult.success(request));
+                    } else {
+                        return HttpResult.success(request);
+                    }
+
+                })
+            );
+
+        Flow<OUT> flow = vertxJsonRoute.handle(httpResponseStream);
 
 
+        router.route(path, method, "*", "application/json", flow, routeConfig);
     }
 
     public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter) {
@@ -61,8 +72,8 @@ public class RoutesRegister {
     }
 
     public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter, RouteConfig routeConfig) {
-        HttpControlStream<Void, APP> objectAPPHttpControlStream = new HttpControlStream<>(new ArrayList<>(), false, applicationState);
-        Flow flow = jsonFilter.handle(objectAPPHttpControlStream);
+        HttpResponseStream<Void, APP> objectAPPHttpResponseStream = new HttpResponseStream<>(new ArrayList<>(), false, applicationState);
+        Flow flow = jsonFilter.handle(objectAPPHttpResponseStream);
 
 
         router.route(path, POST, "*/json", "application/json", flow, routeConfig);
@@ -70,9 +81,9 @@ public class RoutesRegister {
 
     public  <OUT extends JsonResponse, APP>  void uploadFile(String path, Method method, APP applicationState, VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {
 
-        HttpControlStream<Map<String, Buffer>, APP> httpControlStream = new HttpControlStream<>(new ArrayList<>(), true, applicationState);
+        HttpResponseStream<Map<String, Buffer>, APP> httpResponseStream = new HttpResponseStream<>(new ArrayList<>(), true, applicationState);
 
-        HttpControlStream<Map<String, Buffer>, APP> fileUploadStream = httpControlStream.blockingFlatMap((request, ctx) -> {
+        HttpResponseStream<Map<String, Buffer>, APP> fileUploadStream = httpResponseStream.blockingFlatMap((request, ctx) -> {
             ctx.addResponseHeader("Content-Type", "application/json");
 
             Map<String, Buffer> uploadedFile = ctx.resolveUploadedFiles();

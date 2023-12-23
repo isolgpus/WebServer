@@ -1,5 +1,7 @@
 package io.kiw.template.web.infrastructure;
 
+import io.kiw.result.Result;
+
 public class MapInstruction<IN, OUT, APP> {
     final boolean isBlocking;
     private final HttpControlStreamFlatMapper<IN, OUT, APP> consumer;
@@ -21,13 +23,10 @@ public class MapInstruction<IN, OUT, APP> {
     }
 
 
-    public HttpResult handle(IN state, HttpContext httpContext, APP applicationState) {
-        if(consumer != null)
-        {
+    public Result<HttpErrorResponse, OUT> handle(IN state, HttpContext httpContext, APP applicationState) {
+        if (consumer != null) {
             return consumer.handle(state, httpContext, applicationState);
-        }
-        else if(blockingConsumer != null)
-        {
+        } else if (blockingConsumer != null) {
             return blockingConsumer.handle(state, httpContext);
         }
 

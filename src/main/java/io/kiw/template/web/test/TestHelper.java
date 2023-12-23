@@ -3,8 +3,9 @@ package io.kiw.template.web.test;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.util.HashMap;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 public class TestHelper {
@@ -25,19 +26,22 @@ public class TestHelper {
 
     public static JsonObject object(Entry... entries)
     {
-        HashMap<String, Object> stringObjectHashMap = new LinkedHashMap<>();
+        Map<String, Object> stringObjectHashMap = new LinkedHashMap<>();
         for (Entry entry : entries) {
             if(entry.value instanceof JsonObject)
             {
                 stringObjectHashMap.put(entry.key, ((JsonObject) entry.value).entries);
-            }
-            else
-            {
+            } else {
                 stringObjectHashMap.put(entry.key, entry.value);
             }
         }
 
         return new JsonObject(stringObjectHashMap);
+    }
+
+    public static List<Object> array(Object... values) {
+
+        return Arrays.stream(values).map(v -> v instanceof JsonObject ? ((JsonObject) v).entries : v).toList();
     }
 
 

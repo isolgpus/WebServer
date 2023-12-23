@@ -1,7 +1,7 @@
 package io.kiw.template.web.test.handler;
 
 import io.kiw.template.web.infrastructure.Flow;
-import io.kiw.template.web.infrastructure.HttpControlStream;
+import io.kiw.template.web.infrastructure.HttpResponseStream;
 import io.kiw.template.web.infrastructure.VertxJsonRoute;
 import io.kiw.template.web.test.MyApplicationState;
 
@@ -10,9 +10,9 @@ import static io.kiw.template.web.infrastructure.HttpResult.success;
 public class BlockingTestHandler extends VertxJsonRoute<BlockingRequest, BlockingTestResponse, MyApplicationState> {
 
     @Override
-    public Flow<BlockingTestResponse> handle(HttpControlStream<BlockingRequest, MyApplicationState> httpControlStream) {
+    public Flow<BlockingTestResponse> handle(HttpResponseStream<BlockingRequest, MyApplicationState> httpResponseStream) {
         return
-            httpControlStream
+            httpResponseStream
                 .map((blockingRequest, httpContext, applicationState) -> blockingRequest.numberToMultiply)
                 .blockingMap((numberToMultiply, httpContext) -> numberToMultiply * 2)
                 .complete((multipliedNumber, httpContext, applicationState) ->

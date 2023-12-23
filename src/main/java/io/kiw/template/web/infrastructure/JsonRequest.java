@@ -1,4 +1,4 @@
 package io.kiw.template.web.infrastructure;
 
-public interface JsonRequest {
+public interface JsonRequest<T> {
 }

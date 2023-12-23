@@ -1,7 +1,7 @@
 package io.kiw.template.web.test.documentation;
 
 import io.kiw.template.web.infrastructure.Flow;
-import io.kiw.template.web.infrastructure.HttpControlStream;
+import io.kiw.template.web.infrastructure.HttpResponseStream;
 import io.kiw.template.web.infrastructure.HttpResult;
 import io.kiw.template.web.infrastructure.VertxJsonRoute;
 
@@ -9,7 +9,7 @@ public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWo
 
 
     @Override
-    public Flow<HelloWorldResponse> handle(HttpControlStream<HelloWorldRequest, HelloWorldState> e) {
+    public Flow<HelloWorldResponse> handle(HttpResponseStream<HelloWorldRequest, HelloWorldState> e) {
         return e.complete((request, httpContext, applicationState) -> {
             return HttpResult.success(new HelloWorldResponse());
         });

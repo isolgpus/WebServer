@@ -1,34 +1,29 @@
 package io.kiw.template.web.infrastructure;
 
-public class HttpResult<S> {
+import io.kiw.result.Result;
+
+public abstract class HttpResult<S> {
 
 
-    private final boolean successful;
-    final S successValue;
-    final MessageResponse errorMessageValue;
-    final int statusCode;
-
-    private HttpResult(boolean successful, S successValue, MessageResponse errorMessageValue, int statusCode) {
-        this.successful = successful;
-
-        this.successValue = successValue;
-        this.errorMessageValue = errorMessageValue;
-        this.statusCode = statusCode;
+    public static <S> Result<HttpErrorResponse, S> from(Result<String, S> result, int statusCodeOnFailure) {
+        return result.fold(
+            e -> Result.error(new HttpErrorResponse(new ErrorMessageResponse(e), statusCodeOnFailure)),
+            Result::success);
     }
 
-    public static <S> HttpResult<S> error(int statusCode, MessageResponse messageResponse) {
-        return new HttpResult<>(false, null, messageResponse, statusCode);
+    public static <S> Result<HttpErrorResponse, S> from(Result<String, S> result) {
+        return from(result, 400);
     }
 
-    public static <S> HttpResult<S> success(S success) {
-        return new HttpResult<>(true, success, null, 200);
+    public static <S> Result<HttpErrorResponse, S> error(int statusCode, ErrorMessageResponse messageResponse) {
+        return Result.error(new HttpErrorResponse(messageResponse, statusCode));
     }
 
-    public static <S> HttpResult<S> success() {
-        return new HttpResult<>(true, null, null, 200);
+    public static <S> Result<HttpErrorResponse, S> success(S response) {
+        return Result.success(response);
     }
 
-    boolean isSuccessful() {
-        return successful;
+    public static <S> Result<HttpErrorResponse, S> success() {
+        return Result.success(null);
     }
 }

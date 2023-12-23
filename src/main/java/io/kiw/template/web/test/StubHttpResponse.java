@@ -8,9 +8,9 @@ import java.util.Objects;
 
 public class StubHttpResponse {
     public final String responseBody;
-    private int statusCode = 200;
-    private Map<String, String> responseHeaders =  new LinkedHashMap<>();
-    private Map<String, String> responseCookies = new LinkedHashMap<>();
+    public int statusCode = 200;
+    public Map<String, String> responseHeaders = new LinkedHashMap<>();
+    public Map<String, String> responseCookies = new LinkedHashMap<>();
 
     public StubHttpResponse(String responseBody) {
         this.responseBody = responseBody;

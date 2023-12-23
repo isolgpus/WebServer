@@ -1,5 +1,7 @@
 package io.kiw.template.web.infrastructure;
 
+import io.kiw.result.Result;
+
 public interface HttpControlStreamBlockingFlatMapper<REQ, RES> {
-    HttpResult<RES> handle(REQ request, HttpContext httpContext);
+    Result<HttpErrorResponse, RES> handle(REQ request, HttpContext context);
 }

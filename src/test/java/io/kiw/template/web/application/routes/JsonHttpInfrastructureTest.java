@@ -148,12 +148,12 @@ public class JsonHttpInfrastructureTest {
     @Test
     public void shouldReadRequestHeaderParamsOnGet() {
         StubHttpResponse response = testApplicationClient.get(
-                request("/echo")
-                        .queryParam("queryExample", null)
-                        .headerParam("requestHeaderExample", "test"));
+            request("/echo")
+                .queryParam("queryExample", null)
+                .headerParam("requestHeaderExample", "test"));
 
         final String expectedResponse = json(
-                entry("intExample", 188),
+            entry("intExample", 188),
                 entry("stringExample", "You invoked a GET"),
                 entry("queryExample", null),
                 entry("requestHeaderExample", "test"),
@@ -219,7 +219,8 @@ public class JsonHttpInfrastructureTest {
         StubHttpResponse response = testApplicationClient.post(request("/echo"));
 
         final String expectedResponse = json(
-                entry("message", "Invalid json request")
+            entry("message", "Invalid json request"),
+            entry("errors", object())
         );
 
         assertEquals(response(expectedResponse).withStatusCode(400), response);
@@ -307,7 +308,10 @@ public class JsonHttpInfrastructureTest {
             request("/failing")
                 .body(json(entry("numberToMultiply", 22))));
 
-        assertEquals(response(json(entry("message", "intentionally failed"))).withStatusCode(400), response);
+        assertEquals(response(json(
+            entry("message", "intentionally failed"),
+            entry("errors", object())
+        )).withStatusCode(400), response);
     }
 
 
@@ -334,7 +338,10 @@ public class JsonHttpInfrastructureTest {
                 .body("<not json at all>"));
 
         assertEquals(
-            response(json(entry("message", "Invalid json request"))).withStatusCode(400),
+            response(json(
+                entry("message", "Invalid json request"),
+                entry("errors", object())
+            )).withStatusCode(400),
             response
         );
     }

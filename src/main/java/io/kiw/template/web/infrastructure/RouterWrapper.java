@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.kiw.template.web.test.handler.RouteConfig;
+import io.kiw.result.Result;
 
 import java.util.function.Consumer;
 
@@ -22,36 +23,36 @@ public abstract class RouterWrapper {
 
     protected abstract void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig);
 
-    public void handle(MapInstruction applicationInstruction, VertxContext vertxContext, Object applicationState) {
-        HttpContext httpContext = new HttpContext(vertxContext);
+     public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState) {
+         HttpContext httpContext = new HttpContext(vertxContext);
+         Result<HttpErrorResponse, T> result;
+         try {
+             result = applicationInstruction.handle(vertxContext.get("state"), httpContext, applicationState);
+         } catch (Exception e) {
+             handleException(vertxContext, e);
+             return;
+         }
 
-        HttpResult result;
-        try {
-            result = applicationInstruction.handle(vertxContext.get("state"), httpContext, applicationState);
-        } catch (Exception e) {
-            handleException(vertxContext, e);
-            return;
-        }
-
-        if (result.isSuccessful()) {
-            if (applicationInstruction.lastStep) {
+         result.consume(httpErrorResponse -> {
                 try {
-                    vertxContext.end(this.objectMapper.writeValueAsString(result.successValue));
+                    vertxContext.setStatusCode(httpErrorResponse.statusCode);
+                    vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue));
                 } catch (JsonProcessingException e) {
                     handleException(vertxContext, e);
                 }
-            } else {
-                vertxContext.put("state", result.successValue);
-                vertxContext.next();
-            }
-        } else {
-            try {
-                vertxContext.setStatusCode(result.statusCode);
-                vertxContext.end(this.objectMapper.writeValueAsString(result.errorMessageValue));
-            } catch (JsonProcessingException e) {
-                handleException(vertxContext, e);
-            }
-        }
+            },
+            s -> {
+                if (applicationInstruction.lastStep) {
+                    try {
+                        vertxContext.end(this.objectMapper.writeValueAsString(s));
+                    } catch (JsonProcessingException e) {
+                        handleException(vertxContext, e);
+                    }
+                } else {
+                    vertxContext.put("state", s);
+                    vertxContext.next();
+                }
+            });
     }
 
     private void handleException(VertxContext vertxContext, Exception e) {

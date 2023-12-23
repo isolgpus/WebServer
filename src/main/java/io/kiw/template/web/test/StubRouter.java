@@ -21,16 +21,15 @@ public class StubRouter extends RouterWrapper {
         routes.putRoute(path, method, flow);
     }
 
-    StubHttpResponse handle(StubRequest stubRequest, Method method) {
+    public StubHttpResponse handle(StubRequest stubRequest, Method method) {
         StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies, stubRequest.fileUploads);
         List<Flow> flows = this.routes.get(stubRequest.path, method);
 
         for (Flow flow : flows) {
             for (Object what : flow.getApplicationInstructions()) {
-                MapInstruction applicationInstruction = (MapInstruction)what;
+                MapInstruction applicationInstruction = (MapInstruction) what;
                 this.handle(applicationInstruction, context, flow.getApplicationState());
-                if(context.hasFinished())
-                {
+                if (context.hasFinished()) {
                     break;
                 }
             }
