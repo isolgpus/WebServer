@@ -7,8 +7,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.kiw.web.test.handler.RouteConfig;
 import io.kiw.web.test.handler.RouteConfigBuilder;
 import io.vertx.core.buffer.Buffer;
-import io.kiw.result.Validatable;
-import io.kiw.result.Validation;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -48,18 +46,7 @@ public class RoutesRegister {
                 } catch (JsonProcessingException e) {
                     return HttpResult.error(400, new ErrorMessageResponse("Invalid json request"));
                 }
-            }).flatMap(((request, httpContext, as) -> {
-                    if (request instanceof Validatable) {
-                        return Validation.validate("request", (Validatable) request)
-                            .fold(e ->
-                                    HttpResult.error(400, new ErrorMessageResponse("There were validation errors", e.buildErrorMap())),
-                                (success) -> HttpResult.success(request));
-                    } else {
-                        return HttpResult.success(request);
-                    }
-
-                })
-            );
+            }).flatMap(((request, httpContext, as) -> HttpResult.success(request)));
 
         Flow<OUT> flow = vertxJsonRoute.handle(httpResponseStream);
 
