@@ -42,13 +42,13 @@ public class HttpResponseStream<IN, APP> {
         return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState);
     }
 
-    public <OUT extends JsonResponse> Flow<OUT> complete(HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper)
+    public <OUT> Flow<OUT> complete(HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper)
     {
         instructionChain.add(new MapInstruction<>(false, httpControlStreamFlatMapper, canFinishSuccessfully));
         return new Flow<>(instructionChain, applicationState);
     }
 
-    public <OUT extends JsonResponse> Flow<OUT>  blockingComplete(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
+    public <OUT> Flow<OUT>  blockingComplete(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
     {
         instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, canFinishSuccessfully));
         return new Flow<>(instructionChain, applicationState);

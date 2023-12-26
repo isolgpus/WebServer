@@ -2,7 +2,7 @@ package io.kiw.web.test.handler;
 
 import io.kiw.web.infrastructure.JsonResponse;
 
-public class EchoResponse implements JsonResponse {
+public class EchoResponse {
     public final int intExample;
     public final String stringExample;
     public final String queryExample;

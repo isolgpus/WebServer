@@ -25,12 +25,12 @@ public class RoutesRegister {
         this.router = router;
     }
 
-    public <IN, OUT extends JsonResponse, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute) {
+    public <IN, OUT, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute) {
         jsonRoute(path, method, applicationState, vertxJsonRoute, new RouteConfigBuilder().build());
     }
 
 
-    public <IN, OUT extends JsonResponse, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute, RouteConfig routeConfig) {
+    public <IN, OUT, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute, RouteConfig routeConfig) {
 
         HttpResponseStream<IN, APP> httpResponseStream = new HttpResponseStream<>(new ArrayList<>(), true, applicationState)
             .flatMap((request, ctx, as) -> {
@@ -66,7 +66,7 @@ public class RoutesRegister {
         router.route(path, POST, "*/json", "application/json", flow, routeConfig);
     }
 
-    public  <OUT extends JsonResponse, APP>  void uploadFile(String path, Method method, APP applicationState, VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {
+    public  <OUT, APP>  void uploadFile(String path, Method method, APP applicationState, VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {
 
         HttpResponseStream<Map<String, Buffer>, APP> httpResponseStream = new HttpResponseStream<>(new ArrayList<>(), true, applicationState);
 

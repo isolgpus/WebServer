@@ -2,7 +2,7 @@ package io.kiw.web.test;
 
 import io.kiw.web.infrastructure.JsonResponse;
 
-public class StateResponse implements JsonResponse {
+public class StateResponse {
     public final long longValue;
 
     public StateResponse(long longValue) {

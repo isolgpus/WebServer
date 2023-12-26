@@ -2,7 +2,7 @@ package io.kiw.web.infrastructure;
 
 import java.util.List;
 
-public class Flow<T extends JsonResponse> {
+public class Flow<T> {
     private final List<MapInstruction> instructions;
     private final Object applicationState;
 
