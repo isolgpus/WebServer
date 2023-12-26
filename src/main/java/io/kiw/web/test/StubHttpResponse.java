@@ -22,8 +22,12 @@ public class StubHttpResponse {
     }
 
     public static StubHttpResponse response(String expectedResponseBody) {
+        return response(expectedResponseBody, "application/json");
+    }
+
+    public static StubHttpResponse response(String expectedResponseBody, String contentType) {
         return new StubHttpResponse(expectedResponseBody)
-                .withHeader("Content-Type", "application/json");
+            .withHeader("Content-Type", contentType);
     }
 
 

@@ -38,7 +38,8 @@ public class TestApplicationClient {
         routesRegister.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
         routesRegister.jsonRoute("/blockingComplete", Method.POST, state, new BlockingCompleteTestHandler());
         routesRegister.jsonRoute("/timing", Method.POST, state, new TimeoutTestHandler());
-        routesRegister.uploadFile("/upload", Method.POST, state, new FileUploaderHandler());
+        routesRegister.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler());
+        routesRegister.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
         return state;
     }
 

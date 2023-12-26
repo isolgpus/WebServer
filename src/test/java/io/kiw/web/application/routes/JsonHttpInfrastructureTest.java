@@ -402,4 +402,16 @@ public class JsonHttpInfrastructureTest {
             response
         );
     }
+
+    @Test
+    public void shouldDownloadFile() {
+        StubHttpResponse response = testApplicationClient.get(StubRequest.request("/download"));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(TestHelper.file("file contents"), "text/html; charset=utf-8")
+                .withHeader("Transfer-Encoding", "chunked")
+                .withHeader("Content-Disposition", "data.txt"),
+            response
+        );
+    }
 }

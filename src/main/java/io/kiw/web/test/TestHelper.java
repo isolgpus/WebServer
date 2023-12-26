@@ -44,6 +44,10 @@ public class TestHelper {
         return Arrays.stream(values).map(v -> v instanceof JsonObject ? ((JsonObject) v).entries : v).toList();
     }
 
+    public static String file(String fileContents) {
+        return fileContents;
+    }
+
 
     public static final class Entry {
         final String key;

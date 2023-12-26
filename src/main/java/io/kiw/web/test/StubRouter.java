@@ -28,7 +28,7 @@ public class StubRouter extends RouterWrapper {
         for (Flow flow : flows) {
             for (Object what : flow.getApplicationInstructions()) {
                 MapInstruction applicationInstruction = (MapInstruction) what;
-                this.handle(applicationInstruction, context, flow.getApplicationState());
+                this.handle(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
                 if (context.hasFinished()) {
                     break;
                 }

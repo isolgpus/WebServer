@@ -21,17 +21,18 @@ public class RouterWrapperImpl extends RouterWrapper {
         Route route = router.route(method.getVertxMethod(), path).consumes(consumes).produces(produces);
         int timeout = routeConfig.timeoutInMillis.orElse(defaultTimeoutMillis);
 
+
         route.handler(new VertxTimeoutHandler(timeout));
 
         for (Object what : flow.getApplicationInstructions()) {
             MapInstruction applicationInstruction = (MapInstruction) what;
             if(applicationInstruction.isBlocking)
             {
-                route.blockingHandler(ctx -> handle(applicationInstruction, new VertxContextImpl(ctx), null));
+                route.blockingHandler(ctx -> handle(applicationInstruction, new VertxContextImpl(ctx), null, flow.getEnder()));
             }
             else
             {
-                route.handler(ctx -> handle(applicationInstruction, new VertxContextImpl(ctx), flow.getApplicationState()));
+                route.handler(ctx -> handle(applicationInstruction, new VertxContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             }
         }
 

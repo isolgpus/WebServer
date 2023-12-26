@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.kiw.web.infrastructure.ender.Ender;
 import io.kiw.web.test.handler.RouteConfig;
 import io.kiw.result.Result;
 
@@ -23,7 +24,7 @@ public abstract class RouterWrapper {
 
     protected abstract void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig);
 
-     public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState) {
+     public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
          HttpContext httpContext = new HttpContext(vertxContext);
          Result<HttpErrorResponse, T> result;
          try {
@@ -43,9 +44,11 @@ public abstract class RouterWrapper {
             },
             s -> {
                 if (applicationInstruction.lastStep) {
-                    try {
-                        vertxContext.end(this.objectMapper.writeValueAsString(s));
-                    } catch (JsonProcessingException e) {
+                    try
+                    {
+                        ender.end(vertxContext, s);
+                    }
+                    catch (RuntimeException e) {
                         handleException(vertxContext, e);
                     }
                 } else {
