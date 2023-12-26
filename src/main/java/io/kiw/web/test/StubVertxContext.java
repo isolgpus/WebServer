@@ -4,6 +4,7 @@ import io.kiw.web.infrastructure.VertxContext;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
 
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -63,6 +64,13 @@ public class StubVertxContext implements VertxContext {
     @Override
     public void end(String responseBody) {
         this.responseBody = responseBody;
+        this.finished = true;
+    }
+
+    @Override
+    public void end(Buffer bodyResponse) {
+
+        this.responseBody = new String(bodyResponse.getBytes(), StandardCharsets.UTF_8);
         this.finished = true;
     }
 

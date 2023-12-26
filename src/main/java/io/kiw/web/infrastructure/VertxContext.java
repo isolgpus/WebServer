@@ -20,6 +20,8 @@ public interface VertxContext {
 
     void end(String bodyResponse);
 
+    void end(Buffer bodyResponse);
+
     String getRequestHeader(String key);
 
     void next();

@@ -63,6 +63,13 @@ public class VertxContextImpl implements VertxContext {
     }
 
     @Override
+    public void end(Buffer bodyResponse) {
+        if(!hasEnded()) {
+            this.ctx.end(bodyResponse);
+        }
+    }
+
+    @Override
     public String getRequestHeader(String key) {
         return this.ctx.request().getHeader(key);
     }
