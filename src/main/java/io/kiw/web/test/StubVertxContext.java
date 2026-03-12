@@ -14,6 +14,7 @@ public class StubVertxContext implements VertxContext {
     private final Map<String, String> requestHeaders;
     private final Map<String, Cookie> requestCookies;
     private final Map<String, Buffer> fileUploads;
+    private Map<String, String> pathParams = new LinkedHashMap<>();
     private final Map<String, String> responseHeaders = new LinkedHashMap<>();
     private final Map<String, Cookie> responseCookies = new LinkedHashMap<>();
     private String responseBody;
@@ -100,8 +101,17 @@ public class StubVertxContext implements VertxContext {
     }
 
     @Override
+    public String getPathParam(String key) {
+        return this.pathParams.get(key);
+    }
+
+    @Override
     public Map<String, Buffer> resolveUploadedFiles() {
         return fileUploads;
+    }
+
+    public void setPathParams(Map<String, String> pathParams) {
+        this.pathParams = pathParams;
     }
 
     public StubHttpResponse getResponse() {

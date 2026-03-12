@@ -34,4 +34,5 @@ public interface VertxContext {
 
     Map<String, Buffer> resolveUploadedFiles();
 
+    String getPathParam(String key);
 }

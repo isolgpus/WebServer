@@ -36,4 +36,8 @@ public class HttpContext {
     public Map<String, Buffer> resolveUploadedFiles() {
         return this.ctx.resolveUploadedFiles();
     }
+
+    public String getPathParam(String key) {
+        return ctx.getPathParam(key);
+    }
 }

@@ -15,6 +15,7 @@ public class GetEchoHandler extends VertxJsonRoute<EmptyRequest, EchoResponse, M
 
                     return HttpResult.success(new EchoResponse(188,
                         "You invoked a GET",
+                        httpContext.getPathParam("pathExample"),
                         httpContext.getQueryParam("queryExample"),
                         httpContext.getRequestHeader("requestHeaderExample"),
                         requestCookieExample != null ? requestCookieExample.getValue() : null));

@@ -23,9 +23,10 @@ public class StubRouter extends RouterWrapper {
 
     public StubHttpResponse handle(StubRequest stubRequest, Method method) {
         StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies, stubRequest.fileUploads);
-        List<Flow> flows = this.routes.get(stubRequest.path, method);
+        PathMatcher.MatchResult matchResult = this.routes.get(stubRequest.path, method);
+        context.setPathParams(matchResult.getPathParams());
 
-        for (Flow flow : flows) {
+        for (Flow flow : matchResult.getFlows()) {
             for (Object what : flow.getApplicationInstructions()) {
                 MapInstruction applicationInstruction = (MapInstruction) what;
                 this.handle(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());

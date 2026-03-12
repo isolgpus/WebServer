@@ -10,17 +10,19 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import static io.kiw.web.test.TestHelper.entry;
 import static org.junit.Assert.assertEquals;
 
 public class JsonHttpInfrastructureTest {
 
     private TestApplicationClient testApplicationClient;
     private static final String DEFAULT_POST_RESPONSE = TestHelper.json(
-            TestHelper.entry("intExample", 0),
-            TestHelper.entry("stringExample", null),
-            TestHelper.entry("queryExample", null),
-            TestHelper.entry("requestHeaderExample", null),
-            TestHelper.entry("requestCookieExample", null)
+            entry("intExample", 0),
+            entry("stringExample", null),
+                entry("pathExample", null),
+            entry("queryExample", null),
+            entry("requestHeaderExample", null),
+            entry("requestCookieExample", null)
     );
 
     @Before
@@ -37,19 +39,20 @@ public class JsonHttpInfrastructureTest {
     @Test
     public void shouldHandlePopulatingJsonValues() {
         final String requestBody = TestHelper.json(
-                TestHelper.entry("intExample", 17),
-                TestHelper.entry("stringExample", "hiya")
+                entry("intExample", 17),
+                entry("stringExample", "hiya")
         );
 
 
         StubHttpResponse response = testApplicationClient.post(StubRequest.request("/echo").body(requestBody));
 
         final String expectedResponse = TestHelper.json(
-                TestHelper.entry("intExample", 17),
-                TestHelper.entry("stringExample", "hiya"),
-                TestHelper.entry("queryExample", null),
-                TestHelper.entry("requestHeaderExample", null),
-                TestHelper.entry("requestCookieExample", null)
+                entry("intExample", 17),
+                entry("stringExample", "hiya"),
+                entry("pathExample", null),
+                entry("queryExample", null),
+                entry("requestHeaderExample", null),
+                entry("requestCookieExample", null)
 
         );
 
@@ -66,11 +69,12 @@ public class JsonHttpInfrastructureTest {
                         .queryParam("queryExample", "hi"));
 
         final String expectedResponse = TestHelper.json(
-                TestHelper.entry("intExample", 0),
-                TestHelper.entry("stringExample", null),
-                TestHelper.entry("queryExample", "hi"),
-                TestHelper.entry("requestHeaderExample", null),
-                TestHelper.entry("requestCookieExample", null)
+                entry("intExample", 0),
+                entry("stringExample", null),
+                entry("pathExample", null),
+                entry("queryExample", "hi"),
+                entry("requestHeaderExample", null),
+                entry("requestCookieExample", null)
 
         );
 
@@ -88,11 +92,12 @@ public class JsonHttpInfrastructureTest {
                         .headerParam("requestHeaderExample", "test"));
 
         final String expectedResponse = TestHelper.json(
-                TestHelper.entry("intExample", 0),
-                TestHelper.entry("stringExample", null),
-                TestHelper.entry("queryExample", "hi"),
-                TestHelper.entry("requestHeaderExample", "test"),
-                TestHelper.entry("requestCookieExample", null)
+                entry("intExample", 0),
+                entry("stringExample", null),
+                entry("pathExample", null),
+                entry("queryExample", "hi"),
+                entry("requestHeaderExample", "test"),
+                entry("requestCookieExample", null)
 
         );
 
@@ -110,11 +115,12 @@ public class JsonHttpInfrastructureTest {
                 .headerParam("requestHeaderExample", "test"));
 
         final String expectedResponse = TestHelper.json(
-            TestHelper.entry("intExample", 0),
-            TestHelper.entry("stringExample", null),
-            TestHelper.entry("queryExample", "hi"),
-            TestHelper.entry("requestHeaderExample", "test"),
-            TestHelper.entry("requestCookieExample", null)
+            entry("intExample", 0),
+            entry("stringExample", null),
+                entry("pathExample", null),
+            entry("queryExample", "hi"),
+            entry("requestHeaderExample", "test"),
+            entry("requestCookieExample", null)
 
         );
 
@@ -132,11 +138,12 @@ public class JsonHttpInfrastructureTest {
                 .headerParam("requestHeaderExample", "test"));
 
         final String expectedResponse = TestHelper.json(
-            TestHelper.entry("intExample", 0),
-            TestHelper.entry("stringExample", null),
-            TestHelper.entry("queryExample", "hi"),
-            TestHelper.entry("requestHeaderExample", "test"),
-            TestHelper.entry("requestCookieExample", null)
+            entry("intExample", 0),
+            entry("stringExample", null),
+                entry("pathExample", null),
+            entry("queryExample", "hi"),
+            entry("requestHeaderExample", "test"),
+            entry("requestCookieExample", null)
 
         );
 
@@ -153,11 +160,12 @@ public class JsonHttpInfrastructureTest {
                 .headerParam("requestHeaderExample", "test"));
 
         final String expectedResponse = TestHelper.json(
-            TestHelper.entry("intExample", 188),
-                TestHelper.entry("stringExample", "You invoked a GET"),
-                TestHelper.entry("queryExample", null),
-                TestHelper.entry("requestHeaderExample", "test"),
-                TestHelper.entry("requestCookieExample", null)
+            entry("intExample", 188),
+                entry("stringExample", "You invoked a GET"),
+                entry("pathExample", null),
+                entry("queryExample", null),
+                entry("requestHeaderExample", "test"),
+                entry("requestCookieExample", null)
 
         );
 
@@ -173,11 +181,12 @@ public class JsonHttpInfrastructureTest {
                         .queryParam("queryExample", "hi"));
 
         final String expectedResponse = TestHelper.json(
-                TestHelper.entry("intExample", 188),
-                TestHelper.entry("stringExample", "You invoked a GET"),
-                TestHelper.entry("queryExample", "hi"),
-                TestHelper.entry("requestHeaderExample", null),
-                TestHelper.entry("requestCookieExample", null)
+                entry("intExample", 188),
+                entry("stringExample", "You invoked a GET"),
+                entry("pathExample", null),
+                entry("queryExample", "hi"),
+                entry("requestHeaderExample", null),
+                entry("requestCookieExample", null)
 
         );
 
@@ -191,9 +200,10 @@ public class JsonHttpInfrastructureTest {
     public void shouldIgnoreWhenClientSendsUnknownValues() {
 
         final String requestBody = TestHelper.json(
-                TestHelper.entry("intExample", 17),
-                TestHelper.entry("stringExample", "hiya"),
-                TestHelper.entry("something", "else")
+                entry("intExample", 17),
+                entry("stringExample", "hiya"),
+                entry("pathExample", null),
+                entry("something", "else")
         );
 
 
@@ -202,11 +212,12 @@ public class JsonHttpInfrastructureTest {
                 .body(requestBody));
 
         final String expectedResponse = TestHelper.json(
-                TestHelper.entry("intExample", 17),
-                TestHelper.entry("stringExample", "hiya"),
-                TestHelper.entry("queryExample", null),
-                TestHelper.entry("requestHeaderExample", null),
-                TestHelper.entry("requestCookieExample", null)
+                entry("intExample", 17),
+                entry("stringExample", "hiya"),
+                entry("pathExample", null),
+                entry("queryExample", null),
+                entry("requestHeaderExample", null),
+                entry("requestCookieExample", null)
 
         );
 
@@ -219,8 +230,8 @@ public class JsonHttpInfrastructureTest {
         StubHttpResponse response = testApplicationClient.post(StubRequest.request("/echo"));
 
         final String expectedResponse = TestHelper.json(
-            TestHelper.entry("message", "Invalid json request"),
-            TestHelper.entry("errors", TestHelper.object())
+            entry("message", "Invalid json request"),
+            entry("errors", TestHelper.object())
         );
 
         Assert.assertEquals(StubHttpResponse.response(expectedResponse).withStatusCode(400), response);
@@ -232,11 +243,12 @@ public class JsonHttpInfrastructureTest {
 
 
         final String expectedResponseBody = TestHelper.json(
-                TestHelper.entry("intExample", 188),
-                TestHelper.entry("stringExample", "You invoked a GET"),
-                TestHelper.entry("queryExample", null),
-                TestHelper.entry("requestHeaderExample", null),
-                TestHelper.entry("requestCookieExample", null)
+                entry("intExample", 188),
+                entry("stringExample", "You invoked a GET"),
+                entry("pathExample", null),
+                entry("queryExample", null),
+                entry("requestHeaderExample", null),
+                entry("requestCookieExample", null)
 
         );
 
@@ -246,7 +258,7 @@ public class JsonHttpInfrastructureTest {
     @Test
     public void shouldPopulateResponseHeaders() {
         final String request = TestHelper.json(
-                TestHelper.entry("responseHeaderExample", "responseTest")
+                entry("responseHeaderExample", "responseTest")
         );
 
         StubHttpResponse response = testApplicationClient.post(StubRequest.request("/echo")
@@ -265,11 +277,12 @@ public class JsonHttpInfrastructureTest {
                         .cookie("requestCookieExample", "cookietest"));
 
         String expectedResponse = TestHelper.json(
-                TestHelper.entry("intExample", 0),
-                TestHelper.entry("stringExample", null),
-                TestHelper.entry("queryExample", null),
-                TestHelper.entry("requestHeaderExample", null),
-                TestHelper.entry("requestCookieExample", "cookietest")
+                entry("intExample", 0),
+                entry("stringExample", null),
+                entry("pathExample", null),
+                entry("queryExample", null),
+                entry("requestHeaderExample", null),
+                entry("requestCookieExample", "cookietest")
         );
         Assert.assertEquals(StubHttpResponse.response(expectedResponse), response);
     }
@@ -278,7 +291,7 @@ public class JsonHttpInfrastructureTest {
     public void shouldPopulateResponseCookie() {
         StubHttpResponse response = testApplicationClient.post(
                 StubRequest.request("/echo")
-                        .body(TestHelper.json(TestHelper.entry("responseCookieExample", "responseCookieTest"))));
+                        .body(TestHelper.json(entry("responseCookieExample", "responseCookieTest"))));
 
         Assert.assertEquals(StubHttpResponse.response(DEFAULT_POST_RESPONSE)
                 .withCookie(new CookieImpl("responseCookieExample", "responseCookieTest")), response);
@@ -288,29 +301,29 @@ public class JsonHttpInfrastructureTest {
     public void shouldMapThroughABlockingCall() {
         StubHttpResponse response = testApplicationClient.post(
             StubRequest.request("/blocking")
-                .body(TestHelper.json(TestHelper.entry("numberToMultiply", 22))));
+                .body(TestHelper.json(entry("numberToMultiply", 22))));
 
-        Assert.assertEquals(StubHttpResponse.response(TestHelper.json(TestHelper.entry("multipliedNumber", 44))), response);
+        Assert.assertEquals(StubHttpResponse.response(TestHelper.json(entry("multipliedNumber", 44))), response);
     }
 
     @Test
     public void shouldMapThroughABlockingCompleteCall() {
         StubHttpResponse response = testApplicationClient.post(
                 StubRequest.request("/blockingComplete")
-                        .body(TestHelper.json(TestHelper.entry("numberToMultiply", 22))));
+                        .body(TestHelper.json(entry("numberToMultiply", 22))));
 
-        Assert.assertEquals(StubHttpResponse.response(TestHelper.json(TestHelper.entry("multipliedNumber", 44))), response);
+        Assert.assertEquals(StubHttpResponse.response(TestHelper.json(entry("multipliedNumber", 44))), response);
     }
 
     @Test
     public void shouldReturnWithErrorOnBadRequest() {
         StubHttpResponse response = testApplicationClient.post(
             StubRequest.request("/failing")
-                .body(TestHelper.json(TestHelper.entry("numberToMultiply", 22))));
+                .body(TestHelper.json(entry("numberToMultiply", 22))));
 
         Assert.assertEquals(StubHttpResponse.response(TestHelper.json(
-            TestHelper.entry("message", "intentionally failed"),
-            TestHelper.entry("errors", TestHelper.object())
+            entry("message", "intentionally failed"),
+            entry("errors", TestHelper.object())
         )).withStatusCode(400), response);
     }
 
@@ -323,7 +336,7 @@ public class JsonHttpInfrastructureTest {
 
 
         Assert.assertEquals(
-            StubHttpResponse.response(TestHelper.json(TestHelper.entry("filterMessage", "hit handler")))
+            StubHttpResponse.response(TestHelper.json(entry("filterMessage", "hit handler")))
             .withCookie(new CookieImpl("rootFilter", "hitfilter"))
             .withCookie(new CookieImpl("pathFilter", "hitfilter")),
             response
@@ -339,8 +352,8 @@ public class JsonHttpInfrastructureTest {
 
         Assert.assertEquals(
             StubHttpResponse.response(TestHelper.json(
-                TestHelper.entry("message", "Invalid json request"),
-                TestHelper.entry("errors", TestHelper.object())
+                entry("message", "Invalid json request"),
+                entry("errors", TestHelper.object())
             )).withStatusCode(400),
             response
         );
@@ -350,11 +363,11 @@ public class JsonHttpInfrastructureTest {
     public void shouldHandleItWhenThrowingAnExceptionWithinTheHandler() {
         StubHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw")
-                .body(TestHelper.json(TestHelper.entry("where", "complete"))));
+                .body(TestHelper.json(entry("where", "complete"))));
 
 
         Assert.assertEquals(
-            StubHttpResponse.response(TestHelper.json(TestHelper.entry("message", "Something went wrong"))).withStatusCode(500),
+            StubHttpResponse.response(TestHelper.json(entry("message", "Something went wrong"))).withStatusCode(500),
             response
         );
 
@@ -365,10 +378,10 @@ public class JsonHttpInfrastructureTest {
     public void shouldHandleItWhenThrowingAnExceptionInMapHandler() {
         StubHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw")
-                .body(TestHelper.json(TestHelper.entry("where", "map"))));
+                .body(TestHelper.json(entry("where", "map"))));
 
         Assert.assertEquals(
-            StubHttpResponse.response(TestHelper.json(TestHelper.entry("message", "Something went wrong"))).withStatusCode(500),
+            StubHttpResponse.response(TestHelper.json(entry("message", "Something went wrong"))).withStatusCode(500),
             response
         );
 
@@ -379,10 +392,10 @@ public class JsonHttpInfrastructureTest {
     public void shouldHandleItWhenThrowingAnExceptionInBlockingHandler() {
         StubHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw")
-                .body(TestHelper.json(TestHelper.entry("where", "blocking"))));
+                .body(TestHelper.json(entry("where", "blocking"))));
 
         Assert.assertEquals(
-            StubHttpResponse.response(TestHelper.json(TestHelper.entry("message", "Something went wrong"))).withStatusCode(500),
+            StubHttpResponse.response(TestHelper.json(entry("message", "Something went wrong"))).withStatusCode(500),
             response
         );
 
@@ -398,7 +411,7 @@ public class JsonHttpInfrastructureTest {
                 .fileUpload("file2", "even more bytes"));
 
         Assert.assertEquals(
-            StubHttpResponse.response(TestHelper.json(TestHelper.entry("results", TestHelper.object(TestHelper.entry("file1", 10), TestHelper.entry("file2", 15))))),
+            StubHttpResponse.response(TestHelper.json(entry("results", TestHelper.object(entry("file1", 10), entry("file2", 15))))),
             response
         );
     }
@@ -412,6 +425,27 @@ public class JsonHttpInfrastructureTest {
                 .withHeader("Transfer-Encoding", "chunked")
                 .withHeader("Content-Disposition", "data.txt"),
             response
+        );
+    }
+
+
+    @Test
+    public void shouldSupportPathParam() {
+        StubHttpResponse response = testApplicationClient.get(
+                StubRequest.request("/echo/myvariable"));
+
+        final String expectedResponse = TestHelper.json(
+                entry("intExample", 188),
+                entry("stringExample", "You invoked a GET"),
+                entry("pathExample", "myvariable"),
+                entry("queryExample", null),
+                entry("requestHeaderExample", null),
+                entry("requestCookieExample", null)
+
+        );
+        Assert.assertEquals(
+                StubHttpResponse.response(expectedResponse),
+                response
         );
     }
 }

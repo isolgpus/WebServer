@@ -96,6 +96,11 @@ public class VertxContextImpl implements VertxContext {
 
 
     @Override
+    public String getPathParam(String key) {
+        return this.ctx.pathParam(key);
+    }
+
+    @Override
     public Map<String, Buffer> resolveUploadedFiles() {
         return this.ctx.fileUploads().stream()
             .collect(Collectors.toMap(FileUpload::fileName, a -> ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName())));

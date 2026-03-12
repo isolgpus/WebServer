@@ -32,6 +32,7 @@ public class TestApplicationClient {
         routesRegister.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
         routesRegister.jsonRoute("/echo", Method.DELETE, state, new PostEchoHandler());
         routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        routesRegister.jsonRoute("/echo/:pathExample", Method.GET, state, new GetEchoHandler());
         routesRegister.jsonRoute("/blocking", Method.POST, state, new BlockingTestHandler());
         routesRegister.jsonRoute("/failing", Method.POST, state, new FailingTestHandler());
         routesRegister.jsonRoute("/state", Method.POST, state, new StateTestHandler());

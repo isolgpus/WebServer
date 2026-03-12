@@ -26,6 +26,7 @@ public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, M
             return HttpResult.success(new EchoResponse(
                 echoRequest.intExample,
                 echoRequest.stringExample,
+                httpContext.getPathParam("pathExample"),
                 httpContext.getQueryParam("queryExample"),
                 httpContext.getRequestHeader("requestHeaderExample"),
                 requestCookieExample != null ? requestCookieExample.getValue() :  null));

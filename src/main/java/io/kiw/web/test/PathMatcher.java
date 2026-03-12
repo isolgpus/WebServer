@@ -9,6 +9,8 @@ import java.util.stream.Collectors;
 public class PathMatcher {
 
     private Map<String, PathMatcher> children = new LinkedHashMap<>();
+    private String paramName = null;
+    private PathMatcher paramChild = null;
     private Map<Method, List<Flow>> flows = new EnumMap<>(Method.class);
     private Map<Method, List<Flow>> wildCardFlows = new EnumMap<>(Method.class);
 
@@ -34,7 +36,19 @@ public class PathMatcher {
             return;
         }
 
-        PathMatcher childPathMatcher = children.computeIfAbsent(pathSegment, s -> new PathMatcher());
+        boolean isAParam = pathSegment.startsWith(":");
+        PathMatcher childPathMatcher;
+        if(isAParam)
+        {
+            this.paramName = pathSegment.substring(1);
+            this.paramChild = this.paramChild != null ? this.paramChild : new PathMatcher();
+            childPathMatcher = this.paramChild;
+        }
+        else
+        {
+            childPathMatcher = children.computeIfAbsent(pathSegment, s -> new PathMatcher());
+        }
+
         if(pathSegments.size() == 0)
         {
             childPathMatcher.addHandler(flow, method);
@@ -57,13 +71,15 @@ public class PathMatcher {
         this.flows.computeIfAbsent(method, key -> new ArrayList<>()).add(flow);
     }
 
-    public List<Flow> get(String path, Method method) {
+    public MatchResult get(String path, Method method) {
         Queue<String> pathSegments = splitPath(path);
+        Map<String, String> pathParams = new LinkedHashMap<>();
 
-        return get(pathSegments, method, new ArrayList<>());
+        List<Flow> flows = get(pathSegments, method, new ArrayList<>(), pathParams);
+        return new MatchResult(flows, pathParams);
     }
 
-    private List<Flow> get(Queue<String> pathSegments, Method method, List<Flow> collectedFlows) {
+    private List<Flow> get(Queue<String> pathSegments, Method method, List<Flow> collectedFlows, Map<String, String> pathParams) {
         if(this.wildCardFlows.containsKey(method))
         {
             collectedFlows.addAll(this.wildCardFlows.get(method));
@@ -79,9 +95,36 @@ public class PathMatcher {
         }
         else
         {
-            this.children.get(pathSegment).get(pathSegments, method, collectedFlows);
+            PathMatcher child = this.children.get(pathSegment);
+            if(child != null)
+            {
+                child.get(pathSegments, method, collectedFlows, pathParams);
+            }
+            else if(this.paramChild != null)
+            {
+                pathParams.put(this.paramName, pathSegment);
+                this.paramChild.get(pathSegments, method, collectedFlows, pathParams);
+            }
         }
 
         return collectedFlows;
+    }
+
+    public static class MatchResult {
+        private final List<Flow> flows;
+        private final Map<String, String> pathParams;
+
+        public MatchResult(List<Flow> flows, Map<String, String> pathParams) {
+            this.flows = flows;
+            this.pathParams = pathParams;
+        }
+
+        public List<Flow> getFlows() {
+            return flows;
+        }
+
+        public Map<String, String> getPathParams() {
+            return pathParams;
+        }
     }
 }
