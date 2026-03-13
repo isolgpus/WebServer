@@ -358,6 +358,61 @@ public class JsonHttpInfrastructureTest {
     }
 
     @Test
+    public void shouldApplyFilterBeforeHandleOnGet() {
+        StubHttpResponse response = testApplicationClient.get(
+            StubRequest.request("/root/filter/test"));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(json().put("filterMessage", "hit handler").toString())
+            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
+            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            response
+        );
+    }
+
+    @Test
+    public void shouldApplyFilterBeforeHandleOnPut() {
+        StubHttpResponse response = testApplicationClient.put(
+            StubRequest.request("/root/filter/test")
+                .body(json().toString()));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(json().put("filterMessage", "hit handler").toString())
+            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
+            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            response
+        );
+    }
+
+    @Test
+    public void shouldApplyFilterBeforeHandleOnDelete() {
+        StubHttpResponse response = testApplicationClient.delete(
+            StubRequest.request("/root/filter/test")
+                .body(json().toString()));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(json().put("filterMessage", "hit handler").toString())
+            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
+            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            response
+        );
+    }
+
+    @Test
+    public void shouldApplyFilterBeforeHandleOnPatch() {
+        StubHttpResponse response = testApplicationClient.patch(
+            StubRequest.request("/root/filter/test")
+                .body(json().toString()));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(json().put("filterMessage", "hit handler").toString())
+            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
+            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            response
+        );
+    }
+
+    @Test
     public void shouldHandleMalformedJsonRequest() {
         StubHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw")

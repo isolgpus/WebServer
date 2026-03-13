@@ -27,6 +27,10 @@ public class TestApplicationClient {
         routesRegister.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
         routesRegister.jsonFilter("/root/somethingElse/*", state, new TestFilter("otherFilter"));
         routesRegister.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/test", Method.GET, state, new GetTestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/test", Method.PUT, state, new TestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/test", Method.DELETE, state, new TestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/test", Method.PATCH, state, new TestFilterHandler());
 
         routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         routesRegister.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
