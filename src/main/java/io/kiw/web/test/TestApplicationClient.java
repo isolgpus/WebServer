@@ -31,6 +31,7 @@ public class TestApplicationClient {
         routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         routesRegister.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
         routesRegister.jsonRoute("/echo", Method.DELETE, state, new PostEchoHandler());
+        routesRegister.jsonRoute("/echo", Method.PATCH, state, new PostEchoHandler());
         routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         routesRegister.jsonRoute("/echo/:pathExample", Method.GET, state, new GetEchoHandler());
         routesRegister.jsonRoute("/blocking", Method.POST, state, new BlockingTestHandler());
@@ -57,6 +58,11 @@ public class TestApplicationClient {
     public StubHttpResponse delete(StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.DELETE);
+    }
+
+    public StubHttpResponse patch(StubRequest stubRequest) {
+
+        return router.handle(stubRequest, Method.PATCH);
     }
 
     public StubHttpResponse get(StubRequest stubRequest) {

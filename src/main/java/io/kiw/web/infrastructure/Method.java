@@ -6,7 +6,8 @@ public enum Method {
     POST(HttpMethod.POST, true),
     PUT(HttpMethod.PUT, true),
     GET(HttpMethod.GET, false),
-    DELETE(HttpMethod.DELETE, true);
+    DELETE(HttpMethod.DELETE, true),
+    PATCH(HttpMethod.PATCH, true);
 
     private final HttpMethod vertxMethod;
     private final boolean requiresBody;
