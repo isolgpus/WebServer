@@ -248,15 +248,18 @@ StubRequest.request("/echo")
 
 ### Building JSON Test Data
 
-`TestHelper` provides a concise way to build JSON strings:
+`TestHelper.json()` returns a Jackson `ObjectNode` you can build fluently and convert to a string:
 
 ```java
-String json = TestHelper.json(
-    TestHelper.entry("intExample", 17),
-    TestHelper.entry("stringExample", "hiya")
-);
-// {"intExample":17,"stringExample":"hiya"}
+String json = json()
+    .put("intExample", 17)
+    .put("stringExample", "hiya")
+    .putNull("optionalField")
+    .toString();
+// {"intExample":17,"stringExample":"hiya","optionalField":null}
 ```
+
+Import it with `import static io.kiw.web.test.TestHelper.json;`.
 
 ### Asserting Responses
 
@@ -290,21 +293,21 @@ public class MyHandlerTest {
 
     @Test
     public void shouldEchoJsonValues() {
-        String requestBody = TestHelper.json(
-            TestHelper.entry("intExample", 17),
-            TestHelper.entry("stringExample", "hiya")
-        );
+        String requestBody = json()
+            .put("intExample", 17)
+            .put("stringExample", "hiya")
+            .toString();
 
         StubHttpResponse response = client.post(
             StubRequest.request("/echo").body(requestBody));
 
-        String expectedResponse = TestHelper.json(
-            TestHelper.entry("intExample", 17),
-            TestHelper.entry("stringExample", "hiya"),
-            TestHelper.entry("queryExample", null),
-            TestHelper.entry("requestHeaderExample", null),
-            TestHelper.entry("requestCookieExample", null)
-        );
+        String expectedResponse = json()
+            .put("intExample", 17)
+            .put("stringExample", "hiya")
+            .putNull("queryExample")
+            .putNull("requestHeaderExample")
+            .putNull("requestCookieExample")
+            .toString();
 
         Assert.assertEquals(
             StubHttpResponse.response(expectedResponse),
@@ -315,10 +318,9 @@ public class MyHandlerTest {
     public void shouldReturnErrorForMissingBody() {
         StubHttpResponse response = client.post(StubRequest.request("/echo"));
 
-        String expectedResponse = TestHelper.json(
-            TestHelper.entry("message", "Invalid json request"),
-            TestHelper.entry("errors", TestHelper.object())
-        );
+        String expectedResponse = json()
+            .put("message", "Invalid json request")
+            .toString();
 
         Assert.assertEquals(
             StubHttpResponse.response(expectedResponse).withStatusCode(400),
@@ -333,13 +335,13 @@ public class MyHandlerTest {
                 .queryParam("queryExample", "hi")
                 .headerParam("requestHeaderExample", "test"));
 
-        String expectedResponse = TestHelper.json(
-            TestHelper.entry("intExample", 0),
-            TestHelper.entry("stringExample", null),
-            TestHelper.entry("queryExample", "hi"),
-            TestHelper.entry("requestHeaderExample", "test"),
-            TestHelper.entry("requestCookieExample", null)
-        );
+        String expectedResponse = json()
+            .put("intExample", 0)
+            .putNull("stringExample")
+            .put("queryExample", "hi")
+            .put("requestHeaderExample", "test")
+            .putNull("requestCookieExample")
+            .toString();
 
         Assert.assertEquals(
             StubHttpResponse.response(expectedResponse),
@@ -350,11 +352,11 @@ public class MyHandlerTest {
     public void shouldCatchHandlerExceptions() {
         StubHttpResponse response = client.post(
             StubRequest.request("/throw")
-                .body(TestHelper.json(TestHelper.entry("where", "complete"))));
+                .body(json().put("where", "complete").toString()));
 
         Assert.assertEquals(
             StubHttpResponse.response(
-                TestHelper.json(TestHelper.entry("message", "Something went wrong")))
+                json().put("message", "Something went wrong").toString())
                 .withStatusCode(500),
             response);
 
