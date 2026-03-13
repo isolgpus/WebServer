@@ -14,7 +14,6 @@ import io.vertx.core.buffer.Buffer;
 import java.util.ArrayList;
 import java.util.Map;
 
-import static io.kiw.web.infrastructure.Method.POST;
 import static io.netty.handler.codec.http.HttpHeaders.Names.TRANSFER_ENCODING;
 
 public class RoutesRegister {
@@ -67,7 +66,7 @@ public class RoutesRegister {
         Flow flow = jsonFilter.handle(objectAPPHttpResponseStream);
 
 
-        router.route(path, POST, "*/json", "application/json", flow, routeConfig);
+        router.route(path, "*", "application/json", flow, routeConfig);
     }
 
     public  <OUT, APP>  void uploadFileRoute(String path, Method method, APP applicationState, VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {

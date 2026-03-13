@@ -24,6 +24,8 @@ public abstract class RouterWrapper {
 
     protected abstract void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig);
 
+    protected abstract void route(String path, String consumes, String provides, Flow flow, RouteConfig routeConfig);
+
      public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
          HttpContext httpContext = new HttpContext(vertxContext);
          Result<HttpErrorResponse, T> result;

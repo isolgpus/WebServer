@@ -13,6 +13,7 @@ public class PathMatcher {
     private PathMatcher paramChild = null;
     private Map<Method, List<Flow>> flows = new EnumMap<>(Method.class);
     private Map<Method, List<Flow>> wildCardFlows = new EnumMap<>(Method.class);
+    private List<Flow> allMethodWildCardFlows = new ArrayList<>();
 
     public void putRoute(String path, Method method, Flow flow)
     {
@@ -62,6 +63,33 @@ public class PathMatcher {
 
     }
 
+    public void putAllMethodRoute(String path, Flow flow) {
+        Queue<String> pathSegments = splitPath(path);
+        this.putAllMethodRoute(pathSegments, flow);
+    }
+
+    private void putAllMethodRoute(Queue<String> pathSegments, Flow flow) {
+        String pathSegment = pathSegments.poll();
+
+        boolean isAWildCard = pathSegment.equals("*");
+        if(isAWildCard)
+        {
+            this.allMethodWildCardFlows.add(flow);
+            return;
+        }
+
+        PathMatcher childPathMatcher = children.computeIfAbsent(pathSegment, s -> new PathMatcher());
+
+        if(pathSegments.size() == 0)
+        {
+            childPathMatcher.allMethodWildCardFlows.add(flow);
+        }
+        else
+        {
+            childPathMatcher.putAllMethodRoute(pathSegments, flow);
+        }
+    }
+
     private void addWildcardHandler(Flow flow, Method method) {
         this.wildCardFlows.computeIfAbsent(method, key -> new ArrayList<>()).add(flow);
 
@@ -80,6 +108,7 @@ public class PathMatcher {
     }
 
     private List<Flow> get(Queue<String> pathSegments, Method method, List<Flow> collectedFlows, Map<String, String> pathParams) {
+        collectedFlows.addAll(this.allMethodWildCardFlows);
         if(this.wildCardFlows.containsKey(method))
         {
             collectedFlows.addAll(this.wildCardFlows.get(method));

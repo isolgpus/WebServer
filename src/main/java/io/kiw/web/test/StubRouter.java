@@ -21,6 +21,11 @@ public class StubRouter extends RouterWrapper {
         routes.putRoute(path, method, flow);
     }
 
+    @Override
+    public void route(String path, String consumes, String provides, Flow flow, RouteConfig routeConfig) {
+        routes.putAllMethodRoute(path, flow);
+    }
+
     public StubHttpResponse handle(StubRequest stubRequest, Method method) {
         StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies, stubRequest.fileUploads);
         PathMatcher.MatchResult matchResult = this.routes.get(stubRequest.path, method);
