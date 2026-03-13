@@ -2,6 +2,8 @@ package io.kiw.web.infrastructure;
 
 import io.kiw.result.Result;
 import io.kiw.web.infrastructure.ender.Ender;
+import io.kiw.web.infrastructure.jwt.JwtClaims;
+import io.kiw.web.infrastructure.jwt.JwtProvider;
 
 import java.util.List;
 
@@ -35,6 +37,24 @@ public class HttpResponseStream<IN, APP> {
     {
 
         return blockingFlatMap((in, httpContext) -> Result.success(flowHandler.handle(in, httpContext)));
+    }
+
+    public HttpResponseStream<IN, APP> requireJwt(JwtProvider jwtProvider) {
+        return flatMap((in, httpContext, app) -> {
+            String authHeader = httpContext.getRequestHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return HttpResult.error(401, new ErrorMessageResponse("Missing or invalid Authorization header"));
+            }
+            String token = authHeader.substring(7);
+            Result<String, JwtClaims> result = jwtProvider.validateToken(token);
+            return result.fold(
+                error -> HttpResult.error(401, new ErrorMessageResponse(error)),
+                claims -> {
+                    httpContext.ctx.put("__jwt_claims__", claims);
+                    return HttpResult.success(in);
+                }
+            );
+        });
     }
 
     public <OUT> HttpResponseStream<OUT, APP> blockingFlatMap(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)

@@ -1,5 +1,6 @@
 package io.kiw.web.infrastructure;
 
+import io.kiw.web.infrastructure.jwt.JwtClaims;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
 
@@ -39,5 +40,9 @@ public class HttpContext {
 
     public String getPathParam(String key) {
         return ctx.getPathParam(key);
+    }
+
+    public JwtClaims getJwtClaims() {
+        return (JwtClaims) ctx.get("__jwt_claims__");
     }
 }
