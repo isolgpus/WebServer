@@ -148,6 +148,28 @@ public class JsonHttpInfrastructureTest {
     }
 
     @Test
+    public void shouldReadRequestHeaderParamsOnPatch() {
+        StubHttpResponse response = testApplicationClient.patch(
+            StubRequest.request("/echo")
+                .body("{}")
+                .queryParam("queryExample", "hi")
+                .headerParam("requestHeaderExample", "test"));
+
+        final String expectedResponse = json()
+                .put("intExample", 0)
+                .putNull("stringExample")
+                .putNull("pathExample")
+                .put("queryExample", "hi")
+                .put("requestHeaderExample", "test")
+                .putNull("requestCookieExample")
+                .toString();
+
+        Assert.assertEquals(
+            StubHttpResponse.response(expectedResponse),
+            response);
+    }
+
+    @Test
     public void shouldReadRequestHeaderParamsOnGet() {
         StubHttpResponse response = testApplicationClient.get(
             StubRequest.request("/echo")
