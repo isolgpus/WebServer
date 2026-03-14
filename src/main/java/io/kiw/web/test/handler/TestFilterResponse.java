@@ -1,4 +1,4 @@
-package io.kiw.web.test;
+package io.kiw.web.test.handler;
 
 import io.kiw.web.infrastructure.JsonResponse;
 
