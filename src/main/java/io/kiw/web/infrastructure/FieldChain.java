@@ -1,5 +1,7 @@
 package io.kiw.web.infrastructure;
 
+import java.util.function.Predicate;
+
 public class FieldChain {
     private final String fieldName;
     private final Object value;
@@ -56,6 +58,14 @@ public class FieldChain {
     public FieldChain max(double max) {
         if (value instanceof Number n && n.doubleValue() > max) {
             parent.addError(fieldName, "must be at most " + max);
+        }
+        return this;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <V> FieldChain validate(Predicate<V> predicate, String message) {
+        if (value != null && !predicate.test((V) value)) {
+            parent.addError(fieldName, message);
         }
         return this;
     }
