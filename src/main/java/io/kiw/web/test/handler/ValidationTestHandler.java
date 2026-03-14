@@ -15,7 +15,7 @@ public class ValidationTestHandler extends VertxJsonRoute<ValidationRequest, Val
             .validate(v -> {
                 v.jsonField("name", r -> r.name).required().minLength(2);
                 v.jsonField("email", r -> r.email).required().email();
-                v.numericJsonField("age", r -> r.age).required().min(0).max(150);
+                v.jsonField("age", r -> r.age).required().min(0).max(150);
                 v.jsonField("address", r -> r.address, a -> {
                     a.jsonField("city", x -> x.city).required();
                     a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");

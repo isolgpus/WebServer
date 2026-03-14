@@ -166,36 +166,36 @@ public class ValidatorTest {
     @Test
     public void min_failsBelowMin() {
         Validator<Body> v = validator(new Body(null, null, -1, null));
-        v.numericJsonField("age", r -> r.age).min(0);
+        v.jsonField("age", r -> r.age).min(0);
         assertError(v, "age", "must be at least 0.0");
     }
 
     @Test
     public void min_passesAtMin() {
         Validator<Body> v = validator(new Body(null, null, 0, null));
-        v.numericJsonField("age", r -> r.age).min(0);
+        v.jsonField("age", r -> r.age).min(0);
         assertNoErrors(v);
     }
 
     @Test
     public void max_failsAboveMax() {
         Validator<Body> v = validator(new Body(null, null, 200, null));
-        v.numericJsonField("age", r -> r.age).max(150);
+        v.jsonField("age", r -> r.age).max(150);
         assertError(v, "age", "must be at most 150.0");
     }
 
     @Test
     public void max_passesAtMax() {
         Validator<Body> v = validator(new Body(null, null, 150, null));
-        v.numericJsonField("age", r -> r.age).max(150);
+        v.jsonField("age", r -> r.age).max(150);
         assertNoErrors(v);
     }
 
     @Test
     public void numericRequired_failsOnNull() {
         Validator<Body> v = validator(new Body(null, null, null, null));
-        v.numericJsonField("age", r -> r.age).required();
-        assertError(v, "age", "must not be null");
+        v.jsonField("age", r -> r.age).required();
+        assertError(v, "age", "must not be blank");
     }
 
     // --- multiple errors accumulate ---
