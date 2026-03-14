@@ -7,7 +7,7 @@ public class GetTestFilterHandler extends VertxJsonRoute<EmptyRequest, TestFilte
 
     @Override
     public RequestPipeline<TestFilterResponse> handle(HttpResponseStream<EmptyRequest, MyApplicationState> e) {
-        return e.complete((request, context, app) ->
+        return e.complete(ctx ->
             HttpResult.success(new TestFilterResponse("hit handler")));
     }
 }

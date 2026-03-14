@@ -9,12 +9,12 @@ public class TimeoutTestHandler extends VertxJsonRoute<ThrowRequest, ThrowRespon
     @Override
     public RequestPipeline<ThrowResponse> handle(HttpResponseStream<ThrowRequest, MyApplicationState> e) {
         return e
-            .blockingMap((request, httpContext) ->
+            .blockingMap(ctx ->
             {
                 LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(5));
-                return request;
+                return ctx.in();
 
-            }).complete((message, httpContext, app) ->
+            }).complete(ctx ->
                 HttpResult.error(500, new ErrorMessageResponse("should not have got here")));
     }
 }

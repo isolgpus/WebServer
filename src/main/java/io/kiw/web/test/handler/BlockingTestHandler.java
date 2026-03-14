@@ -13,10 +13,8 @@ public class BlockingTestHandler extends VertxJsonRoute<BlockingRequest, Blockin
     public RequestPipeline<BlockingTestResponse> handle(HttpResponseStream<BlockingRequest, MyApplicationState> httpResponseStream) {
         return
             httpResponseStream
-                .map((blockingRequest, httpContext, applicationState) -> blockingRequest.numberToMultiply)
-                .blockingMap((numberToMultiply, httpContext) -> numberToMultiply * 2)
-                .complete((multipliedNumber, httpContext, applicationState) ->
-                    success(new BlockingTestResponse(multipliedNumber))
-                );
+                .map(ctx -> ctx.in().numberToMultiply)
+                .blockingMap(ctx -> ctx.in() * 2)
+                .complete(ctx -> success(new BlockingTestResponse(ctx.in())));
     }
 }

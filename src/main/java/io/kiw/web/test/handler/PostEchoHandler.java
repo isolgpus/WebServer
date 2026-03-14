@@ -12,23 +12,23 @@ public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, M
 
     @Override
     public RequestPipeline<EchoResponse> handle(HttpResponseStream<EchoRequest, MyApplicationState> e) {
-        return e.complete((echoRequest, httpContext, myApplicationState) -> {
-            if(echoRequest.responseHeaderExample != null)
+        return e.complete(ctx -> {
+            if(ctx.in().responseHeaderExample != null)
             {
-                httpContext.addResponseHeader("responseHeaderExample", echoRequest.responseHeaderExample);
+                ctx.http().addResponseHeader("responseHeaderExample", ctx.in().responseHeaderExample);
             }
 
-            if(echoRequest.responseCookieExample != null)
+            if(ctx.in().responseCookieExample != null)
             {
-                httpContext.addResponseCookie(new CookieImpl("responseCookieExample", echoRequest.responseCookieExample));
+                ctx.http().addResponseCookie(new CookieImpl("responseCookieExample", ctx.in().responseCookieExample));
             }
-            Cookie requestCookieExample = httpContext.getRequestCookie("requestCookieExample");
+            Cookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
             return HttpResult.success(new EchoResponse(
-                echoRequest.intExample,
-                echoRequest.stringExample,
-                httpContext.getPathParam("pathExample"),
-                httpContext.getQueryParam("queryExample"),
-                httpContext.getRequestHeader("requestHeaderExample"),
+                ctx.in().intExample,
+                ctx.in().stringExample,
+                ctx.http().getPathParam("pathExample"),
+                ctx.http().getQueryParam("queryExample"),
+                ctx.http().getRequestHeader("requestHeaderExample"),
                 requestCookieExample != null ? requestCookieExample.getValue() :  null));
         });
     }

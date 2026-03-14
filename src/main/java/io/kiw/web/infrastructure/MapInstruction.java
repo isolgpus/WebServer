@@ -25,9 +25,9 @@ public class MapInstruction<IN, OUT, APP> {
 
     public Result<HttpErrorResponse, OUT> handle(IN state, HttpContext httpContext, APP applicationState) {
         if (consumer != null) {
-            return consumer.handle(state, httpContext, applicationState);
+            return consumer.handle(new RouteContext<>(state, httpContext, applicationState));
         } else if (blockingConsumer != null) {
-            return blockingConsumer.handle(state, httpContext);
+            return blockingConsumer.handle(new BlockingContext<>(state, httpContext));
         }
 
         throw new UnsupportedOperationException("Unknown consumer");

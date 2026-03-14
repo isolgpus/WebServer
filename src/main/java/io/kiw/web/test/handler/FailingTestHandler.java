@@ -12,8 +12,8 @@ public class FailingTestHandler extends VertxJsonRoute<BlockingRequest, Blocking
     public RequestPipeline<BlockingTestResponse> handle(HttpResponseStream<BlockingRequest, MyApplicationState> httpResponseStream) {
         return
             httpResponseStream
-                .map((blockingRequest, httpContext, myApplicationState) -> blockingRequest.numberToMultiply)
-                .flatMap((numberToMultiply, httpContext, myApplicationState) -> {
+                .map(ctx -> ctx.in().numberToMultiply)
+                .flatMap(ctx -> {
                     if(2 * 2 == 4)
                     {
                         return HttpResult.error(400, new ErrorMessageResponse("intentionally failed"));
@@ -24,6 +24,6 @@ public class FailingTestHandler extends VertxJsonRoute<BlockingRequest, Blocking
                     }
                 })
                 // should never reach this
-                .complete((multipliedNumber, httpContext, myApplicationState) -> success(new BlockingTestResponse(multipliedNumber)));
+                .complete(ctx -> success(new BlockingTestResponse(ctx.in())));
     }
 }

@@ -10,14 +10,14 @@ public class GetEchoHandler extends VertxJsonRoute<EmptyRequest, EchoResponse, M
     public RequestPipeline<EchoResponse> handle(HttpResponseStream<EmptyRequest, MyApplicationState> httpResponseStream) {
         return
             httpResponseStream
-                .complete((number, httpContext, myApplicationState) -> {
-                    Cookie requestCookieExample = httpContext.getRequestCookie("requestCookieExample");
+                .complete(ctx -> {
+                    Cookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
 
                     return HttpResult.success(new EchoResponse(188,
                         "You invoked a GET",
-                        httpContext.getPathParam("pathExample"),
-                        httpContext.getQueryParam("queryExample"),
-                        httpContext.getRequestHeader("requestHeaderExample"),
+                        ctx.http().getPathParam("pathExample"),
+                        ctx.http().getQueryParam("queryExample"),
+                        ctx.http().getRequestHeader("requestHeaderExample"),
                         requestCookieExample != null ? requestCookieExample.getValue() : null));
                 });
     }

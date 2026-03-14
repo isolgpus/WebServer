@@ -6,7 +6,7 @@ public class StateTestHandler extends VertxJsonRoute<EmptyRequest, StateResponse
 
     @Override
     public RequestPipeline<StateResponse> handle(HttpResponseStream<EmptyRequest, MyApplicationState> e) {
-        return e.complete((request, httpContext, myApplicationState) ->
-            HttpResult.success(new StateResponse(myApplicationState.getLongValue())));
+        return e.complete(ctx ->
+            HttpResult.success(new StateResponse(ctx.app().getLongValue())));
     }
 }
