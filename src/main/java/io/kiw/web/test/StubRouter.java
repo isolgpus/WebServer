@@ -34,7 +34,11 @@ public class StubRouter extends RouterWrapper {
         for (RequestPipeline flow : matchResult.getFlows()) {
             for (Object what : flow.getApplicationInstructions()) {
                 MapInstruction applicationInstruction = (MapInstruction) what;
-                this.handle(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
+                if (applicationInstruction.isAsync) {
+                    this.handleAsyncBlocking(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
+                } else {
+                    this.handle(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
+                }
                 if (context.hasFinished()) {
                     break;
                 }
