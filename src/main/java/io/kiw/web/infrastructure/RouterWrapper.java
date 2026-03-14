@@ -20,6 +20,10 @@ public abstract class RouterWrapper {
         this.exceptionHandler = exceptionHandler;
     }
 
+    Consumer<Exception> getExceptionHandler() {
+        return exceptionHandler;
+    }
+
     private final ObjectMapper objectMapper = new ObjectMapper()
         .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
@@ -29,6 +33,8 @@ public abstract class RouterWrapper {
     protected abstract void route(String path, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig);
 
     public abstract void configureCors(CorsConfig corsConfig);
+
+    protected abstract void webSocketRoute(String path, WebSocketRouteHandler<?, ?, ?> handler);
 
     public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
         HttpContext httpContext = new HttpContext(vertxContext);

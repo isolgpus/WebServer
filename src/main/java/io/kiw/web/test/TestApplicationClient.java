@@ -55,6 +55,8 @@ public class TestApplicationClient {
         routesRegister.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
         routesRegister.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler());
         routesRegister.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
+        routesRegister.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
+        routesRegister.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
         return state;
     }
 
@@ -84,6 +86,10 @@ public class TestApplicationClient {
 
     public StubHttpResponse options(StubRequest stubRequest) {
         return router.handle(stubRequest, Method.OPTIONS);
+    }
+
+    public StubWebSocketClient webSocket(StubRequest stubRequest) {
+        return router.webSocket(stubRequest);
     }
 
     public void assertNoMoreExceptions(){
