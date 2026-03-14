@@ -7,7 +7,8 @@ public enum Method {
     PUT(HttpMethod.PUT, true),
     GET(HttpMethod.GET, false),
     DELETE(HttpMethod.DELETE, true),
-    PATCH(HttpMethod.PATCH, true);
+    PATCH(HttpMethod.PATCH, true),
+    OPTIONS(HttpMethod.OPTIONS, false);
 
     private final HttpMethod vertxMethod;
     private final boolean requiresBody;

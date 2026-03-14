@@ -2,6 +2,7 @@ package io.kiw.web.test;
 
 import io.kiw.web.infrastructure.Method;
 import io.kiw.web.infrastructure.RoutesRegister;
+import io.kiw.web.infrastructure.cors.CorsConfig;
 import io.kiw.web.test.handler.*;
 
 import java.util.ArrayList;
@@ -17,7 +18,12 @@ public class TestApplicationClient {
     public TestApplicationClient() {
         RoutesRegister routesRegister = new RoutesRegister(router);
         registerRoutes(routesRegister);
+    }
 
+    public TestApplicationClient(CorsConfig corsConfig) {
+        router.configureCors(corsConfig);
+        RoutesRegister routesRegister = new RoutesRegister(router);
+        registerRoutes(routesRegister);
     }
 
     public static MyApplicationState registerRoutes(RoutesRegister routesRegister) {
@@ -73,6 +79,10 @@ public class TestApplicationClient {
 
     public StubHttpResponse get(StubRequest stubRequest) {
         return router.handle(stubRequest, Method.GET);
+    }
+
+    public StubHttpResponse options(StubRequest stubRequest) {
+        return router.handle(stubRequest, Method.OPTIONS);
     }
 
     public void assertNoMoreExceptions(){

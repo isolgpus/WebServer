@@ -1,5 +1,8 @@
 package io.kiw.web;
 
+import io.kiw.web.infrastructure.cors.CorsConfig;
+
+import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.function.Consumer;
 
@@ -8,6 +11,7 @@ public class WebServiceConfigBuilder {
     private int defaultTimeoutMillis = 30_000;
     private Consumer<Exception> exceptionHandler = (e) -> {};
     private OptionalLong maxBodySize = OptionalLong.empty();
+    private Optional<CorsConfig> corsConfig = Optional.empty();
 
     public WebServiceConfigBuilder setPort(int port) {
         this.port = port;
@@ -19,8 +23,13 @@ public class WebServiceConfigBuilder {
         return this;
     }
 
+    public WebServiceConfigBuilder setCorsConfig(CorsConfig corsConfig) {
+        this.corsConfig = Optional.of(corsConfig);
+        return this;
+    }
+
     public WebServerConfig build() {
-        return new WebServerConfig(port, defaultTimeoutMillis, exceptionHandler, maxBodySize);
+        return new WebServerConfig(port, defaultTimeoutMillis, exceptionHandler, maxBodySize, corsConfig);
     }
 
     public WebServiceConfigBuilder setDefaultBlockingTimeoutMillis(int timeoutMillis) {

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.kiw.web.infrastructure.cors.CorsConfig;
 import io.kiw.web.infrastructure.ender.Ender;
 import io.kiw.web.test.handler.RouteConfig;
 import io.kiw.result.Result;
@@ -26,6 +27,8 @@ public abstract class RouterWrapper {
     protected abstract void route(String path, Method method, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig);
 
     protected abstract void route(String path, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig);
+
+    public abstract void configureCors(CorsConfig corsConfig);
 
     public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
         HttpContext httpContext = new HttpContext(vertxContext);
