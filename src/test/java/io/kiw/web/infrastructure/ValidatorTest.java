@@ -4,6 +4,7 @@ import io.kiw.result.Result;
 import io.kiw.web.test.StubVertxContext;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -17,12 +18,21 @@ public class ValidatorTest {
         String email;
         Integer age;
         Address address;
+        List<Address> addresses;
 
         Body(String name, String email, Integer age, Address address) {
             this.name = name;
             this.email = email;
             this.age = age;
             this.address = address;
+        }
+
+        Body(String name, String email, Integer age, Address address, List<Address> addresses) {
+            this.name = name;
+            this.email = email;
+            this.age = age;
+            this.address = address;
+            this.addresses = addresses;
         }
     }
 
@@ -327,6 +337,63 @@ public class ValidatorTest {
         assertEquals(422, statusCode[0]);
     }
 
+    // --- listField ---
+
+    @Test
+    public void listField_required_failsOnNull() {
+        Validator<Body> v = validator(new Body(null, null, null, null));
+        v.listField("addresses", r -> r.addresses).required();
+        assertError(v, "addresses", "must not be null");
+    }
+
+    @Test
+    public void listField_minSize_failsBelowMin() {
+        Validator<Body> v = validator(new Body(null, null, null, null, Collections.emptyList()));
+        v.listField("addresses", r -> r.addresses).minSize(1);
+        assertError(v, "addresses", "must have at least 1 items");
+    }
+
+    @Test
+    public void listField_maxSize_failsAboveMax() {
+        List<Address> three = Arrays.asList(new Address("A", "11111"), new Address("B", "22222"), new Address("C", "33333"));
+        Validator<Body> v = validator(new Body(null, null, null, null, three));
+        v.listField("addresses", r -> r.addresses).maxSize(2);
+        assertError(v, "addresses", "must have at most 2 items");
+    }
+
+    @Test
+    public void listField_each_validatesElements() {
+        List<Address> list = Arrays.asList(new Address(null, "12345"));
+        Validator<Body> v = validator(new Body(null, null, null, null, list));
+        v.listField("addresses", r -> r.addresses)
+            .each(a -> {
+                a.jsonField("city", x -> x.city).required();
+                a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
+            });
+        assertError(v, "addresses[0].city", "must not be blank");
+        assertNoErrors_forField(v, "addresses[0].zip");
+    }
+
+    @Test
+    public void listField_each_skipsWhenNull() {
+        Validator<Body> v = validator(new Body(null, null, null, null));
+        v.listField("addresses", r -> r.addresses)
+            .each(a -> a.jsonField("city", x -> x.city).required());
+        assertNoErrors(v);
+    }
+
+    @Test
+    public void listField_each_passesWhenAllValid() {
+        List<Address> list = Arrays.asList(new Address("NYC", "12345"), new Address("LA", "90001"));
+        Validator<Body> v = validator(new Body(null, null, null, null, list));
+        v.listField("addresses", r -> r.addresses)
+            .each(a -> {
+                a.jsonField("city", x -> x.city).required();
+                a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
+            });
+        assertNoErrors(v);
+    }
+
     // --- helpers ---
 
     private void assertError(Validator<?> v, String field, String message) {
@@ -337,5 +404,9 @@ public class ValidatorTest {
 
     private void assertNoErrors(Validator<?> v) {
         assertTrue("Expected no errors but got: " + v.errors, v.errors.isEmpty());
+    }
+
+    private void assertNoErrors_forField(Validator<?> v, String field) {
+        assertFalse("Expected no error for field: " + field, v.errors.containsKey(field));
     }
 }
