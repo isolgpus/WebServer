@@ -11,7 +11,7 @@ import java.util.function.Function;
 
 public class Validator<T> {
     private final T value;
-    private final HttpContext http;
+    final HttpContext http;
     private final String prefix;
     final Map<String, List<String>> errors = new LinkedHashMap<>();
 
@@ -44,6 +44,16 @@ public class Validator<T> {
             errors.putAll(nestedValidator.errors);
         }
         return this;
+    }
+
+    public <E> ListValidator<T, E> listField(String name, Function<T, List<E>> getter) {
+        List<E> list;
+        try {
+            list = getter.apply(value);
+        } catch (NullPointerException e) {
+            list = null;
+        }
+        return new ListValidator<>(prefix + name, list, this);
     }
 
     public FieldChain queryParam(String name) {
