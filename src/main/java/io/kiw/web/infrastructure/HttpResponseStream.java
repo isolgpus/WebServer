@@ -65,15 +65,15 @@ public class HttpResponseStream<IN, APP> {
         return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
     }
 
-    public <OUT> Flow<OUT> complete(HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper)
+    public <OUT> RequestPipeline<OUT> complete(HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper)
     {
         instructionChain.add(new MapInstruction<>(false, httpControlStreamFlatMapper, canFinishSuccessfully));
-        return new Flow<>(instructionChain, applicationState, ender);
+        return new RequestPipeline<>(instructionChain, applicationState, ender);
     }
 
-    public <OUT> Flow<OUT>  blockingComplete(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
+    public <OUT> RequestPipeline<OUT>  blockingComplete(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
     {
         instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, canFinishSuccessfully));
-        return new Flow<>(instructionChain, applicationState, ender);
+        return new RequestPipeline<>(instructionChain, applicationState, ender);
     }
 }

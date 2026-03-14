@@ -1,6 +1,6 @@
 package io.kiw.web.test;
 
-import io.kiw.web.infrastructure.Flow;
+import io.kiw.web.infrastructure.RequestPipeline;
 import io.kiw.web.infrastructure.MapInstruction;
 import io.kiw.web.infrastructure.Method;
 import io.kiw.web.infrastructure.RouterWrapper;
@@ -17,12 +17,12 @@ public class StubRouter extends RouterWrapper {
     }
 
     @Override
-    public void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig) {
+    public void route(String path, Method method, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig) {
         routes.putRoute(path, method, flow);
     }
 
     @Override
-    public void route(String path, String consumes, String provides, Flow flow, RouteConfig routeConfig) {
+    public void route(String path, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig) {
         routes.putAllMethodRoute(path, flow);
     }
 
@@ -31,7 +31,7 @@ public class StubRouter extends RouterWrapper {
         PathMatcher.MatchResult matchResult = this.routes.get(stubRequest.path, method);
         context.setPathParams(matchResult.getPathParams());
 
-        for (Flow flow : matchResult.getFlows()) {
+        for (RequestPipeline flow : matchResult.getFlows()) {
             for (Object what : flow.getApplicationInstructions()) {
                 MapInstruction applicationInstruction = (MapInstruction) what;
                 this.handle(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());

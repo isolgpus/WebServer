@@ -22,9 +22,9 @@ public abstract class RouterWrapper {
         .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    protected abstract void route(String path, Method method, String consumes, String provides, Flow flow, RouteConfig routeConfig);
+    protected abstract void route(String path, Method method, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig);
 
-    protected abstract void route(String path, String consumes, String provides, Flow flow, RouteConfig routeConfig);
+    protected abstract void route(String path, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig);
 
      public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
          HttpContext httpContext = new HttpContext(vertxContext);

@@ -7,7 +7,7 @@ import java.util.concurrent.locks.LockSupport;
 
 public class TimeoutTestHandler extends VertxJsonRoute<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
-    public Flow<ThrowResponse> handle(HttpResponseStream<ThrowRequest, MyApplicationState> e) {
+    public RequestPipeline<ThrowResponse> handle(HttpResponseStream<ThrowRequest, MyApplicationState> e) {
         return e
             .blockingMap((request, httpContext) ->
             {

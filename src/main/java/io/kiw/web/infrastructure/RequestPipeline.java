@@ -4,12 +4,12 @@ import io.kiw.web.infrastructure.ender.Ender;
 
 import java.util.List;
 
-public class Flow<T> {
+public class RequestPipeline<T> {
     private final List<MapInstruction> instructions;
     private final Object applicationState;
     private final Ender ender;
 
-    Flow(List<MapInstruction> instructions, Object applicationState, Ender ender) {
+    RequestPipeline(List<MapInstruction> instructions, Object applicationState, Ender ender) {
 
         this.instructions = instructions;
         this.applicationState = applicationState;

@@ -1,6 +1,6 @@
 package io.kiw.web.test.handler;
 
-import io.kiw.web.infrastructure.Flow;
+import io.kiw.web.infrastructure.RequestPipeline;
 import io.kiw.web.infrastructure.HttpResponseStream;
 import io.kiw.web.infrastructure.HttpResult;
 import io.kiw.web.infrastructure.VertxJsonRoute;
@@ -11,7 +11,7 @@ import io.vertx.core.http.impl.CookieImpl;
 public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, MyApplicationState> {
 
     @Override
-    public Flow<EchoResponse> handle(HttpResponseStream<EchoRequest, MyApplicationState> e) {
+    public RequestPipeline<EchoResponse> handle(HttpResponseStream<EchoRequest, MyApplicationState> e) {
         return e.complete((echoRequest, httpContext, myApplicationState) -> {
             if(echoRequest.responseHeaderExample != null)
             {

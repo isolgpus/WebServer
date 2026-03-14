@@ -1,6 +1,6 @@
 package io.kiw.web.test;
 
-import io.kiw.web.infrastructure.Flow;
+import io.kiw.web.infrastructure.RequestPipeline;
 import io.kiw.web.infrastructure.HttpResponseStream;
 import io.kiw.web.infrastructure.HttpResult;
 import io.kiw.web.infrastructure.VertxJsonFilter;
@@ -15,7 +15,7 @@ public class TestFilter implements VertxJsonFilter<MyApplicationState>
     }
 
     @Override
-    public Flow handle(HttpResponseStream<Void, MyApplicationState> e) {
+    public RequestPipeline handle(HttpResponseStream<Void, MyApplicationState> e) {
         return e.complete((request, httpContext, applicationState) -> {
             httpContext.addResponseCookie(new CookieImpl(cookieKey, "hitfilter"));
             return HttpResult.success();

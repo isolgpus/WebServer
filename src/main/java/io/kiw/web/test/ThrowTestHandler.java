@@ -1,13 +1,13 @@
 package io.kiw.web.test;
 
-import io.kiw.web.infrastructure.Flow;
+import io.kiw.web.infrastructure.RequestPipeline;
 import io.kiw.web.infrastructure.HttpResponseStream;
 import io.kiw.web.infrastructure.HttpResult;
 import io.kiw.web.infrastructure.VertxJsonRoute;
 
 public class ThrowTestHandler extends VertxJsonRoute<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
-    public Flow<ThrowResponse> handle(HttpResponseStream<ThrowRequest, MyApplicationState> e) {
+    public RequestPipeline<ThrowResponse> handle(HttpResponseStream<ThrowRequest, MyApplicationState> e) {
         return e.map((request, b, c) -> request.where).map((where,b,c) -> {
             if("map".equals(where))
             {

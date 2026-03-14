@@ -17,18 +17,18 @@ public class RouterWrapperImpl extends RouterWrapper {
     }
 
     @Override
-    public void route(String path, Method method, String consumes, String produces, Flow flow, RouteConfig routeConfig) {
+    public void route(String path, Method method, String consumes, String produces, RequestPipeline flow, RouteConfig routeConfig) {
         Route route = router.route(method.getVertxMethod(), path).consumes(consumes).produces(produces);
         registerHandlers(route, flow, routeConfig);
     }
 
     @Override
-    public void route(String path, String consumes, String produces, Flow flow, RouteConfig routeConfig) {
+    public void route(String path, String consumes, String produces, RequestPipeline flow, RouteConfig routeConfig) {
         Route route = router.route(path).consumes(consumes).produces(produces);
         registerHandlers(route, flow, routeConfig);
     }
 
-    private void registerHandlers(Route route, Flow flow, RouteConfig routeConfig) {
+    private void registerHandlers(Route route, RequestPipeline flow, RouteConfig routeConfig) {
         int timeout = routeConfig.timeoutInMillis.orElse(defaultTimeoutMillis);
 
         route.handler(new VertxTimeoutHandler(timeout));

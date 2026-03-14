@@ -51,7 +51,7 @@ public class RoutesRegister {
                 }
             }).flatMap(((request, httpContext, as) -> HttpResult.success(request)));
 
-        Flow<OUT> flow = vertxJsonRoute.handle(httpResponseStream);
+        RequestPipeline<OUT> flow = vertxJsonRoute.handle(httpResponseStream);
 
 
         router.route(path, method, "*", "application/json", flow, routeConfig);
@@ -63,7 +63,7 @@ public class RoutesRegister {
 
     public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter, RouteConfig routeConfig) {
         HttpResponseStream<Void, APP> objectAPPHttpResponseStream = new HttpResponseStream<>(new ArrayList<>(), false, applicationState, null);
-        Flow flow = jsonFilter.handle(objectAPPHttpResponseStream);
+        RequestPipeline flow = jsonFilter.handle(objectAPPHttpResponseStream);
 
 
         router.route(path, "*", "application/json", flow, routeConfig);
@@ -79,7 +79,7 @@ public class RoutesRegister {
             Map<String, Buffer> uploadedFile = ctx.resolveUploadedFiles();
             return HttpResult.success(uploadedFile);
         });
-        Flow flow = fileUploaderHandler.handle(fileUploadStream);
+        RequestPipeline flow = fileUploaderHandler.handle(fileUploadStream);
 
         router.route(path, method, "multipart/form-data", "application/json", flow, new RouteConfigBuilder().build());
     }
@@ -92,7 +92,7 @@ public class RoutesRegister {
             ctx.addResponseHeader(TRANSFER_ENCODING, "chunked");
             return HttpResult.success(request);
         });
-        Flow flow = fileDownloadHandler.handle(fileDownloadStream);
+        RequestPipeline flow = fileDownloadHandler.handle(fileDownloadStream);
 
         router.route(path, method, "*", contentType, flow, new RouteConfigBuilder().build());
     }
