@@ -6,6 +6,7 @@ import io.kiw.web.infrastructure.jwt.JwtClaims;
 import io.kiw.web.infrastructure.jwt.JwtProvider;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class HttpResponseStream<IN, APP> {
     private final List<MapInstruction> instructionChain;
@@ -60,6 +61,28 @@ public class HttpResponseStream<IN, APP> {
     public <OUT> HttpResponseStream<OUT, APP> blockingFlatMap(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
     {
         instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, false));
+        return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+    }
+
+    public <OUT> HttpResponseStream<OUT, APP> asyncMap(HttpControlStreamAsyncMapper<IN, OUT, APP> flowHandler)
+    {
+        return asyncFlatMap(ctx -> flowHandler.handle(ctx).thenApply(Result::success));
+    }
+
+    public <OUT> HttpResponseStream<OUT, APP> asyncFlatMap(HttpControlStreamAsyncFlatMapper<IN, OUT, APP> mapper)
+    {
+        instructionChain.add(new MapInstruction<>(mapper, false));
+        return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+    }
+
+    public <OUT> HttpResponseStream<OUT, APP> asyncBlockingMap(HttpControlStreamAsyncBlockingMapper<IN, OUT> flowHandler)
+    {
+        return asyncBlockingFlatMap(ctx -> flowHandler.handle(ctx).thenApply(Result::success));
+    }
+
+    public <OUT> HttpResponseStream<OUT, APP> asyncBlockingFlatMap(HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> mapper)
+    {
+        instructionChain.add(new MapInstruction<>(mapper, false));
         return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
     }
 

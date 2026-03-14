@@ -500,6 +500,26 @@ public class JsonHttpInfrastructureTest {
 
 
     @Test
+    public void shouldSupportAsyncMap() {
+        StubHttpResponse response = testApplicationClient.post(
+                StubRequest.request("/asyncMap").body(json().put("value", 5).toString()));
+
+        Assert.assertEquals(
+                StubHttpResponse.response(json().put("result", 50).toString()),
+                response);
+    }
+
+    @Test
+    public void shouldSupportAsyncBlockingMap() {
+        StubHttpResponse response = testApplicationClient.post(
+                StubRequest.request("/asyncBlockingMap").body(json().put("value", 3).toString()));
+
+        Assert.assertEquals(
+                StubHttpResponse.response(json().put("result", 60).toString()),
+                response);
+    }
+
+    @Test
     public void shouldSupportPathParam() {
         StubHttpResponse response = testApplicationClient.get(
                 StubRequest.request("/echo/myvariable"));
