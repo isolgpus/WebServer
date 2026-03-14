@@ -1,8 +1,11 @@
 package io.kiw.web.infrastructure;
 
+import io.kiw.web.infrastructure.cors.CorsConfig;
 import io.kiw.web.test.handler.RouteConfig;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Route;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.CorsHandler;
 
 import java.util.function.Consumer;
 
@@ -14,6 +17,28 @@ public class RouterWrapperImpl extends RouterWrapper {
         super(exceptionHandler);
         this.router = router;
         this.defaultTimeoutMillis = defaultTimeoutMillis;
+    }
+
+    @Override
+    public void configureCors(CorsConfig corsConfig) {
+        CorsHandler corsHandler = CorsHandler.create();
+        for (String origin : corsConfig.getAllowedOrigins()) {
+            corsHandler.addOrigin(origin);
+        }
+        for (String method : corsConfig.getAllowedMethods()) {
+            corsHandler.allowedMethod(HttpMethod.valueOf(method));
+        }
+        if (!corsConfig.getAllowedHeaders().isEmpty()) {
+            corsHandler.allowedHeaders(corsConfig.getAllowedHeaders());
+        }
+        if (!corsConfig.getExposedHeaders().isEmpty()) {
+            corsHandler.exposedHeaders(corsConfig.getExposedHeaders());
+        }
+        corsHandler.allowCredentials(corsConfig.isAllowCredentials());
+        if (corsConfig.getMaxAgeSeconds() >= 0) {
+            corsHandler.maxAgeSeconds(corsConfig.getMaxAgeSeconds());
+        }
+        router.route().handler(corsHandler);
     }
 
     @Override

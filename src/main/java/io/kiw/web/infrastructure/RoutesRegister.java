@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.kiw.web.infrastructure.cors.CorsConfig;
 import io.kiw.web.infrastructure.ender.FileEnder;
 import io.kiw.web.infrastructure.ender.JsonEnder;
 import io.kiw.web.test.handler.RouteConfig;
@@ -25,6 +26,10 @@ public class RoutesRegister {
     public RoutesRegister(RouterWrapper router) {
 
         this.router = router;
+    }
+
+    public void cors(CorsConfig corsConfig) {
+        router.configureCors(corsConfig);
     }
 
     public <IN, OUT, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute) {
