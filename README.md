@@ -29,10 +29,8 @@ Create a handler by extending `VertxJsonRoute`:
 public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWorldResponse, HelloWorldState> {
 
     @Override
-    public Flow<HelloWorldResponse> handle(HttpResponseStream<HelloWorldRequest, HelloWorldState> e) {
-        return e.complete((request, httpContext, applicationState) -> {
-            return HttpResult.success(new HelloWorldResponse());
-        });
+    public RequestPipeline<HelloWorldResponse> handle(HttpResponseStream<HelloWorldRequest, HelloWorldState> e) {
+        return e.complete(ctx -> HttpResult.success(new HelloWorldResponse()));
     }
 }
 ```
@@ -53,24 +51,24 @@ public class Main {
 
 ### Handler Pipeline
 
-Handlers build a processing chain using `map`, `flatMap`, `blockingMap`, and `complete`. Each step transforms the data flowing through the pipeline:
+Handlers build a processing chain using `map`, `flatMap`, `blockingMap`, and `complete`. Each step receives a context object (`ctx`) that exposes the current value via `ctx.in()`, the HTTP context via `ctx.http()`, and the application state via `ctx.app()`:
 
 ```java
 public class MultiplyHandler extends VertxJsonRoute<MultiplyRequest, MultiplyResponse, MyState> {
 
     @Override
-    public Flow<MultiplyResponse> handle(HttpResponseStream<MultiplyRequest, MyState> stream) {
+    public RequestPipeline<MultiplyResponse> handle(HttpResponseStream<MultiplyRequest, MyState> stream) {
         return stream
-            .map((request, httpContext, appState) -> request.numberToMultiply)    // extract on event loop
-            .blockingMap((number, httpContext) -> number * 2)                      // compute on worker thread
-            .complete((result, httpContext, appState) ->                           // build response
-                HttpResult.success(new MultiplyResponse(result)));
+            .map(ctx -> ctx.in().numberToMultiply)      // extract on event loop
+            .blockingMap(ctx -> ctx.in() * 2)           // compute on worker thread
+            .complete(ctx ->                             // build response
+                HttpResult.success(new MultiplyResponse(ctx.in())));
     }
 }
 ```
 
-- `map` / `flatMap` — run on the event loop
-- `blockingMap` / `blockingFlatMap` — run on a worker thread (for database calls, file I/O, etc.)
+- `map` / `flatMap` — run on the event loop; context provides `ctx.in()`, `ctx.http()`, `ctx.app()`
+- `blockingMap` / `blockingFlatMap` — run on a worker thread (for database calls, file I/O, etc.); context provides `ctx.in()` and `ctx.http()` only (no app state access by design)
 - `complete` / `blockingComplete` — terminal operation that produces the final response
 
 ### Error Handling
@@ -79,36 +77,35 @@ Use `flatMap` with `HttpResult.error()` to short-circuit the pipeline. Once an e
 
 ```java
 @Override
-public Flow<Response> handle(HttpResponseStream<Request, MyState> stream) {
+public RequestPipeline<Response> handle(HttpResponseStream<Request, MyState> stream) {
     return stream
-        .map((request, httpContext, appState) -> request.numberToMultiply)
-        .flatMap((number, httpContext, appState) -> {
-            if (number < 0) {
+        .map(ctx -> ctx.in().numberToMultiply)
+        .flatMap(ctx -> {
+            if (ctx.in() < 0) {
                 return HttpResult.error(400, new ErrorMessageResponse("Number must be positive"));
             }
-            return Result.success(number);
+            return Result.success(ctx.in());
         })
-        .complete((number, httpContext, appState) ->
-            HttpResult.success(new Response(number * 2)));
+        .complete(ctx -> HttpResult.success(new Response(ctx.in() * 2)));
 }
 ```
 
 ### Accessing HTTP Context
 
-The `httpContext` parameter gives you access to query parameters, headers, and cookies:
+Use `ctx.http()` to access query parameters, headers, and cookies:
 
 ```java
 @Override
-public Flow<EchoResponse> handle(HttpResponseStream<EchoRequest, MyState> e) {
-    return e.complete((request, httpContext, appState) -> {
+public RequestPipeline<EchoResponse> handle(HttpResponseStream<EchoRequest, MyState> e) {
+    return e.complete(ctx -> {
         // Read from request
-        String query = httpContext.getQueryParam("search");
-        String header = httpContext.getRequestHeader("X-Request-Id");
-        Cookie cookie = httpContext.getRequestCookie("session");
+        String query = ctx.http().getQueryParam("search");
+        String header = ctx.http().getRequestHeader("X-Request-Id");
+        Cookie cookie = ctx.http().getRequestCookie("session");
 
         // Write to response
-        httpContext.addResponseHeader("X-Response-Id", "abc");
-        httpContext.addResponseCookie(new CookieImpl("session", "new-value"));
+        ctx.http().addResponseHeader("X-Response-Id", "abc");
+        ctx.http().addResponseCookie(new CookieImpl("session", "new-value"));
 
         return HttpResult.success(new EchoResponse(query, header));
     });
@@ -123,9 +120,9 @@ Filters are middleware that run before matching routes. Register them with wildc
 public class AuthFilter implements VertxJsonFilter<MyState> {
 
     @Override
-    public Flow handle(HttpResponseStream<Void, MyState> e) {
-        return e.complete((request, httpContext, appState) -> {
-            httpContext.addResponseCookie(new CookieImpl("visited", "true"));
+    public RequestPipeline handle(HttpResponseStream<Void, MyState> e) {
+        return e.complete(ctx -> {
+            ctx.http().addResponseCookie(new CookieImpl("visited", "true"));
             return HttpResult.success();
         });
     }
@@ -145,9 +142,9 @@ Upload routes receive a `Map<String, Buffer>` of uploaded files:
 public class UploadHandler extends VertxFileUploadRoute<UploadResponse, MyState> {
 
     @Override
-    public Flow<UploadResponse> handle(HttpResponseStream<Map<String, Buffer>, MyState> e) {
-        return e.complete((files, httpContext, appState) -> {
-            int totalBytes = files.values().stream().mapToInt(b -> b.getBytes().length).sum();
+    public RequestPipeline<UploadResponse> handle(HttpResponseStream<Map<String, Buffer>, MyState> e) {
+        return e.complete(ctx -> {
+            int totalBytes = ctx.in().values().stream().mapToInt(b -> b.getBytes().length).sum();
             return HttpResult.success(new UploadResponse(totalBytes));
         });
     }
@@ -162,8 +159,8 @@ Download routes return a `DownloadFileResponse`:
 public class DownloadHandler implements VertxFileDownloadRoute<String, MyState> {
 
     @Override
-    public Flow<DownloadFileResponse> handle(HttpResponseStream<String, MyState> e) {
-        return e.complete((request, httpContext, appState) ->
+    public RequestPipeline<DownloadFileResponse> handle(HttpResponseStream<String, MyState> e) {
+        return e.complete(ctx ->
             Result.success(new DownloadFileResponse(Buffer.buffer("file contents"), "report.csv")));
     }
 }
