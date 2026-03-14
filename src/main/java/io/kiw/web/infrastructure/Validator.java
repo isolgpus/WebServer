@@ -21,7 +21,7 @@ public class Validator<T> {
         this.prefix = prefix;
     }
 
-    public StringFieldChain bodyField(String field, Function<T, String> getter) {
+    public StringFieldChain jsonField(String field, Function<T, String> getter) {
         String resolved;
         try {
             resolved = getter.apply(value);
@@ -31,7 +31,7 @@ public class Validator<T> {
         return new StringFieldChain(prefix + field, resolved, this);
     }
 
-    public NumericFieldChain numericBodyField(String field, Function<T, ? extends Number> getter) {
+    public NumericFieldChain numericJsonField(String field, Function<T, ? extends Number> getter) {
         Number resolved;
         try {
             resolved = getter.apply(value);
@@ -41,7 +41,7 @@ public class Validator<T> {
         return new NumericFieldChain(prefix + field, resolved, this);
     }
 
-    public <N> Validator<T> nestedBodyField(String name, Function<T, N> getter, Consumer<Validator<N>> block) {
+    public <N> Validator<T> nestedJsonField(String name, Function<T, N> getter, Consumer<Validator<N>> block) {
         N nested;
         try {
             nested = getter.apply(value);

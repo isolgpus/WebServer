@@ -121,8 +121,8 @@ Use `validate()` in your pipeline to declare field-level rules declaratively. Al
 public RequestPipeline<Response> handle(HttpResponseStream<Request, MyState> stream) {
     return stream
         .validate(v -> {
-            v.bodyField("name", r -> r.name).required().minLength(2);
-            v.bodyField("email", r -> r.email).required().email();
+            v.jsonField("name", r -> r.name).required().minLength(2);
+            v.jsonField("email", r -> r.email).required().email();
             v.numericBodyField("age", r -> r.age).required().min(0).max(150);
             v.queryParam("page").required().matches("[0-9]+");
             v.pathParam("userId").required().matches("[0-9]+");
@@ -135,8 +135,8 @@ Nested objects are validated with `nestedBodyField`:
 
 ```java
 v.nestedBodyField("address", r -> r.address, a -> {
-    a.bodyField("city", x -> x.city).required();
-    a.bodyField("zip", x -> x.zip).required().matches("[0-9]{5}");
+    a.jsonField("city", x -> x.city).required();
+    a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
 });
 ```
 
