@@ -223,10 +223,10 @@ public class ValidatorTest {
     // --- nested body field ---
 
     @Test
-    public void nestedJsonField_prefixesErrorKeys() {
+    public void jsonField_prefixesErrorKeys() {
         Body body = new Body(null, null, null, new Address(null, "bad"));
         Validator<Body> v = validator(body);
-        v.nestedJsonField("address", r -> r.address, a -> {
+        v.jsonField("address", r -> r.address, a -> {
             a.jsonField("city", x -> x.city).required();
             a.jsonField("zip", x -> x.zip).matches("[0-9]{5}");
         });
@@ -235,20 +235,20 @@ public class ValidatorTest {
     }
 
     @Test
-    public void nestedJsonField_skipsBlockWhenNull() {
+    public void jsonField_skipsBlockWhenNull() {
         Body body = new Body(null, null, null, null);
         Validator<Body> v = validator(body);
-        v.nestedJsonField("address", r -> r.address, a -> {
+        v.jsonField("address", r -> r.address, a -> {
             a.jsonField("city", x -> x.city).required();
         });
         assertNoErrors(v);
     }
 
     @Test
-    public void nestedJsonField_passesWhenValid() {
+    public void jsonField_passesWhenValid() {
         Body body = new Body(null, null, null, new Address("NYC", "12345"));
         Validator<Body> v = validator(body);
-        v.nestedJsonField("address", r -> r.address, a -> {
+        v.jsonField("address", r -> r.address, a -> {
             a.jsonField("city", x -> x.city).required();
             a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
         });
