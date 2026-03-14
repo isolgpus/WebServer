@@ -13,12 +13,12 @@ public class ValidationTestHandler extends VertxJsonRoute<ValidationRequest, Val
     public RequestPipeline<ValidationResponse> handle(HttpResponseStream<ValidationRequest, MyApplicationState> httpResponseStream) {
         return httpResponseStream
             .validate(v -> {
-                v.bodyField("name", r -> r.name).required().minLength(2);
-                v.bodyField("email", r -> r.email).required().email();
-                v.numericBodyField("age", r -> r.age).required().min(0).max(150);
-                v.nestedBodyField("address", r -> r.address, a -> {
-                    a.bodyField("city", x -> x.city).required();
-                    a.bodyField("zip", x -> x.zip).required().matches("[0-9]{5}");
+                v.jsonField("name", r -> r.name).required().minLength(2);
+                v.jsonField("email", r -> r.email).required().email();
+                v.numericJsonField("age", r -> r.age).required().min(0).max(150);
+                v.nestedJsonField("address", r -> r.address, a -> {
+                    a.jsonField("city", x -> x.city).required();
+                    a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
                 });
                 v.queryParam("page").required().matches("[0-9]+");
                 v.pathParam("userId").required().matches("[0-9]+");
