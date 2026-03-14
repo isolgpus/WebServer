@@ -53,13 +53,18 @@ public abstract class RouterWrapper {
             return;
         }
 
-        future.whenComplete((result, throwable) -> {
-            if (throwable != null) {
-                handleException(vertxContext, throwable instanceof Exception ? (Exception) throwable : new RuntimeException(throwable));
-                return;
-            }
-            processResult(result, applicationInstruction, vertxContext, ender);
-        });
+        // whenComplete fires on whichever thread completes the future (e.g. ForkJoinPool).
+        // We must dispatch back to the Vert.x event loop before touching the pipeline
+        // (ctx.next(), ctx.end(), etc. are not thread-safe outside the event loop).
+        future.whenComplete((result, throwable) ->
+            vertxContext.runOnContext(() -> {
+                if (throwable != null) {
+                    handleException(vertxContext, throwable instanceof Exception ? (Exception) throwable : new RuntimeException(throwable));
+                    return;
+                }
+                processResult(result, applicationInstruction, vertxContext, ender);
+            })
+        );
     }
 
     public <T> void handleAsyncBlocking(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {

@@ -129,4 +129,9 @@ public class StubVertxContext implements VertxContext {
     public boolean hasFinished() {
         return finished;
     }
+
+    @Override
+    public void runOnContext(Runnable task) {
+        task.run();
+    }
 }
