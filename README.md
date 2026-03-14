@@ -112,6 +112,51 @@ public RequestPipeline<EchoResponse> handle(HttpResponseStream<EchoRequest, MySt
 }
 ```
 
+### Validation
+
+Use `validate()` in your pipeline to declare field-level rules declaratively. All rules are evaluated together and, if any fail, the pipeline short-circuits with a `422` response containing a map of field errors.
+
+```java
+@Override
+public RequestPipeline<Response> handle(HttpResponseStream<Request, MyState> stream) {
+    return stream
+        .validate(v -> {
+            v.bodyField("name", r -> r.name).required().minLength(2);
+            v.bodyField("email", r -> r.email).required().email();
+            v.numericBodyField("age", r -> r.age).required().min(0).max(150);
+            v.queryParam("page").required().matches("[0-9]+");
+            v.pathParam("userId").required().matches("[0-9]+");
+        })
+        .complete(ctx -> HttpResult.success(new Response(ctx.in().name)));
+}
+```
+
+Nested objects are validated with `nestedBodyField`:
+
+```java
+v.nestedBodyField("address", r -> r.address, a -> {
+    a.bodyField("city", x -> x.city).required();
+    a.bodyField("zip", x -> x.zip).required().matches("[0-9]{5}");
+});
+```
+
+On failure the response body is:
+
+```json
+{
+  "message": "Validation failed",
+  "errors": {
+    "name": ["must not be blank"],
+    "email": ["must be a valid email address"],
+    "address.zip": ["must match pattern: [0-9]{5}"]
+  }
+}
+```
+
+**String rules:** `required()`, `minLength(n)`, `maxLength(n)`, `email()`, `matches(regex)`
+
+**Numeric rules:** `required()`, `min(n)`, `max(n)`
+
 ### Filters
 
 Filters are middleware that run before matching routes. Register them with wildcard paths:
