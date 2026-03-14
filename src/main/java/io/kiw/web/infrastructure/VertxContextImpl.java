@@ -101,6 +101,11 @@ public class VertxContextImpl implements VertxContext {
     }
 
     @Override
+    public void runOnContext(Runnable task) {
+        this.ctx.vertx().runOnContext(v -> task.run());
+    }
+
+    @Override
     public Map<String, Buffer> resolveUploadedFiles() {
         return this.ctx.fileUploads().stream()
             .collect(Collectors.toMap(FileUpload::fileName, a -> ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName())));
