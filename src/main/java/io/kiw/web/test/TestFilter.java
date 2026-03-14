@@ -16,8 +16,8 @@ public class TestFilter implements VertxJsonFilter<MyApplicationState>
 
     @Override
     public RequestPipeline handle(HttpResponseStream<Void, MyApplicationState> e) {
-        return e.complete((request, httpContext, applicationState) -> {
-            httpContext.addResponseCookie(new CookieImpl(cookieKey, "hitfilter"));
+        return e.complete(ctx -> {
+            ctx.http().addResponseCookie(new CookieImpl(cookieKey, "hitfilter"));
             return HttpResult.success();
         });
     }

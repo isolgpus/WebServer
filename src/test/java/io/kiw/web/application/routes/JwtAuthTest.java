@@ -44,8 +44,8 @@ public class JwtAuthTest {
                 public RequestPipeline<SubjectResponse> handle(HttpResponseStream<EmptyRequest, MyApplicationState> stream) {
                     return stream
                         .requireJwt(jwtProvider)
-                        .complete((req, ctx, app) ->
-                            HttpResult.success(new SubjectResponse(ctx.getJwtClaims().getSubject())));
+                        .complete(ctx ->
+                            HttpResult.success(new SubjectResponse(ctx.http().getJwtClaims().getSubject())));
                 }
             });
     }

@@ -23,7 +23,7 @@ public class HttpResponseStream<IN, APP> {
     public <OUT> HttpResponseStream<OUT, APP> map(HttpControlStreamMapper<IN, OUT, APP> flowHandler)
     {
 
-        return flatMap((in, httpContext, application) -> Result.success(flowHandler.handle(in, httpContext, application)));
+        return flatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
     public <OUT> HttpResponseStream<OUT, APP> flatMap(HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper)
@@ -36,12 +36,12 @@ public class HttpResponseStream<IN, APP> {
     public <OUT> HttpResponseStream<OUT, APP> blockingMap(HttpControlStreamBlockingMapper<IN, OUT> flowHandler)
     {
 
-        return blockingFlatMap((in, httpContext) -> Result.success(flowHandler.handle(in, httpContext)));
+        return blockingFlatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
     public HttpResponseStream<IN, APP> requireJwt(JwtProvider jwtProvider) {
-        return flatMap((in, httpContext, app) -> {
-            String authHeader = httpContext.getRequestHeader("Authorization");
+        return flatMap(ctx -> {
+            String authHeader = ctx.http().getRequestHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return HttpResult.error(401, new ErrorMessageResponse("Missing or invalid Authorization header"));
             }
@@ -50,8 +50,8 @@ public class HttpResponseStream<IN, APP> {
             return result.fold(
                 error -> HttpResult.error(401, new ErrorMessageResponse(error)),
                 claims -> {
-                    httpContext.ctx.put("__jwt_claims__", claims);
-                    return HttpResult.success(in);
+                    ctx.http().ctx.put("__jwt_claims__", claims);
+                    return HttpResult.success(ctx.in());
                 }
             );
         });
@@ -59,9 +59,7 @@ public class HttpResponseStream<IN, APP> {
 
     public <OUT> HttpResponseStream<OUT, APP> blockingFlatMap(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
     {
-        instructionChain.add(new MapInstruction<>(true,
-            (HttpControlStreamFlatMapper<IN, OUT, APP>) (request, httpContext, applicationState) ->
-                httpControlStreamFlatMapper.handle(request, httpContext), false));
+        instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, false));
         return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
     }
 
