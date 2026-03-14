@@ -21,24 +21,14 @@ public class Validator<T> {
         this.prefix = prefix;
     }
 
-    public StringFieldChain jsonField(String field, Function<T, String> getter) {
-        String resolved;
+    public FieldChain jsonField(String field, Function<T, ?> getter) {
+        Object resolved;
         try {
             resolved = getter.apply(value);
         } catch (NullPointerException e) {
             resolved = null;
         }
-        return new StringFieldChain(prefix + field, resolved, this);
-    }
-
-    public NumericFieldChain numericJsonField(String field, Function<T, ? extends Number> getter) {
-        Number resolved;
-        try {
-            resolved = getter.apply(value);
-        } catch (NullPointerException e) {
-            resolved = null;
-        }
-        return new NumericFieldChain(prefix + field, resolved, this);
+        return new FieldChain(prefix + field, resolved, this);
     }
 
     public <N> Validator<T> jsonField(String name, Function<T, N> getter, Consumer<Validator<N>> block) {
@@ -56,12 +46,12 @@ public class Validator<T> {
         return this;
     }
 
-    public StringFieldChain queryParam(String name) {
-        return new StringFieldChain(prefix + name, http.getQueryParam(name), this);
+    public FieldChain queryParam(String name) {
+        return new FieldChain(prefix + name, http.getQueryParam(name), this);
     }
 
-    public StringFieldChain pathParam(String name) {
-        return new StringFieldChain(prefix + name, http.getPathParam(name), this);
+    public FieldChain pathParam(String name) {
+        return new FieldChain(prefix + name, http.getPathParam(name), this);
     }
 
     void addError(String field, String message) {
