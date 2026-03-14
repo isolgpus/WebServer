@@ -4,16 +4,18 @@ import io.kiw.web.infrastructure.RequestPipeline;
 import io.kiw.web.infrastructure.MapInstruction;
 import io.kiw.web.infrastructure.Method;
 import io.kiw.web.infrastructure.RouterWrapper;
+import io.kiw.web.infrastructure.WebSocketRouteHandler;
 import io.kiw.web.infrastructure.cors.CorsConfig;
 import io.kiw.web.test.handler.RouteConfig;
 
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class StubRouter extends RouterWrapper {
     private PathMatcher routes = new PathMatcher();
     private CorsConfig corsConfig;
+    private final List<WebSocketRouteEntry> webSocketRoutes = new ArrayList<>();
 
     public StubRouter(Consumer<Exception> exceptionHandler) {
         super(exceptionHandler);
@@ -94,6 +96,48 @@ public class StubRouter extends RouterWrapper {
         }
 
         return response;
+    }
+
+    @Override
+    protected void webSocketRoute(String path, WebSocketRouteHandler<?, ?, ?> handler) {
+        webSocketRoutes.add(new WebSocketRouteEntry(path, handler));
+    }
+
+    public StubWebSocketClient webSocket(StubRequest stubRequest) {
+        for (WebSocketRouteEntry entry : webSocketRoutes) {
+            Map<String, String> pathParams = matchWebSocketPath(entry.path, stubRequest.path);
+            if (pathParams != null) {
+                return new StubWebSocketClient(entry.handler, pathParams, stubRequest.queryParams);
+            }
+        }
+        throw new IllegalArgumentException("No WebSocket route registered for path: " + stubRequest.path);
+    }
+
+    private Map<String, String> matchWebSocketPath(String pattern, String actual) {
+        String[] patternParts = pattern.split("/");
+        String[] actualParts = actual.split("/");
+        if (patternParts.length != actualParts.length) {
+            return null;
+        }
+        Map<String, String> pathParams = new LinkedHashMap<>();
+        for (int i = 0; i < patternParts.length; i++) {
+            if (patternParts[i].startsWith(":")) {
+                pathParams.put(patternParts[i].substring(1), actualParts[i]);
+            } else if (!patternParts[i].equals(actualParts[i])) {
+                return null;
+            }
+        }
+        return pathParams;
+    }
+
+    private static class WebSocketRouteEntry {
+        final String path;
+        final WebSocketRouteHandler<?, ?, ?> handler;
+
+        WebSocketRouteEntry(String path, WebSocketRouteHandler<?, ?, ?> handler) {
+            this.path = path;
+            this.handler = handler;
+        }
     }
 
     private void addCorsResponseHeaders(StubRequest stubRequest, StubHttpResponse response) {

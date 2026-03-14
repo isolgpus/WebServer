@@ -53,6 +53,23 @@ public class RouterWrapperImpl extends RouterWrapper {
         registerHandlers(route, flow, routeConfig);
     }
 
+    @Override
+    protected void webSocketRoute(String path, WebSocketRouteHandler<?, ?, ?> handler) {
+        router.route(path).handler(ctx -> {
+            ctx.request().toWebSocket()
+                .onSuccess(ws -> {
+                    VertxWebSocketConnection connection = new VertxWebSocketConnection(ws, ctx);
+                    WebSocketSession<?> session = handler.createSession(connection);
+                    handler.onOpen(session);
+                    ws.textMessageHandler(msg -> handler.onMessage(msg, session));
+                    ws.closeHandler(v -> handler.onClose(session));
+                })
+                .onFailure(err -> {
+                    ctx.response().setStatusCode(500).end();
+                });
+        });
+    }
+
     private void registerHandlers(Route route, RequestPipeline flow, RouteConfig routeConfig) {
         int timeout = routeConfig.timeoutInMillis.orElse(defaultTimeoutMillis);
 

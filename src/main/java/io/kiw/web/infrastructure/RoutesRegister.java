@@ -88,6 +88,11 @@ public class RoutesRegister {
         router.route(path, method, "multipart/form-data", "application/json", flow, new RouteConfigBuilder().build());
     }
 
+    public <IN, OUT, APP> void webSocketRoute(String path, APP applicationState, WebSocketRoute<IN, OUT, APP> webSocketRoute) {
+        WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler());
+        router.webSocketRoute(path, handler);
+    }
+
     public <IN, APP> void downloadFileRoute(String path, Method method, APP applicationState, VertxFileDownloadRoute<IN, APP> fileDownloadHandler, String contentType) {
         HttpResponseStream<IN, APP> httpResponseStream = new HttpResponseStream<>(new ArrayList<>(), true, applicationState, new FileEnder());
 
