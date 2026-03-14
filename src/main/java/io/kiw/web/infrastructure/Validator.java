@@ -41,7 +41,7 @@ public class Validator<T> {
         return new NumericFieldChain(prefix + field, resolved, this);
     }
 
-    public <N> Validator<T> nestedJsonField(String name, Function<T, N> getter, Consumer<Validator<N>> block) {
+    public <N> Validator<T> jsonField(String name, Function<T, N> getter, Consumer<Validator<N>> block) {
         N nested;
         try {
             nested = getter.apply(value);
