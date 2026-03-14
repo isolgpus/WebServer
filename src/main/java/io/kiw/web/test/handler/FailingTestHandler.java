@@ -9,7 +9,7 @@ import static io.kiw.result.Result.success;
 public class FailingTestHandler extends VertxJsonRoute<BlockingRequest, BlockingTestResponse, MyApplicationState> {
 
     @Override
-    public Flow<BlockingTestResponse> handle(HttpResponseStream<BlockingRequest, MyApplicationState> httpResponseStream) {
+    public RequestPipeline<BlockingTestResponse> handle(HttpResponseStream<BlockingRequest, MyApplicationState> httpResponseStream) {
         return
             httpResponseStream
                 .map((blockingRequest, httpContext, myApplicationState) -> blockingRequest.numberToMultiply)

@@ -1,6 +1,6 @@
 package io.kiw.web.test;
 
-import io.kiw.web.infrastructure.Flow;
+import io.kiw.web.infrastructure.RequestPipeline;
 import io.kiw.web.infrastructure.Method;
 
 import java.util.*;
@@ -11,11 +11,11 @@ public class PathMatcher {
     private Map<String, PathMatcher> children = new LinkedHashMap<>();
     private String paramName = null;
     private PathMatcher paramChild = null;
-    private Map<Method, List<Flow>> flows = new EnumMap<>(Method.class);
-    private Map<Method, List<Flow>> wildCardFlows = new EnumMap<>(Method.class);
-    private List<Flow> allMethodWildCardFlows = new ArrayList<>();
+    private Map<Method, List<RequestPipeline>> flows = new EnumMap<>(Method.class);
+    private Map<Method, List<RequestPipeline>> wildCardFlows = new EnumMap<>(Method.class);
+    private List<RequestPipeline> allMethodWildCardFlows = new ArrayList<>();
 
-    public void putRoute(String path, Method method, Flow flow)
+    public void putRoute(String path, Method method, RequestPipeline flow)
     {
         Queue<String> pathSegments = splitPath(path);
         this.putRoute(pathSegments, method, flow);
@@ -26,7 +26,7 @@ public class PathMatcher {
             .collect(Collectors.toCollection(LinkedList::new));
     }
 
-    private void putRoute(Queue<String> pathSegments, Method method, Flow flow) {
+    private void putRoute(Queue<String> pathSegments, Method method, RequestPipeline flow) {
         String pathSegment = pathSegments.poll();
 
 
@@ -63,12 +63,12 @@ public class PathMatcher {
 
     }
 
-    public void putAllMethodRoute(String path, Flow flow) {
+    public void putAllMethodRoute(String path, RequestPipeline flow) {
         Queue<String> pathSegments = splitPath(path);
         this.putAllMethodRoute(pathSegments, flow);
     }
 
-    private void putAllMethodRoute(Queue<String> pathSegments, Flow flow) {
+    private void putAllMethodRoute(Queue<String> pathSegments, RequestPipeline flow) {
         String pathSegment = pathSegments.poll();
 
         boolean isAWildCard = pathSegment.equals("*");
@@ -90,12 +90,12 @@ public class PathMatcher {
         }
     }
 
-    private void addWildcardHandler(Flow flow, Method method) {
+    private void addWildcardHandler(RequestPipeline flow, Method method) {
         this.wildCardFlows.computeIfAbsent(method, key -> new ArrayList<>()).add(flow);
 
     }
 
-    private void addHandler(Flow flow, Method method) {
+    private void addHandler(RequestPipeline flow, Method method) {
         this.flows.computeIfAbsent(method, key -> new ArrayList<>()).add(flow);
     }
 
@@ -103,11 +103,11 @@ public class PathMatcher {
         Queue<String> pathSegments = splitPath(path);
         Map<String, String> pathParams = new LinkedHashMap<>();
 
-        List<Flow> flows = get(pathSegments, method, new ArrayList<>(), pathParams);
+        List<RequestPipeline> flows = get(pathSegments, method, new ArrayList<>(), pathParams);
         return new MatchResult(flows, pathParams);
     }
 
-    private List<Flow> get(Queue<String> pathSegments, Method method, List<Flow> collectedFlows, Map<String, String> pathParams) {
+    private List<RequestPipeline> get(Queue<String> pathSegments, Method method, List<RequestPipeline> collectedFlows, Map<String, String> pathParams) {
         collectedFlows.addAll(this.allMethodWildCardFlows);
         if(this.wildCardFlows.containsKey(method))
         {
@@ -140,15 +140,15 @@ public class PathMatcher {
     }
 
     public static class MatchResult {
-        private final List<Flow> flows;
+        private final List<RequestPipeline> flows;
         private final Map<String, String> pathParams;
 
-        public MatchResult(List<Flow> flows, Map<String, String> pathParams) {
+        public MatchResult(List<RequestPipeline> flows, Map<String, String> pathParams) {
             this.flows = flows;
             this.pathParams = pathParams;
         }
 
-        public List<Flow> getFlows() {
+        public List<RequestPipeline> getFlows() {
             return flows;
         }
 

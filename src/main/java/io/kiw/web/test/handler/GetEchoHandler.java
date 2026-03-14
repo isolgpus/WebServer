@@ -7,7 +7,7 @@ import io.vertx.core.http.Cookie;
 public class GetEchoHandler extends VertxJsonRoute<EmptyRequest, EchoResponse, MyApplicationState> {
 
     @Override
-    public Flow<EchoResponse> handle(HttpResponseStream<EmptyRequest, MyApplicationState> httpResponseStream) {
+    public RequestPipeline<EchoResponse> handle(HttpResponseStream<EmptyRequest, MyApplicationState> httpResponseStream) {
         return
             httpResponseStream
                 .complete((number, httpContext, myApplicationState) -> {
