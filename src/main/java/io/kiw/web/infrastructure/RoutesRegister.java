@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.kiw.web.infrastructure.ender.FileEnder;
 import io.kiw.web.infrastructure.ender.JsonEnder;
-import io.kiw.web.test.VertxFileDownloadRoute;
 import io.kiw.web.test.handler.RouteConfig;
 import io.kiw.web.test.handler.RouteConfigBuilder;
 import io.vertx.core.buffer.Buffer;
