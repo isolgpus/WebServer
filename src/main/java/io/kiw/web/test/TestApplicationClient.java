@@ -52,6 +52,7 @@ public class TestApplicationClient {
         routesRegister.jsonRoute("/timing", Method.POST, state, new TimeoutTestHandler());
         routesRegister.jsonRoute("/asyncMap", Method.POST, state, new AsyncMapTestHandler());
         routesRegister.jsonRoute("/asyncBlockingMap", Method.POST, state, new AsyncBlockingMapTestHandler());
+        routesRegister.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
         routesRegister.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler());
         routesRegister.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
         return state;
