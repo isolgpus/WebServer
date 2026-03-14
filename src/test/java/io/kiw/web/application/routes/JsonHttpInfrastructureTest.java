@@ -538,4 +538,143 @@ public class JsonHttpInfrastructureTest {
                 response
         );
     }
+
+    @Test
+    public void shouldPassValidationAndReturnResponse() {
+        String body = json()
+            .put("name", "Alice")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/validate/42")
+                .body(body)
+                .queryParam("page", "1"));
+
+        String expected = json()
+            .put("name", "Alice")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .put("city", "NYC")
+            .put("page", "1")
+            .put("userId", "42")
+            .toString();
+
+        Assert.assertEquals(StubHttpResponse.response(expected), response);
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForInvalidBodyField() {
+        String body = json()
+            .putNull("name")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/validate/42")
+                .body(body)
+                .queryParam("page", "1"));
+
+        String expected = json()
+            .put("message", "Validation failed")
+            .set("errors", json()
+                .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
+            .toString();
+
+        Assert.assertEquals(StubHttpResponse.response(expected).withStatusCode(422), response);
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForInvalidEmail() {
+        String body = json()
+            .put("name", "Alice")
+            .put("email", "not-an-email")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/validate/42")
+                .body(body)
+                .queryParam("page", "1"));
+
+        String expected = json()
+            .put("message", "Validation failed")
+            .set("errors", json()
+                .set("email", TestHelper.MAPPER.createArrayNode().add("must be a valid email address")))
+            .toString();
+
+        Assert.assertEquals(StubHttpResponse.response(expected).withStatusCode(422), response);
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForNestedField() {
+        String body = json()
+            .put("name", "Alice")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "bad"))
+            .toString();
+
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/validate/42")
+                .body(body)
+                .queryParam("page", "1"));
+
+        String expected = json()
+            .put("message", "Validation failed")
+            .set("errors", json()
+                .set("address.zip", TestHelper.MAPPER.createArrayNode().add("must match pattern: [0-9]{5}")))
+            .toString();
+
+        Assert.assertEquals(StubHttpResponse.response(expected).withStatusCode(422), response);
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForMissingQueryParam() {
+        String body = json()
+            .put("name", "Alice")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/validate/42").body(body));
+
+        String expected = json()
+            .put("message", "Validation failed")
+            .set("errors", json()
+                .set("page", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
+            .toString();
+
+        Assert.assertEquals(StubHttpResponse.response(expected).withStatusCode(422), response);
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForInvalidPathParam() {
+        String body = json()
+            .put("name", "Alice")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/validate/not-a-number")
+                .body(body)
+                .queryParam("page", "1"));
+
+        String expected = json()
+            .put("message", "Validation failed")
+            .set("errors", json()
+                .set("userId", TestHelper.MAPPER.createArrayNode().add("must match pattern: [0-9]+")))
+            .toString();
+
+        Assert.assertEquals(StubHttpResponse.response(expected).withStatusCode(422), response);
+    }
 }

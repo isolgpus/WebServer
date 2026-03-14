@@ -7,6 +7,7 @@ import io.kiw.web.infrastructure.jwt.JwtProvider;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Consumer;
 
 public class HttpResponseStream<IN, APP> {
     private final List<MapInstruction> instructionChain;
@@ -38,6 +39,14 @@ public class HttpResponseStream<IN, APP> {
     {
 
         return blockingFlatMap(ctx -> Result.success(flowHandler.handle(ctx)));
+    }
+
+    public HttpResponseStream<IN, APP> validate(Consumer<Validator<IN>> config) {
+        return flatMap(ctx -> {
+            Validator<IN> v = new Validator<>(ctx.in(), ctx.http(), "");
+            config.accept(v);
+            return v.toResult();
+        });
     }
 
     public HttpResponseStream<IN, APP> requireJwt(JwtProvider jwtProvider) {
