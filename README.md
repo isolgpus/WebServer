@@ -108,21 +108,15 @@ public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserRespon
 
 ### Error Handling
 
-Use `flatMap` with `HttpResult.error()` to short-circuit the pipeline. Once an error is returned, subsequent steps are skipped and the error response is sent immediately:
+Use `flatMap` with `HttpResult.error()` to short-circuit the pipeline:
 
 ```java
-@Override
-public RequestPipeline<Response> handle(HttpResponseStream<Request, MyState> stream) {
-    return stream
-        .map(ctx -> ctx.in().numberToMultiply)
-        .flatMap(ctx -> {
-            if (ctx.in() < 0) {
-                return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Number must be positive"));
-            }
-            return Result.success(ctx.in());
-        })
-        .complete(ctx -> HttpResult.success(new Response(ctx.in() * 2)));
-}
+.flatMap(ctx -> {
+    if (ctx.in() < 0) {
+        return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Number must be positive"));
+    }
+    return Result.success(ctx.in());
+})
 ```
 
 ### Accessing HTTP Context
@@ -149,24 +143,17 @@ public RequestPipeline<EchoResponse> handle(HttpResponseStream<EchoRequest, MySt
 
 ### Validation
 
-Use `validate()` in your pipeline to declare field-level rules declaratively. All rules are evaluated together and, if any fail, the pipeline short-circuits with a `422` response containing a map of field errors.
+`validate()` evaluates all field rules together and short-circuits with a `422` response if any fail. You can validate JSON body fields, query parameters, and path parameters:
 
 ```java
-@Override
-public RequestPipeline<Response> handle(HttpResponseStream<Request, MyState> stream) {
-    return stream
-        .validate(v -> {
-            v.jsonField("name", r -> r.name).required().minLength(2);
-            v.jsonField("email", r -> r.email).required().email();
-            v.jsonField("age", r -> r.age).required().min(0).max(150);
-            v.queryParam("page").required().matches("[0-9]+");
-            v.pathParam("userId").required().matches("[0-9]+");
-        })
-        .complete(ctx -> HttpResult.success(new Response(ctx.in().name)));
-}
+v.jsonField("name", r -> r.name).required().minLength(2);
+v.jsonField("email", r -> r.email).required().email();
+v.jsonField("age", r -> r.age).required().min(0).max(150);
+v.queryParam("page").required().matches("[0-9]+");
+v.pathParam("userId").required().matches("[0-9]+");
 ```
 
-Nested objects are validated with the `jsonField` overload that takes a `Consumer<Validator<N>>` block:
+Nested objects use the `jsonField` overload that takes a `Consumer<Validator<N>>` block:
 
 ```java
 v.jsonField("address", r -> r.address, a -> {
@@ -280,11 +267,9 @@ WebServer.start(MyApp::registerRoutes, new WebServiceConfigBuilder()
 
 ## Testing Your Handlers
 
-The framework ships with a stub router that executes your handlers in-memory without Vert.x. Your route registration code is shared between production and test — the only difference is which router implementation it runs against.
-
 ### Setting Up a Test Client
 
-Create a `TestApplicationClient` that registers the same routes against a `StubRouter`:
+Register the same routes against a `StubRouter` to run handlers in-memory without Vert.x:
 
 ```java
 public class TestApplicationClient {
