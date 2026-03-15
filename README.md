@@ -69,7 +69,76 @@ public class MultiplyHandler extends VertxJsonRoute<MultiplyRequest, MultiplyRes
 
 - `map` / `flatMap` — run on the event loop; context provides `ctx.in()`, `ctx.http()`, `ctx.app()`
 - `blockingMap` / `blockingFlatMap` — run on a worker thread (for database calls, file I/O, etc.); context provides `ctx.in()` and `ctx.http()` only (no app state access by design)
+- `asyncMap` / `asyncFlatMap` — run asynchronously, returning a `CompletableFuture`; context provides `ctx.in()`, `ctx.http()`, `ctx.app()`
 - `complete` / `blockingComplete` — terminal operation that produces the final response
+
+### Realistic Pipeline Example
+
+A handler that validates input, updates application state, checks and writes to a database, publishes a Kafka event, and handles the async result — each step extracted as a method reference:
+
+```java
+public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserResponse, AppState> {
+
+    private final UserDatabase database;
+    private final KafkaProducer kafka;
+
+    public AddUserHandler(UserDatabase database, KafkaProducer kafka) {
+        this.database = database;
+        this.kafka = kafka;
+    }
+
+    @Override
+    public RequestPipeline<AddUserResponse> handle(HttpResponseStream<AddUserRequest, AppState> stream) {
+        return stream
+            .flatMap(this::validateRequest)
+            .map(this::updateApplicationState)
+            .blockingFlatMap(this::validateAgainstDatabase)
+            .blockingMap(this::writeToDatabase)
+            .asyncMap(this::sendKafkaEvent)
+            .flatMap(this::handleKafkaResponse)
+            .complete(this::toResponse);
+    }
+
+    private Result<HttpErrorResponse, AddUserRequest> validateRequest(RouteContext<AddUserRequest, AppState> ctx) {
+        if (ctx.in().name == null || ctx.in().name.isBlank()) {
+            return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Name is required"));
+        }
+        return HttpResult.success(ctx.in());
+    }
+
+    private User updateApplicationState(RouteContext<AddUserRequest, AppState> ctx) {
+        User user = new User(ctx.in().name, ctx.in().email);
+        ctx.app().getUserCache().add(user);
+        return user;
+    }
+
+    private Result<HttpErrorResponse, User> validateAgainstDatabase(BlockingContext<User> ctx) {
+        if (database.existsByEmail(ctx.in().email)) {
+            return HttpResult.error(ErrorStatusCode.UNPROCESSABLE_ENTITY, new ErrorMessageResponse("Email already registered"));
+        }
+        return HttpResult.success(ctx.in());
+    }
+
+    private User writeToDatabase(BlockingContext<User> ctx) {
+        return database.save(ctx.in());
+    }
+
+    private CompletableFuture<KafkaResult> sendKafkaEvent(RouteContext<User, AppState> ctx) {
+        return kafka.send("user-events", new UserCreatedEvent(ctx.in().id));
+    }
+
+    private Result<HttpErrorResponse, User> handleKafkaResponse(RouteContext<KafkaResult, AppState> ctx) {
+        if (ctx.in().failed()) {
+            return HttpResult.error(ErrorStatusCode.INTERNAL_SERVER_ERROR, new ErrorMessageResponse("Failed to publish event"));
+        }
+        return HttpResult.success(ctx.in().user());
+    }
+
+    private Result<HttpErrorResponse, AddUserResponse> toResponse(RouteContext<User, AppState> ctx) {
+        return HttpResult.success(new AddUserResponse(ctx.in().id, ctx.in().name));
+    }
+}
+```
 
 ### Error Handling
 
