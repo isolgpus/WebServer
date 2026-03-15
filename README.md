@@ -101,13 +101,6 @@ public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserRespon
             .flatMap(this::handleKafkaResponse)
             .complete(this::toResponse);
     }
-
-    private User updateApplicationState(RouteContext<AddUserRequest, AppState> ctx) { /* ... */ }
-    private Result<HttpErrorResponse, User> validateAgainstDatabase(BlockingContext<User> ctx) { /* ... */ }
-    private User writeToDatabase(BlockingContext<User> ctx) { /* ... */ }
-    private CompletableFuture<KafkaResult> sendKafkaEvent(RouteContext<User, AppState> ctx) { /* ... */ }
-    private Result<HttpErrorResponse, User> handleKafkaResponse(RouteContext<KafkaResult, AppState> ctx) { /* ... */ }
-    private Result<HttpErrorResponse, AddUserResponse> toResponse(RouteContext<User, AppState> ctx) { /* ... */ }
 }
 ```
 
