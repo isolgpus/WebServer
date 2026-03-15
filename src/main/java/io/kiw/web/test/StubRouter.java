@@ -57,6 +57,9 @@ public class StubRouter extends RouterWrapper {
                     break;
                 }
             }
+            if (context.hasFinished()) {
+                break;
+            }
         }
 
         StubHttpResponse response = context.getResponse();
