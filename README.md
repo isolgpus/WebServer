@@ -102,37 +102,12 @@ public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserRespon
             .complete(this::toResponse);
     }
 
-    private User updateApplicationState(RouteContext<AddUserRequest, AppState> ctx) {
-        User user = new User(ctx.in().name, ctx.in().email);
-        ctx.app().getUserCache().add(user);
-        return user;
-    }
-
-    private Result<HttpErrorResponse, User> validateAgainstDatabase(BlockingContext<User> ctx) {
-        if (database.existsByEmail(ctx.in().email)) {
-            return HttpResult.error(ErrorStatusCode.UNPROCESSABLE_ENTITY, new ErrorMessageResponse("Email already registered"));
-        }
-        return HttpResult.success(ctx.in());
-    }
-
-    private User writeToDatabase(BlockingContext<User> ctx) {
-        return database.save(ctx.in());
-    }
-
-    private CompletableFuture<KafkaResult> sendKafkaEvent(RouteContext<User, AppState> ctx) {
-        return kafka.send("user-events", new UserCreatedEvent(ctx.in().id));
-    }
-
-    private Result<HttpErrorResponse, User> handleKafkaResponse(RouteContext<KafkaResult, AppState> ctx) {
-        if (ctx.in().failed()) {
-            return HttpResult.error(ErrorStatusCode.INTERNAL_SERVER_ERROR, new ErrorMessageResponse("Failed to publish event"));
-        }
-        return HttpResult.success(ctx.in().user());
-    }
-
-    private Result<HttpErrorResponse, AddUserResponse> toResponse(RouteContext<User, AppState> ctx) {
-        return HttpResult.success(new AddUserResponse(ctx.in().id, ctx.in().name));
-    }
+    private User updateApplicationState(RouteContext<AddUserRequest, AppState> ctx) { /* ... */ }
+    private Result<HttpErrorResponse, User> validateAgainstDatabase(BlockingContext<User> ctx) { /* ... */ }
+    private User writeToDatabase(BlockingContext<User> ctx) { /* ... */ }
+    private CompletableFuture<KafkaResult> sendKafkaEvent(RouteContext<User, AppState> ctx) { /* ... */ }
+    private Result<HttpErrorResponse, User> handleKafkaResponse(RouteContext<KafkaResult, AppState> ctx) { /* ... */ }
+    private Result<HttpErrorResponse, AddUserResponse> toResponse(RouteContext<User, AppState> ctx) { /* ... */ }
 }
 ```
 
