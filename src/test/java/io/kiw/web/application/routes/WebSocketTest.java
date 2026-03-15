@@ -8,6 +8,8 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static org.junit.Assert.fail;
+
 public class WebSocketTest {
 
     @Test
@@ -96,6 +98,18 @@ public class WebSocketTest {
         Assert.assertEquals("{\"echo\":\"lobby/alice: hi\"}", received.get(0));
 
         client.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldThrowWhenNoWebSocketRouteMatches() {
+        TestApplicationClient client = new TestApplicationClient();
+
+        try {
+            client.webSocket(StubRequest.request("/ws/nonexistent"));
+            fail("Expected IllegalArgumentException");
+        } catch (IllegalArgumentException e) {
+            Assert.assertEquals("No WebSocket route registered for path: /ws/nonexistent", e.getMessage());
+        }
     }
 
     @Test

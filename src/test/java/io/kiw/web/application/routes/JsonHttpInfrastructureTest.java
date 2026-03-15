@@ -656,6 +656,80 @@ public class JsonHttpInfrastructureTest {
     }
 
     @Test
+    public void shouldReturnApplicationState() {
+        StubHttpResponse response = testApplicationClient.post(StubRequest.request("/state").body("{}"));
+
+        Assert.assertEquals(StubHttpResponse.response(json().put("longValue", 55).toString()), response);
+    }
+
+    @Test
+    public void shouldShortCircuitWhenFilterReturnsError() {
+        StubHttpResponse response = testApplicationClient.get(StubRequest.request("/protected/resource"));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(json()
+                .put("message", "filter blocked")
+                .set("errors", json())
+                .toString()).withStatusCode(401),
+            response
+        );
+    }
+
+    @Test
+    public void shouldHandleBlockingFlatMapFailure() {
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/blockingFailing").body(json().put("numberToMultiply", 5).toString()));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(json()
+                .put("message", "blocking flat map failed")
+                .set("errors", json())
+                .toString()).withStatusCode(400),
+            response
+        );
+    }
+
+    @Test
+    public void shouldHandleAsyncFlatMapFailure() {
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/asyncFailing").body(json().put("value", 5).toString()));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(json()
+                .put("message", "async flat map failed")
+                .set("errors", json())
+                .toString()).withStatusCode(400),
+            response
+        );
+    }
+
+    @Test
+    public void shouldHandleExceptionInAsyncMapHandler() {
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/throw").body(json().put("where", "asyncMap").toString()));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
+            response
+        );
+
+        testApplicationClient.assertException("app error in asyncMap");
+    }
+
+    @Test
+    public void shouldHandleExceptionInAsyncBlockingMapHandler() {
+        StubHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/throw").body(json().put("where", "asyncBlockingMap").toString()));
+
+        Assert.assertEquals(
+            StubHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
+            response
+        );
+
+        testApplicationClient.assertException("app error in asyncBlockingMap");
+    }
+
+    @Test
     public void shouldReturnValidationErrorForInvalidPathParam() {
         String body = json()
             .put("name", "Alice")

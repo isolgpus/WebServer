@@ -53,6 +53,10 @@ public class TestApplicationClient {
         routesRegister.jsonRoute("/asyncMap", Method.POST, state, new AsyncMapTestHandler());
         routesRegister.jsonRoute("/asyncBlockingMap", Method.POST, state, new AsyncBlockingMapTestHandler());
         routesRegister.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
+        routesRegister.jsonFilter("/protected/*", state, new ErrorFilter());
+        routesRegister.jsonRoute("/protected/resource", Method.GET, state, new GetEchoHandler());
+        routesRegister.jsonRoute("/blockingFailing", Method.POST, state, new BlockingFlatMapFailHandler());
+        routesRegister.jsonRoute("/asyncFailing", Method.POST, state, new AsyncFlatMapFailHandler());
         routesRegister.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler());
         routesRegister.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
         routesRegister.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
