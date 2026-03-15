@@ -74,7 +74,7 @@ public class MultiplyHandler extends VertxJsonRoute<MultiplyRequest, MultiplyRes
 
 ### Realistic Pipeline Example
 
-A handler that validates input, updates application state, checks and writes to a database, publishes a Kafka event, and handles the async result — each step extracted as a method reference:
+A handler that validates input, updates application state, checks and writes to a database, publishes a Kafka event, and handles the async result — using built-in validation and method references for each pipeline step:
 
 ```java
 public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserResponse, AppState> {
@@ -90,20 +90,16 @@ public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserRespon
     @Override
     public RequestPipeline<AddUserResponse> handle(HttpResponseStream<AddUserRequest, AppState> stream) {
         return stream
-            .flatMap(this::validateRequest)
+            .validate(v -> {
+                v.jsonField("name", r -> r.name).required().minLength(2);
+                v.jsonField("email", r -> r.email).required().email();
+            })
             .map(this::updateApplicationState)
             .blockingFlatMap(this::validateAgainstDatabase)
             .blockingMap(this::writeToDatabase)
             .asyncMap(this::sendKafkaEvent)
             .flatMap(this::handleKafkaResponse)
             .complete(this::toResponse);
-    }
-
-    private Result<HttpErrorResponse, AddUserRequest> validateRequest(RouteContext<AddUserRequest, AppState> ctx) {
-        if (ctx.in().name == null || ctx.in().name.isBlank()) {
-            return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Name is required"));
-        }
-        return HttpResult.success(ctx.in());
     }
 
     private User updateApplicationState(RouteContext<AddUserRequest, AppState> ctx) {
