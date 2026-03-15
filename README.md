@@ -70,13 +70,7 @@ Handlers are typed transformation chains built by calling methods on `HttpRespon
 | `complete` | Event loop | `in()`, `http()`, `app()` | `Result` | **Terminal** — produce the final response |
 | `blockingComplete` | Worker | `in()`, `http()` | `Result` | **Terminal** — produce the final response from a blocking operation |
 
-Blocking steps intentionally exclude `app()` to prevent shared mutable state from being accessed off the event loop.
-
-`flat` variants return a `Result` and can short-circuit the pipeline with an error — once an error is returned, all subsequent steps are skipped.
-
 #### Example
-
-A handler that validates input, updates application state, checks and writes to a database, publishes a Kafka event, and handles the async result:
 
 ```java
 public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserResponse, AppState> {
@@ -153,7 +147,7 @@ v.queryParam("page").required().matches("[0-9]+");
 v.pathParam("userId").required().matches("[0-9]+");
 ```
 
-Nested objects use the `jsonField` overload that takes a `Consumer<Validator<N>>` block:
+Nested objects use a `jsonField` overload with a validation block:
 
 ```java
 v.jsonField("address", r -> r.address, a -> {
