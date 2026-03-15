@@ -23,9 +23,9 @@ public abstract class HttpResult<S> {
         return Result.success(response);
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public static <S> Result<HttpErrorResponse, S> success(S response, SuccessStatusCode statusCode) {
-        return (Result<HttpErrorResponse, S>) Result.success(new HttpSuccessResponse<>(response, statusCode));
+        return (Result) Result.success(new HttpSuccessResponse<>(response, statusCode));
     }
 
     public static <S> Result<HttpErrorResponse, S> success() {
