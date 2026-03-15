@@ -186,9 +186,26 @@ On failure the response body is:
 }
 ```
 
+Lists are validated with `listField`, which supports size constraints and per-element validation via `each()`:
+
+```java
+v.listField("addresses", r -> r.addresses)
+    .required()
+    .minSize(1)
+    .maxSize(10)
+    .each(a -> {
+        a.jsonField("city", x -> x.city).required();
+        a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
+    });
+```
+
+Element errors are keyed by index, e.g. `addresses[0].city`.
+
 **String rules:** `required()`, `minLength(n)`, `maxLength(n)`, `email()`, `matches(regex)`
 
 **Numeric rules:** `required()`, `min(n)`, `max(n)`
+
+**List rules:** `required()`, `minSize(n)`, `maxSize(n)`, `each(block)`
 
 ### Filters
 
