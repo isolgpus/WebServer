@@ -1,9 +1,13 @@
 package io.kiw.web.test.handler;
 
+import io.kiw.web.infrastructure.openapi.OpenApiMetadataBuilder;
+
+import java.util.Optional;
 import java.util.OptionalInt;
 
 public class RouteConfigBuilder {
     private OptionalInt timeoutInMillis = OptionalInt.empty();
+    private OpenApiMetadataBuilder openApiBuilder = null;
 
     public RouteConfigBuilder() {
     }
@@ -13,7 +17,17 @@ public class RouteConfigBuilder {
         return this;
     }
 
+    public OpenApiMetadataBuilder openApi() {
+        if (openApiBuilder == null) {
+            openApiBuilder = new OpenApiMetadataBuilder(this);
+        }
+        return openApiBuilder;
+    }
+
     public RouteConfig build() {
-        return new RouteConfig(timeoutInMillis);
+        return new RouteConfig(
+            timeoutInMillis,
+            openApiBuilder != null ? Optional.of(openApiBuilder.buildMetadata()) : Optional.empty()
+        );
     }
 }

@@ -7,10 +7,15 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.kiw.web.infrastructure.cors.CorsConfig;
 import io.kiw.web.infrastructure.ender.FileEnder;
 import io.kiw.web.infrastructure.ender.JsonEnder;
+import io.kiw.web.infrastructure.openapi.OpenApiCollector;
+import io.kiw.web.infrastructure.openapi.OpenApiRoute;
+import io.kiw.web.infrastructure.openapi.RouteDescriptor;
+import io.kiw.web.infrastructure.openapi.TypeResolver;
 import io.kiw.web.test.handler.RouteConfig;
 import io.kiw.web.test.handler.RouteConfigBuilder;
 import io.vertx.core.buffer.Buffer;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -22,10 +27,19 @@ public class RoutesRegister {
     private final ObjectMapper objectMapper = new ObjectMapper()
         .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private final OpenApiCollector openApiCollector = new OpenApiCollector();
 
     public RoutesRegister(RouterWrapper router) {
 
         this.router = router;
+    }
+
+    public OpenApiCollector getOpenApiCollector() {
+        return openApiCollector;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
     }
 
     public void cors(CorsConfig corsConfig) {
@@ -57,6 +71,15 @@ public class RoutesRegister {
 
         RequestPipeline<OUT> flow = vertxJsonRoute.handle(httpResponseStream);
 
+        Type[] typeArgs = TypeResolver.resolveTypeArguments(vertxJsonRoute.getClass(), VertxJsonRoute.class);
+        openApiCollector.addRoute(new RouteDescriptor(
+            path, method,
+            typeArgs != null ? typeArgs[0] : null,
+            typeArgs != null ? typeArgs[1] : null,
+            "application/json", "application/json",
+            RouteDescriptor.RouteKind.JSON,
+            routeConfig.openApiMetadata.orElse(null)
+        ));
 
         router.route(path, method, "*", "application/json", flow, routeConfig);
     }
@@ -85,10 +108,30 @@ public class RoutesRegister {
         });
         RequestPipeline flow = fileUploaderHandler.handle(fileUploadStream);
 
+        Type[] typeArgs = TypeResolver.resolveTypeArguments(fileUploaderHandler.getClass(), VertxFileUploadRoute.class);
+        openApiCollector.addRoute(new RouteDescriptor(
+            path, method,
+            null,
+            typeArgs != null ? typeArgs[0] : null,
+            "multipart/form-data", "application/json",
+            RouteDescriptor.RouteKind.UPLOAD,
+            null
+        ));
+
         router.route(path, method, "multipart/form-data", "application/json", flow, new RouteConfigBuilder().build());
     }
 
     public <IN, OUT, APP> void webSocketRoute(String path, APP applicationState, WebSocketRoute<IN, OUT, APP> webSocketRoute) {
+        Type[] typeArgs = TypeResolver.resolveTypeArguments(webSocketRoute.getClass(), WebSocketRoute.class);
+        openApiCollector.addRoute(new RouteDescriptor(
+            path, null,
+            typeArgs != null ? typeArgs[0] : null,
+            typeArgs != null ? typeArgs[1] : null,
+            null, null,
+            RouteDescriptor.RouteKind.WEBSOCKET,
+            null
+        ));
+
         WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler());
         router.webSocketRoute(path, handler);
     }
@@ -103,6 +146,22 @@ public class RoutesRegister {
         });
         RequestPipeline flow = fileDownloadHandler.handle(fileDownloadStream);
 
+        Type[] typeArgs = TypeResolver.resolveTypeArguments(fileDownloadHandler.getClass(), VertxFileDownloadRoute.class);
+        openApiCollector.addRoute(new RouteDescriptor(
+            path, method,
+            typeArgs != null ? typeArgs[0] : null,
+            DownloadFileResponse.class,
+            "*", contentType,
+            RouteDescriptor.RouteKind.DOWNLOAD,
+            null
+        ));
+
         router.route(path, method, "*", contentType, flow, new RouteConfigBuilder().build());
+    }
+
+    public void serveOpenApiSpec(String path, String title, String version, String description) {
+        OpenApiRoute openApiRoute = new OpenApiRoute(openApiCollector, objectMapper, title, version, description);
+        RouteConfig config = new RouteConfigBuilder().openApi().hidden().build();
+        jsonRoute(path, Method.GET, null, openApiRoute, config);
     }
 }
