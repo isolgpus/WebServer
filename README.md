@@ -51,30 +51,32 @@ public class Main {
 
 ### Handler Pipeline
 
-Handlers build a processing chain using `map`, `flatMap`, `blockingMap`, and `complete`. Each step receives a context object (`ctx`) that exposes the current value via `ctx.in()`, the HTTP context via `ctx.http()`, and the application state via `ctx.app()`:
+Handlers are typed transformation chains built by calling methods on `HttpResponseStream`. Each step receives a context object (`ctx`) that provides access to the current value (`ctx.in()`), the HTTP context (`ctx.http()`), and — for non-blocking steps — the application state (`ctx.app()`).
 
-```java
-public class MultiplyHandler extends VertxJsonRoute<MultiplyRequest, MultiplyResponse, MyState> {
+#### Pipeline Methods
 
-    @Override
-    public RequestPipeline<MultiplyResponse> handle(HttpResponseStream<MultiplyRequest, MyState> stream) {
-        return stream
-            .map(ctx -> ctx.in().numberToMultiply)      // extract on event loop
-            .blockingMap(ctx -> ctx.in() * 2)           // compute on worker thread
-            .complete(ctx ->                             // build response
-                HttpResult.success(new MultiplyResponse(ctx.in())));
-    }
-}
-```
+| Method | Thread | Context | Returns | Use when you need to… |
+|---|---|---|---|---|
+| `map` | Event loop | `in()`, `http()`, `app()` | Value | Transform a value without error handling |
+| `flatMap` | Event loop | `in()`, `http()`, `app()` | `Result` | Transform a value and potentially short-circuit with an error |
+| `blockingMap` | Worker | `in()`, `http()` | Value | Perform blocking I/O (DB reads, file I/O) |
+| `blockingFlatMap` | Worker | `in()`, `http()` | `Result` | Perform blocking I/O that can fail |
+| `asyncMap` | Event loop | `in()`, `http()`, `app()` | `CompletableFuture<Value>` | Call an async API (Kafka, HTTP client) |
+| `asyncFlatMap` | Event loop | `in()`, `http()`, `app()` | `CompletableFuture<Result>` | Call an async API that can fail |
+| `asyncBlockingMap` | Worker | `in()`, `http()` | `CompletableFuture<Value>` | Blocking setup followed by an async result |
+| `asyncBlockingFlatMap` | Worker | `in()`, `http()` | `CompletableFuture<Result>` | Blocking setup followed by an async result that can fail |
+| `validate` | Event loop | `in()`, `http()` | `Result` | Declaratively validate fields (see [Validation](#validation)) |
+| `requireJwt` | Event loop | `in()`, `http()` | `Result` | Require and validate a JWT Bearer token |
+| `complete` | Event loop | `in()`, `http()`, `app()` | `Result` | **Terminal** — produce the final response |
+| `blockingComplete` | Worker | `in()`, `http()` | `Result` | **Terminal** — produce the final response from a blocking operation |
 
-- `map` / `flatMap` — run on the event loop; context provides `ctx.in()`, `ctx.http()`, `ctx.app()`
-- `blockingMap` / `blockingFlatMap` — run on a worker thread (for database calls, file I/O, etc.); context provides `ctx.in()` and `ctx.http()` only (no app state access by design)
-- `asyncMap` / `asyncFlatMap` — run asynchronously, returning a `CompletableFuture`; context provides `ctx.in()`, `ctx.http()`, `ctx.app()`
-- `complete` / `blockingComplete` — terminal operation that produces the final response
+Blocking steps intentionally exclude `app()` to prevent shared mutable state from being accessed off the event loop.
 
-### Realistic Pipeline Example
+`flat` variants return a `Result` and can short-circuit the pipeline with an error — once an error is returned, all subsequent steps are skipped.
 
-A handler that validates input, updates application state, checks and writes to a database, publishes a Kafka event, and handles the async result — using built-in validation and method references for each pipeline step:
+#### Example
+
+A handler that validates input, updates application state, checks and writes to a database, publishes a Kafka event, and handles the async result:
 
 ```java
 public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserResponse, AppState> {
