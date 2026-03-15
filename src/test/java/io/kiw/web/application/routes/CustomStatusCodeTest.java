@@ -29,7 +29,7 @@ public class CustomStatusCodeTest {
     public void shouldAllowHandlerToSetCreatedStatusCode() {
         StubHttpResponse response = testApplicationClient.post(
             StubRequest.request("/statusCode")
-                .body(json().put("statusCode", 201).put("value", "created").toString()));
+                .body(json().put("statusCode", "CREATED").put("value", "created").toString()));
 
         Assert.assertEquals(
             StubHttpResponse.response(json().put("value", "created").toString()).withStatusCode(201),
@@ -40,7 +40,7 @@ public class CustomStatusCodeTest {
     public void shouldAllowHandlerToSetNoContentStatusCode() {
         StubHttpResponse response = testApplicationClient.post(
             StubRequest.request("/statusCode")
-                .body(json().put("statusCode", 204).put("value", "done").toString()));
+                .body(json().put("statusCode", "NO_CONTENT").put("value", "done").toString()));
 
         Assert.assertEquals(
             StubHttpResponse.response(json().put("value", "done").toString()).withStatusCode(204),
@@ -51,7 +51,7 @@ public class CustomStatusCodeTest {
     public void shouldDefaultToOkWhenStatusCodeNotSet() {
         StubHttpResponse response = testApplicationClient.post(
             StubRequest.request("/statusCode")
-                .body(json().put("statusCode", 200).put("value", "ok").toString()));
+                .body(json().put("statusCode", "OK").put("value", "ok").toString()));
 
         Assert.assertEquals(
             StubHttpResponse.response(json().put("value", "ok").toString()),

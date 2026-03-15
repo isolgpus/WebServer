@@ -82,7 +82,7 @@ public RequestPipeline<Response> handle(HttpResponseStream<Request, MyState> str
         .map(ctx -> ctx.in().numberToMultiply)
         .flatMap(ctx -> {
             if (ctx.in() < 0) {
-                return HttpResult.error(400, new ErrorMessageResponse("Number must be positive"));
+                return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Number must be positive"));
             }
             return Result.success(ctx.in());
         })

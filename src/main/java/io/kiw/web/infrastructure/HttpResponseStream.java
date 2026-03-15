@@ -53,12 +53,12 @@ public class HttpResponseStream<IN, APP> {
         return flatMap(ctx -> {
             String authHeader = ctx.http().getRequestHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                return HttpResult.error(401, new ErrorMessageResponse("Missing or invalid Authorization header"));
+                return HttpResult.error(ErrorStatusCode.UNAUTHORIZED, new ErrorMessageResponse("Missing or invalid Authorization header"));
             }
             String token = authHeader.substring(7);
             Result<String, JwtClaims> result = jwtProvider.validateToken(token);
             return result.fold(
-                error -> HttpResult.error(401, new ErrorMessageResponse(error)),
+                error -> HttpResult.error(ErrorStatusCode.UNAUTHORIZED, new ErrorMessageResponse(error)),
                 claims -> {
                     ctx.http().ctx.put("__jwt_claims__", claims);
                     return HttpResult.success(ctx.in());

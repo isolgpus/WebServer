@@ -1,6 +1,8 @@
 package io.kiw.web.test.handler;
 
+import io.kiw.web.infrastructure.SuccessStatusCode;
+
 public class StatusCodeRequest {
-    public int statusCode;
+    public SuccessStatusCode statusCode;
     public String value;
 }

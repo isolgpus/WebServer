@@ -17,6 +17,6 @@ public class TimeoutTestHandler extends VertxJsonRoute<ThrowRequest, ThrowRespon
                 return ctx.in();
 
             }).complete(ctx ->
-                HttpResult.error(500, new ErrorMessageResponse("should not have got here")));
+                HttpResult.error(ErrorStatusCode.INTERNAL_SERVER_ERROR, new ErrorMessageResponse("should not have got here")));
     }
 }
