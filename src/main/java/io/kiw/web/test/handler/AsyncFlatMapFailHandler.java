@@ -10,7 +10,7 @@ public class AsyncFlatMapFailHandler extends VertxJsonRoute<AsyncMapRequest, Asy
     @Override
     public RequestPipeline<AsyncMapResponse> handle(HttpResponseStream<AsyncMapRequest, MyApplicationState> httpResponseStream) {
         return httpResponseStream
-            .asyncFlatMap(ctx -> CompletableFuture.completedFuture(HttpResult.error(400, new ErrorMessageResponse("async flat map failed"))))
+            .<AsyncMapResponse>asyncFlatMap(ctx -> CompletableFuture.completedFuture(HttpResult.error(400, new ErrorMessageResponse("async flat map failed"))))
             .complete(ctx -> HttpResult.success(ctx.in()));
     }
 }
