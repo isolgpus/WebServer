@@ -42,10 +42,6 @@ public class HttpContext {
         return ctx.getPathParam(key);
     }
 
-    public void setStatusCode(int statusCode) {
-        ctx.setStatusCode(statusCode);
-    }
-
     public JwtClaims getJwtClaims() {
         return (JwtClaims) ctx.get("__jwt_claims__");
     }

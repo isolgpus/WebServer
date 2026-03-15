@@ -10,9 +10,7 @@ public class StatusCodeTestHandler extends VertxJsonRoute<StatusCodeRequest, Sta
 
     @Override
     public RequestPipeline<StatusCodeResponse> handle(HttpResponseStream<StatusCodeRequest, MyApplicationState> e) {
-        return e.complete(ctx -> {
-            ctx.http().setStatusCode(ctx.in().statusCode);
-            return HttpResult.success(new StatusCodeResponse(ctx.in().value));
-        });
+        return e.complete(ctx ->
+            HttpResult.success(new StatusCodeResponse(ctx.in().value), ctx.in().statusCode));
     }
 }

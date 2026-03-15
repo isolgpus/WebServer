@@ -95,7 +95,12 @@ public abstract class RouterWrapper {
             s -> {
                 if (applicationInstruction.lastStep) {
                     try {
-                        ender.end(vertxContext, s);
+                        Object value = s;
+                        if (s instanceof HttpSuccessResponse<?> successResponse) {
+                            vertxContext.setStatusCode(successResponse.statusCode);
+                            value = successResponse.value;
+                        }
+                        ender.end(vertxContext, value);
                     } catch (RuntimeException e) {
                         handleException(vertxContext, e);
                     }
