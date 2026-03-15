@@ -59,21 +59,21 @@ public class ValidatorTest {
     // --- required ---
 
     @Test
-    public void required_failsOnNull() {
+    public void shouldFailRequiredValidationWhenNull() {
         Validator<Body> v = validator(new Body(null, "a@b.com", 1, null));
         v.jsonField("name", r -> r.name).required();
         assertError(v, "name", "must not be blank");
     }
 
     @Test
-    public void required_failsOnBlank() {
+    public void shouldFailRequiredValidationWhenBlank() {
         Validator<Body> v = validator(new Body("  ", "a@b.com", 1, null));
         v.jsonField("name", r -> r.name).required();
         assertError(v, "name", "must not be blank");
     }
 
     @Test
-    public void required_passesOnNonBlank() {
+    public void shouldPassRequiredValidationWhenNonBlank() {
         Validator<Body> v = validator(new Body("Alice", "a@b.com", 1, null));
         v.jsonField("name", r -> r.name).required();
         assertNoErrors(v);
@@ -82,21 +82,21 @@ public class ValidatorTest {
     // --- minLength ---
 
     @Test
-    public void minLength_failsBelowMin() {
+    public void shouldFailMinLengthWhenBelowMin() {
         Validator<Body> v = validator(new Body("Al", null, null, null));
         v.jsonField("name", r -> r.name).minLength(3);
         assertError(v, "name", "must be at least 3 characters");
     }
 
     @Test
-    public void minLength_passesAtMin() {
+    public void shouldPassMinLengthAtMin() {
         Validator<Body> v = validator(new Body("Ali", null, null, null));
         v.jsonField("name", r -> r.name).minLength(3);
         assertNoErrors(v);
     }
 
     @Test
-    public void minLength_skipsNull() {
+    public void shouldSkipMinLengthValidationWhenNull() {
         Validator<Body> v = validator(new Body(null, null, null, null));
         v.jsonField("name", r -> r.name).minLength(3);
         assertNoErrors(v);
@@ -105,14 +105,14 @@ public class ValidatorTest {
     // --- maxLength ---
 
     @Test
-    public void maxLength_failsAboveMax() {
+    public void shouldFailMaxLengthWhenAboveMax() {
         Validator<Body> v = validator(new Body("Alicia", null, null, null));
         v.jsonField("name", r -> r.name).maxLength(3);
         assertError(v, "name", "must be at most 3 characters");
     }
 
     @Test
-    public void maxLength_passesAtMax() {
+    public void shouldPassMaxLengthAtMax() {
         Validator<Body> v = validator(new Body("Ali", null, null, null));
         v.jsonField("name", r -> r.name).maxLength(3);
         assertNoErrors(v);
@@ -121,35 +121,35 @@ public class ValidatorTest {
     // --- email ---
 
     @Test
-    public void email_failsWithoutAt() {
+    public void shouldFailEmailValidationWithoutAt() {
         Validator<Body> v = validator(new Body(null, "notanemail", null, null));
         v.jsonField("email", r -> r.email).email();
         assertError(v, "email", "must be a valid email address");
     }
 
     @Test
-    public void email_failsWithSpaces() {
+    public void shouldFailEmailValidationWithSpaces() {
         Validator<Body> v = validator(new Body(null, "a b@c.com", null, null));
         v.jsonField("email", r -> r.email).email();
         assertError(v, "email", "must be a valid email address");
     }
 
     @Test
-    public void email_passesOnValid() {
+    public void shouldPassEmailValidationOnValidEmail() {
         Validator<Body> v = validator(new Body(null, "user@example.com", null, null));
         v.jsonField("email", r -> r.email).email();
         assertNoErrors(v);
     }
 
     @Test
-    public void email_skipsNull() {
+    public void shouldSkipEmailValidationWhenNull() {
         Validator<Body> v = validator(new Body(null, null, null, null));
         v.jsonField("email", r -> r.email).email();
         assertNoErrors(v);
     }
 
     @Test
-    public void email_skipsBlank() {
+    public void shouldSkipEmailValidationWhenBlank() {
         Validator<Body> v = validator(new Body(null, "  ", null, null));
         v.jsonField("email", r -> r.email).email();
         assertNoErrors(v);
@@ -158,14 +158,14 @@ public class ValidatorTest {
     // --- matches ---
 
     @Test
-    public void matches_failsOnNonMatch() {
+    public void shouldFailMatchesValidationWhenNoMatch() {
         Validator<Body> v = validator(new Body("abc", null, null, null));
         v.jsonField("name", r -> r.name).matches("[0-9]+");
         assertError(v, "name", "must match pattern: [0-9]+");
     }
 
     @Test
-    public void matches_passesOnMatch() {
+    public void shouldPassMatchesValidationWhenMatched() {
         Validator<Body> v = validator(new Body("123", null, null, null));
         v.jsonField("name", r -> r.name).matches("[0-9]+");
         assertNoErrors(v);
@@ -174,35 +174,35 @@ public class ValidatorTest {
     // --- numeric min/max ---
 
     @Test
-    public void min_failsBelowMin() {
+    public void shouldFailMinValidationWhenBelowMin() {
         Validator<Body> v = validator(new Body(null, null, -1, null));
         v.jsonField("age", r -> r.age).min(0);
         assertError(v, "age", "must be at least 0.0");
     }
 
     @Test
-    public void min_passesAtMin() {
+    public void shouldPassMinValidationAtMin() {
         Validator<Body> v = validator(new Body(null, null, 0, null));
         v.jsonField("age", r -> r.age).min(0);
         assertNoErrors(v);
     }
 
     @Test
-    public void max_failsAboveMax() {
+    public void shouldFailMaxValidationWhenAboveMax() {
         Validator<Body> v = validator(new Body(null, null, 200, null));
         v.jsonField("age", r -> r.age).max(150);
         assertError(v, "age", "must be at most 150.0");
     }
 
     @Test
-    public void max_passesAtMax() {
+    public void shouldPassMaxValidationAtMax() {
         Validator<Body> v = validator(new Body(null, null, 150, null));
         v.jsonField("age", r -> r.age).max(150);
         assertNoErrors(v);
     }
 
     @Test
-    public void numericRequired_failsOnNull() {
+    public void shouldFailNumericRequiredValidationWhenNull() {
         Validator<Body> v = validator(new Body(null, null, null, null));
         v.jsonField("age", r -> r.age).required();
         assertError(v, "age", "must not be blank");
@@ -211,7 +211,7 @@ public class ValidatorTest {
     // --- multiple errors accumulate ---
 
     @Test
-    public void multipleRulesOnSameField_accumulateErrors() {
+    public void shouldAccumulateErrorsForMultipleRulesOnSameField() {
         Validator<Body> v = validator(new Body(null, null, null, null));
         v.jsonField("name", r -> r.name).required();
         v.jsonField("email", r -> r.email).required();
@@ -221,7 +221,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void combinedRequiredAndFormat_bothRecorded() {
+    public void shouldRecordBothErrorsWhenRequiredAndFormatFail() {
         Validator<Body> v = validator(new Body(null, "bad", null, null));
         v.jsonField("name", r -> r.name).required();
         v.jsonField("email", r -> r.email).required().email();
@@ -233,7 +233,7 @@ public class ValidatorTest {
     // --- nested body field ---
 
     @Test
-    public void jsonField_prefixesErrorKeys() {
+    public void shouldPrefixErrorKeysForNestedJsonField() {
         Body body = new Body(null, null, null, new Address(null, "bad"));
         Validator<Body> v = validator(body);
         v.jsonField("address", r -> r.address, a -> {
@@ -245,7 +245,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void jsonField_skipsBlockWhenNull() {
+    public void shouldSkipNestedJsonFieldValidationWhenNull() {
         Body body = new Body(null, null, null, null);
         Validator<Body> v = validator(body);
         v.jsonField("address", r -> r.address, a -> {
@@ -255,7 +255,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void jsonField_passesWhenValid() {
+    public void shouldPassNestedJsonFieldValidationWhenValid() {
         Body body = new Body(null, null, null, new Address("NYC", "12345"));
         Validator<Body> v = validator(body);
         v.jsonField("address", r -> r.address, a -> {
@@ -268,7 +268,7 @@ public class ValidatorTest {
     // --- query param ---
 
     @Test
-    public void queryParam_failsWhenMissing() {
+    public void shouldFailQueryParamValidationWhenMissing() {
         Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Collections.emptyMap(), Collections.emptyMap());
         v.queryParam("page").required();
@@ -276,7 +276,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void queryParam_failsPatternMismatch() {
+    public void shouldFailQueryParamValidationOnPatternMismatch() {
         Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Map.of("page", "abc"), Collections.emptyMap());
         v.queryParam("page").matches("[0-9]+");
@@ -284,7 +284,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void queryParam_passesWhenValid() {
+    public void shouldPassQueryParamValidationWhenValid() {
         Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Map.of("page", "5"), Collections.emptyMap());
         v.queryParam("page").required().matches("[0-9]+");
@@ -294,7 +294,7 @@ public class ValidatorTest {
     // --- path param ---
 
     @Test
-    public void pathParam_failsWhenMissing() {
+    public void shouldFailPathParamValidationWhenMissing() {
         Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Collections.emptyMap(), Collections.emptyMap());
         v.pathParam("userId").required();
@@ -302,7 +302,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void pathParam_passesWhenPresent() {
+    public void shouldPassPathParamValidationWhenPresent() {
         Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Collections.emptyMap(), Map.of("userId", "42"));
         v.pathParam("userId").required().matches("[0-9]+");
@@ -312,7 +312,7 @@ public class ValidatorTest {
     // --- toResult ---
 
     @Test
-    public void toResult_successWhenNoErrors() {
+    public void shouldReturnSuccessFromToResultWhenNoErrors() {
         Body body = new Body("Alice", "a@b.com", 25, null);
         Validator<Body> v = validator(body);
         v.jsonField("name", r -> r.name).required();
@@ -323,7 +323,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void toResult_errorWhenErrors() {
+    public void shouldReturnErrorFromToResultWhenErrors() {
         Validator<Body> v = validator(new Body(null, null, null, null));
         v.jsonField("name", r -> r.name).required();
         Result<HttpErrorResponse, Body> result = v.toResult();
@@ -340,21 +340,21 @@ public class ValidatorTest {
     // --- listField ---
 
     @Test
-    public void listField_required_failsOnNull() {
+    public void shouldFailListFieldRequiredValidationWhenNull() {
         Validator<Body> v = validator(new Body(null, null, null, null));
         v.listField("addresses", r -> r.addresses).required();
         assertError(v, "addresses", "must not be null");
     }
 
     @Test
-    public void listField_minSize_failsBelowMin() {
+    public void shouldFailListFieldMinSizeWhenBelowMin() {
         Validator<Body> v = validator(new Body(null, null, null, null, Collections.emptyList()));
         v.listField("addresses", r -> r.addresses).minSize(1);
         assertError(v, "addresses", "must have at least 1 items");
     }
 
     @Test
-    public void listField_maxSize_failsAboveMax() {
+    public void shouldFailListFieldMaxSizeWhenAboveMax() {
         List<Address> three = Arrays.asList(new Address("A", "11111"), new Address("B", "22222"), new Address("C", "33333"));
         Validator<Body> v = validator(new Body(null, null, null, null, three));
         v.listField("addresses", r -> r.addresses).maxSize(2);
@@ -362,7 +362,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void listField_each_validatesElements() {
+    public void shouldValidateListFieldEachElement() {
         List<Address> list = Arrays.asList(new Address(null, "12345"));
         Validator<Body> v = validator(new Body(null, null, null, null, list));
         v.listField("addresses", r -> r.addresses)
@@ -375,7 +375,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void listField_each_skipsWhenNull() {
+    public void shouldSkipListFieldEachValidationWhenNull() {
         Validator<Body> v = validator(new Body(null, null, null, null));
         v.listField("addresses", r -> r.addresses)
             .each(a -> a.jsonField("city", x -> x.city).required());
@@ -383,7 +383,7 @@ public class ValidatorTest {
     }
 
     @Test
-    public void listField_each_passesWhenAllValid() {
+    public void shouldPassListFieldEachValidationWhenAllValid() {
         List<Address> list = Arrays.asList(new Address("NYC", "12345"), new Address("LA", "90001"));
         Validator<Body> v = validator(new Body(null, null, null, null, list));
         v.listField("addresses", r -> r.addresses)
