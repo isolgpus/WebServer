@@ -16,7 +16,7 @@ public class FailingTestHandler extends VertxJsonRoute<BlockingRequest, Blocking
                 .flatMap(ctx -> {
                     if(2 * 2 == 4)
                     {
-                        return HttpResult.error(400, new ErrorMessageResponse("intentionally failed"));
+                        return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("intentionally failed"));
                     }
                     else
                     {

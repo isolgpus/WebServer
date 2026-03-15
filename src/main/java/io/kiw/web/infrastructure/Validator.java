@@ -72,6 +72,6 @@ public class Validator<T> {
         if (errors.isEmpty()) {
             return Result.success(value);
         }
-        return HttpResult.error(422, new ErrorMessageResponse("Validation failed", errors));
+        return HttpResult.error(ErrorStatusCode.UNPROCESSABLE_ENTITY, new ErrorMessageResponse("Validation failed", errors));
     }
 }

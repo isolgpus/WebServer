@@ -3,6 +3,7 @@ package io.kiw.web.test.handler;
 import io.kiw.web.infrastructure.HttpResponseStream;
 import io.kiw.web.infrastructure.HttpResult;
 import io.kiw.web.infrastructure.RequestPipeline;
+import io.kiw.web.infrastructure.SuccessStatusCode;
 import io.kiw.web.infrastructure.VertxJsonRoute;
 import io.kiw.web.test.MyApplicationState;
 

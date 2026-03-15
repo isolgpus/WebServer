@@ -5,17 +5,17 @@ import io.kiw.result.Result;
 public abstract class HttpResult<S> {
 
 
-    public static <S> Result<HttpErrorResponse, S> from(Result<String, S> result, int statusCodeOnFailure) {
+    public static <S> Result<HttpErrorResponse, S> from(Result<String, S> result, ErrorStatusCode statusCodeOnFailure) {
         return result.fold(
             e -> Result.error(new HttpErrorResponse(new ErrorMessageResponse(e), statusCodeOnFailure)),
             Result::success);
     }
 
     public static <S> Result<HttpErrorResponse, S> from(Result<String, S> result) {
-        return from(result, 400);
+        return from(result, ErrorStatusCode.BAD_REQUEST);
     }
 
-    public static <S> Result<HttpErrorResponse, S> error(int statusCode, ErrorMessageResponse messageResponse) {
+    public static <S> Result<HttpErrorResponse, S> error(ErrorStatusCode statusCode, ErrorMessageResponse messageResponse) {
         return Result.error(new HttpErrorResponse(messageResponse, statusCode));
     }
 
@@ -24,7 +24,7 @@ public abstract class HttpResult<S> {
     }
 
     @SuppressWarnings("unchecked")
-    public static <S> Result<HttpErrorResponse, S> success(S response, int statusCode) {
+    public static <S> Result<HttpErrorResponse, S> success(S response, SuccessStatusCode statusCode) {
         return (Result<HttpErrorResponse, S>) Result.success(new HttpSuccessResponse<>(response, statusCode));
     }
 

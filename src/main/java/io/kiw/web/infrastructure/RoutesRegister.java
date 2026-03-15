@@ -44,14 +44,14 @@ public class RoutesRegister {
                 ctx.http().addResponseHeader("Content-Type", "application/json");
 
                 if (method.canHaveABody() && ctx.http().ctx.getRequestBody() == null) {
-                    return HttpResult.error(400, new ErrorMessageResponse("Invalid json request"));
+                    return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
                 }
 
                 try {
                     IN jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.http().ctx.getRequestBody(), vertxJsonRoute) : null;
                     return HttpResult.success(jsonRequest);
                 } catch (JsonProcessingException e) {
-                    return HttpResult.error(400, new ErrorMessageResponse("Invalid json request"));
+                    return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
                 }
             }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
