@@ -61,6 +61,7 @@ public class TestApplicationClient {
         routesRegister.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
         routesRegister.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         routesRegister.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
+        routesRegister.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         return state;
     }
 
