@@ -23,6 +23,11 @@ public abstract class HttpResult<S> {
         return Result.success(response);
     }
 
+    @SuppressWarnings("unchecked")
+    public static <S> Result<HttpErrorResponse, S> success(S response, int statusCode) {
+        return (Result<HttpErrorResponse, S>) Result.success(new HttpSuccessResponse<>(response, statusCode));
+    }
+
     public static <S> Result<HttpErrorResponse, S> success() {
         return Result.success(null);
     }
