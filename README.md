@@ -156,7 +156,7 @@ public RequestPipeline<Response> handle(HttpResponseStream<Request, MyState> str
         .validate(v -> {
             v.jsonField("name", r -> r.name).required().minLength(2);
             v.jsonField("email", r -> r.email).required().email();
-            v.numericBodyField("age", r -> r.age).required().min(0).max(150);
+            v.jsonField("age", r -> r.age).required().min(0).max(150);
             v.queryParam("page").required().matches("[0-9]+");
             v.pathParam("userId").required().matches("[0-9]+");
         })
@@ -164,10 +164,10 @@ public RequestPipeline<Response> handle(HttpResponseStream<Request, MyState> str
 }
 ```
 
-Nested objects are validated with `nestedBodyField`:
+Nested objects are validated with the `jsonField` overload that takes a `Consumer<Validator<N>>` block:
 
 ```java
-v.nestedBodyField("address", r -> r.address, a -> {
+v.jsonField("address", r -> r.address, a -> {
     a.jsonField("city", x -> x.city).required();
     a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
 });
