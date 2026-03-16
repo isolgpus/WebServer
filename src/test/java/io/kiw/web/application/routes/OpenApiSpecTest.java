@@ -33,9 +33,10 @@ public class OpenApiSpecTest {
     @Test
     public void shouldGenerateSpecWithCorrectVersion() {
         routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
 
-        ObjectNode spec = getSpec();
+        OpenApiSpecGenerator generator = new OpenApiSpecGenerator(
+            routesRegister.getOpenApiCollector(), routesRegister.getObjectMapper());
+        ObjectNode spec = generator.title("Test API").version("1.0.0").description("A test API").generate();
 
         assertEquals("3.0.3", spec.get("openapi").asText());
         assertEquals("Test API", spec.get("info").get("title").asText());
