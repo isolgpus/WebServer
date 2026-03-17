@@ -6,34 +6,34 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
-public class StubHttpResponse {
+public class TestHttpResponse {
     public final String responseBody;
     public int statusCode = 200;
-    public Map<String, String> responseHeaders = new LinkedHashMap<>();
-    public Map<String, String> responseCookies = new LinkedHashMap<>();
+    private final Map<String, String> responseHeaders = new LinkedHashMap<>();
+    private final Map<String, String> responseCookies = new LinkedHashMap<>();
 
-    public StubHttpResponse(String responseBody) {
+    public TestHttpResponse(String responseBody) {
         this.responseBody = responseBody;
     }
 
-    public StubHttpResponse withStatusCode(int statusCode) {
+    public TestHttpResponse withStatusCode(int statusCode) {
         this.statusCode = statusCode;
         return this;
     }
 
-    public static StubHttpResponse response(String expectedResponseBody) {
+    public static TestHttpResponse response(String expectedResponseBody) {
         return response(expectedResponseBody, "application/json");
     }
 
-    public static StubHttpResponse response(String expectedResponseBody, String contentType) {
-        return new StubHttpResponse(expectedResponseBody)
+    public static TestHttpResponse response(String expectedResponseBody, String contentType) {
+        return new TestHttpResponse(expectedResponseBody)
             .withHeader("Content-Type", contentType);
     }
 
 
     @Override
     public String toString() {
-        return "StubHttpResponse{" +
+        return "TestHttpResponse{" +
                 "responseBody='" + responseBody + '\'' +
                 ", statusCode=" + statusCode +
                 ", responseHeaders=" + responseHeaders +
@@ -45,7 +45,7 @@ public class StubHttpResponse {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        StubHttpResponse that = (StubHttpResponse) o;
+        TestHttpResponse that = (TestHttpResponse) o;
         return statusCode == that.statusCode &&
                 Objects.equals(responseBody, that.responseBody) &&
                 Objects.equals(responseHeaders, that.responseHeaders) &&
@@ -57,13 +57,29 @@ public class StubHttpResponse {
         return Objects.hash(responseBody, statusCode, responseHeaders, responseCookies);
     }
 
-    public StubHttpResponse withHeader(String key, String value) {
-        this.responseHeaders.put(key, value);
+    public String getHeader(String key) {
+        return responseHeaders.get(key);
+    }
+
+    public String getCookie(String key) {
+        return responseCookies.get(key);
+    }
+
+    public TestHttpResponse withHeader(String key, String value) {
+        if(!key.equals("content-length") && !key.equals("set-cookie"))
+        {
+            this.responseHeaders.put(key, value);
+        }
         return this;
     }
 
-    public StubHttpResponse withCookie(Cookie value) {
+    public TestHttpResponse withCookie(Cookie value) {
         this.responseCookies.put(value.getName(), value.getValue());
+        return this;
+    }
+
+    public TestHttpResponse withCookie(String key, String value) {
+        this.responseCookies.put(key, value);
         return this;
     }
 }

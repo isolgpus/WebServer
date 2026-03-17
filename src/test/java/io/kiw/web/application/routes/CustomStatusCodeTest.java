@@ -1,9 +1,6 @@
 package io.kiw.web.application.routes;
 
-import io.kiw.web.test.StubHttpResponse;
-import io.kiw.web.test.StubRequest;
-import io.kiw.web.test.TestApplicationClient;
-import io.kiw.web.test.TestHelper;
+import io.kiw.web.test.*;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -17,7 +14,7 @@ public class CustomStatusCodeTest {
 
     @Before
     public void setUp() {
-        testApplicationClient = new TestApplicationClient();
+        testApplicationClient = new TestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
     }
 
     @After
@@ -27,34 +24,34 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetCreatedStatusCode() {
-        StubHttpResponse response = testApplicationClient.post(
+        TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "CREATED").put("value", "created").toString()));
 
         Assert.assertEquals(
-            StubHttpResponse.response(json().put("value", "created").toString()).withStatusCode(201),
+            TestHttpResponse.response(json().put("value", "created").toString()).withStatusCode(201),
             response);
     }
 
     @Test
     public void shouldAllowHandlerToSetNoContentStatusCode() {
-        StubHttpResponse response = testApplicationClient.post(
+        TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "NO_CONTENT").put("value", "done").toString()));
 
         Assert.assertEquals(
-            StubHttpResponse.response(json().put("value", "done").toString()).withStatusCode(204),
+            TestHttpResponse.response(json().put("value", "done").toString()).withStatusCode(204),
             response);
     }
 
     @Test
     public void shouldDefaultToOkWhenStatusCodeNotSet() {
-        StubHttpResponse response = testApplicationClient.post(
+        TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "OK").put("value", "ok").toString()));
 
         Assert.assertEquals(
-            StubHttpResponse.response(json().put("value", "ok").toString()),
+            TestHttpResponse.response(json().put("value", "ok").toString()),
             response);
     }
 }

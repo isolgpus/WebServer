@@ -7,7 +7,7 @@ public class WebServerTestMain {
     public static void main(String[] args) {
 
         WebServer<MyApplicationState> webServer = WebServer.start(
-            TestApplicationClient::registerRoutes, new WebServiceConfigBuilder()
+            routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), new WebServiceConfigBuilder()
                 .setPort(8080)
                 .setDefaultBlockingTimeoutMillis(5000)
                 .setExceptionHandler(Throwable::printStackTrace)

@@ -4,11 +4,10 @@ import io.kiw.web.infrastructure.WebSocketRouteHandler;
 import io.kiw.web.infrastructure.WebSocketSession;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-public class StubWebSocketClient {
+public class StubWebSocketClient implements WebSocketClient {
 
     private final List<String> receivedMessages = new ArrayList<>();
     private final WebSocketRouteHandler<?, ?, ?> handler;
@@ -22,20 +21,24 @@ public class StubWebSocketClient {
         handler.onOpen(session);
     }
 
+    @Override
     public void send(String jsonMessage) {
         handler.onMessage(jsonMessage, session);
     }
 
+    @Override
     public List<String> received() {
         List<String> messages = new ArrayList<>(receivedMessages);
         receivedMessages.clear();
         return messages;
     }
 
+    @Override
     public void close() {
         handler.onClose(session);
     }
 
+    @Override
     public boolean isClosed() {
         return connection.isClosed();
     }

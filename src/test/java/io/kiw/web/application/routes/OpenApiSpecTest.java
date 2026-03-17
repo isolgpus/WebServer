@@ -1,14 +1,12 @@
 package io.kiw.web.application.routes;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.kiw.web.infrastructure.Method;
 import io.kiw.web.infrastructure.RoutesRegister;
-import io.kiw.web.infrastructure.openapi.OpenApiCollector;
 import io.kiw.web.infrastructure.openapi.OpenApiSpecGenerator;
 import io.kiw.web.test.MyApplicationState;
-import io.kiw.web.test.StubHttpResponse;
+import io.kiw.web.test.TestHttpResponse;
 import io.kiw.web.test.StubRequest;
 import io.kiw.web.test.StubRouter;
 import io.kiw.web.test.handler.*;
@@ -225,7 +223,7 @@ public class OpenApiSpecTest {
         routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
 
-        StubHttpResponse response = router.handle(StubRequest.request("/openapi.json"), Method.GET);
+        TestHttpResponse response = router.handle(StubRequest.request("/openapi.json"), Method.GET);
 
         assertEquals(200, response.statusCode);
         assertNotNull(response.responseBody);

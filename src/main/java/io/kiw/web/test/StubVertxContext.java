@@ -114,16 +114,16 @@ public class StubVertxContext implements VertxContext {
         this.pathParams = pathParams;
     }
 
-    public StubHttpResponse getResponse() {
-        StubHttpResponse stubHttpResponse = new StubHttpResponse(responseBody).withStatusCode(statusCode);
+    public TestHttpResponse getResponse() {
+        TestHttpResponse testHttpResponse = new TestHttpResponse(responseBody).withStatusCode(statusCode);
         for (Map.Entry<String, String> header : this.responseHeaders.entrySet()) {
-            stubHttpResponse.withHeader(header.getKey(), header.getValue());
+            testHttpResponse.withHeader(header.getKey(), header.getValue());
         }
 
         for (Map.Entry<String, Cookie> cookie : this.responseCookies.entrySet()) {
-            stubHttpResponse.withCookie(cookie.getValue());
+            testHttpResponse.withCookie(cookie.getValue());
         }
-        return stubHttpResponse;
+        return testHttpResponse;
     }
 
     public boolean hasFinished() {

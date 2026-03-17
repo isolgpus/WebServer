@@ -1,22 +1,21 @@
 package io.kiw.web.application.routes;
 
-import io.kiw.web.test.StubRequest;
-import io.kiw.web.test.StubWebSocketClient;
-import io.kiw.web.test.TestApplicationClient;
+import io.kiw.web.test.*;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.List;
 
+import static io.kiw.web.application.routes.TestApplicationClientCreator.createApplicationClient;
 import static org.junit.Assert.fail;
 
 public class WebSocketTest {
 
     @Test
     public void shouldEchoWebSocketMessage() {
-        TestApplicationClient client = new TestApplicationClient();
+        ApplicationClient client = createApplicationClient();
 
-        StubWebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
+        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"hello\"}");
 
         List<String> received = ws.received();
@@ -28,9 +27,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleMultipleMessages() {
-        TestApplicationClient client = new TestApplicationClient();
+        ApplicationClient client = createApplicationClient();
 
-        StubWebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
+        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"first\"}");
         ws.send("{\"message\":\"second\"}");
 
@@ -43,10 +42,10 @@ public class WebSocketTest {
     }
 
     @Test
-    public void shouldSendMessageOnConnect() {
-        TestApplicationClient client = new TestApplicationClient();
+    public void shouldSendMessageOnConnect() throws InterruptedException {
+        ApplicationClient client = createApplicationClient();
 
-        StubWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
+        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
 
         List<String> received = ws.received();
         Assert.assertEquals(1, received.size());
@@ -57,9 +56,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldSendMessageOnClose() {
-        TestApplicationClient client = new TestApplicationClient();
+        ApplicationClient client = createApplicationClient();
 
-        StubWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
+        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
         ws.received(); // consume connect message
         ws.close();
 
@@ -72,9 +71,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldSupportPathParams() {
-        TestApplicationClient client = new TestApplicationClient();
+        ApplicationClient client = createApplicationClient();
 
-        StubWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
+        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
         ws.received(); // consume connect message
         ws.send("{\"message\":\"hi\"}");
 
@@ -87,9 +86,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldSupportQueryParams() {
-        TestApplicationClient client = new TestApplicationClient();
+        ApplicationClient client = createApplicationClient();
 
-        StubWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/lobby").queryParam("user", "alice"));
+        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/lobby").queryParam("user", "alice"));
         ws.received(); // consume connect message
         ws.send("{\"message\":\"hi\"}");
 
@@ -102,7 +101,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldThrowWhenNoWebSocketRouteMatches() {
-        TestApplicationClient client = new TestApplicationClient();
+        ApplicationClient client = new TestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
 
         try {
             client.webSocket(StubRequest.request("/ws/nonexistent"));
@@ -114,9 +113,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleInvalidJsonGracefully() {
-        TestApplicationClient client = new TestApplicationClient();
+        ApplicationClient client = createApplicationClient();
 
-        StubWebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
+        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("not valid json");
 
         List<String> received = ws.received();

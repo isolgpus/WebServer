@@ -3,96 +3,64 @@ package io.kiw.web.test;
 import io.kiw.web.infrastructure.Method;
 import io.kiw.web.infrastructure.RoutesRegister;
 import io.kiw.web.infrastructure.cors.CorsConfig;
-import io.kiw.web.test.handler.*;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class TestApplicationClient {
+public class TestApplicationClient implements ApplicationClient {
 
     private List<Exception> seenExceptions = new ArrayList<>();
     private final StubRouter router = new StubRouter(seenExceptions::add);
 
-    public TestApplicationClient() {
+    public TestApplicationClient(final Consumer<RoutesRegister> registerRoutes) {
         RoutesRegister routesRegister = new RoutesRegister(router);
-        registerRoutes(routesRegister);
+        registerRoutes.accept(routesRegister);
     }
 
-    public TestApplicationClient(CorsConfig corsConfig) {
+    public TestApplicationClient(final Consumer<RoutesRegister> registerRoutes, CorsConfig corsConfig) {
         router.configureCors(corsConfig);
         RoutesRegister routesRegister = new RoutesRegister(router);
-        registerRoutes(routesRegister);
+        registerRoutes.accept(routesRegister);
     }
 
-    public static MyApplicationState registerRoutes(RoutesRegister routesRegister) {
-        MyApplicationState state = new MyApplicationState();
-
-        routesRegister.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
-        routesRegister.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
-        routesRegister.jsonFilter("/root/somethingElse/*", state, new TestFilter("otherFilter"));
-        routesRegister.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
-        routesRegister.jsonRoute("/root/filter/test", Method.GET, state, new GetTestFilterHandler());
-        routesRegister.jsonRoute("/root/filter/test", Method.PUT, state, new TestFilterHandler());
-        routesRegister.jsonRoute("/root/filter/test", Method.DELETE, state, new TestFilterHandler());
-        routesRegister.jsonRoute("/root/filter/test", Method.PATCH, state, new TestFilterHandler());
-
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.DELETE, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.PATCH, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
-        routesRegister.jsonRoute("/echo/:pathExample", Method.GET, state, new GetEchoHandler());
-        routesRegister.jsonRoute("/blocking", Method.POST, state, new BlockingTestHandler());
-        routesRegister.jsonRoute("/failing", Method.POST, state, new FailingTestHandler());
-        routesRegister.jsonRoute("/state", Method.POST, state, new StateTestHandler());
-        routesRegister.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
-        routesRegister.jsonRoute("/blockingComplete", Method.POST, state, new BlockingCompleteTestHandler());
-        routesRegister.jsonRoute("/timing", Method.POST, state, new TimeoutTestHandler());
-        routesRegister.jsonRoute("/asyncMap", Method.POST, state, new AsyncMapTestHandler());
-        routesRegister.jsonRoute("/asyncBlockingMap", Method.POST, state, new AsyncBlockingMapTestHandler());
-        routesRegister.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
-        routesRegister.jsonFilter("/protected/*", state, new ErrorFilter());
-        routesRegister.jsonRoute("/protected/resource", Method.GET, state, new GetEchoHandler());
-        routesRegister.jsonRoute("/blockingFailing", Method.POST, state, new BlockingFlatMapFailHandler());
-        routesRegister.jsonRoute("/asyncFailing", Method.POST, state, new AsyncFlatMapFailHandler());
-        routesRegister.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler());
-        routesRegister.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
-        routesRegister.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
-        routesRegister.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
-        routesRegister.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
-        return state;
-    }
-
-    public StubHttpResponse post(StubRequest stubRequest) {
+    @Override
+    public TestHttpResponse post(StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.POST);
     }
 
-    public StubHttpResponse put(StubRequest stubRequest) {
+    @Override
+    public TestHttpResponse put(StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.PUT);
     }
 
-    public StubHttpResponse delete(StubRequest stubRequest) {
+    @Override
+    public TestHttpResponse delete(StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.DELETE);
     }
 
-    public StubHttpResponse patch(StubRequest stubRequest) {
+    @Override
+    public TestHttpResponse patch(StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.PATCH);
     }
 
-    public StubHttpResponse get(StubRequest stubRequest) {
+    @Override
+    public TestHttpResponse get(StubRequest stubRequest) {
         return router.handle(stubRequest, Method.GET);
     }
 
-    public StubHttpResponse options(StubRequest stubRequest) {
+    @Override
+    public TestHttpResponse options(StubRequest stubRequest) {
         return router.handle(stubRequest, Method.OPTIONS);
     }
 
+    @Override
     public StubWebSocketClient webSocket(StubRequest stubRequest) {
         return router.webSocket(stubRequest);
     }

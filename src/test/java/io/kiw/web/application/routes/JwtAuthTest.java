@@ -2,7 +2,7 @@ package io.kiw.web.application.routes;
 
 import io.kiw.web.infrastructure.*;
 import io.kiw.web.test.MyApplicationState;
-import io.kiw.web.test.StubHttpResponse;
+import io.kiw.web.test.TestHttpResponse;
 import io.kiw.web.test.StubRequest;
 import io.kiw.web.test.StubRouter;
 import io.kiw.web.test.jwt.StubJwtProvider;
@@ -54,12 +54,12 @@ public class JwtAuthTest {
     public void shouldAllowRequestWithValidJwt() {
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
 
-        StubHttpResponse response = router.handle(
+        TestHttpResponse response = router.handle(
             StubRequest.request("/protected").headerParam("Authorization", "Bearer " + token),
             Method.GET);
 
         assertEquals(
-            StubHttpResponse.response(json().put("subject", "user123").toString()),
+            TestHttpResponse.response(json().put("subject", "user123").toString()),
             response);
     }
 
@@ -67,23 +67,23 @@ public class JwtAuthTest {
     public void shouldExposeAllClaimsFromToken() {
         String token = jwtProvider.generateToken(Map.of("sub", "user456", "role", "admin"));
 
-        StubHttpResponse response = router.handle(
+        TestHttpResponse response = router.handle(
             StubRequest.request("/protected").headerParam("Authorization", "Bearer " + token),
             Method.GET);
 
         assertEquals(
-            StubHttpResponse.response(json().put("subject", "user456").toString()),
+            TestHttpResponse.response(json().put("subject", "user456").toString()),
             response);
     }
 
     @Test
     public void shouldRejectRequestWithNoAuthorizationHeader() {
-        StubHttpResponse response = router.handle(
+        TestHttpResponse response = router.handle(
             StubRequest.request("/protected"),
             Method.GET);
 
         assertEquals(
-            StubHttpResponse.response(json()
+            TestHttpResponse.response(json()
                 .put("message", "Missing or invalid Authorization header")
                 .set("errors", json())
                 .toString()).withStatusCode(401),
@@ -92,12 +92,12 @@ public class JwtAuthTest {
 
     @Test
     public void shouldRejectRequestWithMalformedBearerToken() {
-        StubHttpResponse response = router.handle(
+        TestHttpResponse response = router.handle(
             StubRequest.request("/protected").headerParam("Authorization", "Bearer header.payload.badsignature"),
             Method.GET);
 
         assertEquals(
-            StubHttpResponse.response(json()
+            TestHttpResponse.response(json()
                 .put("message", "Invalid token signature")
                 .set("errors", json())
                 .toString()).withStatusCode(401),
@@ -109,12 +109,12 @@ public class JwtAuthTest {
         StubJwtProvider otherProvider = new StubJwtProvider("a-completely-different-secret");
         String token = otherProvider.generateToken(Map.of("sub", "attacker"));
 
-        StubHttpResponse response = router.handle(
+        TestHttpResponse response = router.handle(
             StubRequest.request("/protected").headerParam("Authorization", "Bearer " + token),
             Method.GET);
 
         assertEquals(
-            StubHttpResponse.response(json()
+            TestHttpResponse.response(json()
                 .put("message", "Invalid token signature")
                 .set("errors", json())
                 .toString()).withStatusCode(401),
@@ -126,12 +126,12 @@ public class JwtAuthTest {
         long oneHourAgo = System.currentTimeMillis() / 1000 - 3600;
         String token = jwtProvider.generateToken(Map.of("sub", "user789", "exp", oneHourAgo));
 
-        StubHttpResponse response = router.handle(
+        TestHttpResponse response = router.handle(
             StubRequest.request("/protected").headerParam("Authorization", "Bearer " + token),
             Method.GET);
 
         assertEquals(
-            StubHttpResponse.response(json()
+            TestHttpResponse.response(json()
                 .put("message", "Token has expired")
                 .set("errors", json())
                 .toString()).withStatusCode(401),
@@ -142,12 +142,12 @@ public class JwtAuthTest {
     public void shouldRejectTokenWithWrongHeaderFormat() {
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
 
-        StubHttpResponse response = router.handle(
+        TestHttpResponse response = router.handle(
             StubRequest.request("/protected").headerParam("Authorization", "Basic " + token),
             Method.GET);
 
         assertEquals(
-            StubHttpResponse.response(json()
+            TestHttpResponse.response(json()
                 .put("message", "Missing or invalid Authorization header")
                 .set("errors", json())
                 .toString()).withStatusCode(401),

@@ -5,7 +5,9 @@ import io.vertx.core.http.Cookie;
 import io.vertx.ext.web.FileUpload;
 import io.vertx.ext.web.RoutingContext;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 public class VertxContextImpl implements VertxContext {
@@ -108,6 +110,11 @@ public class VertxContextImpl implements VertxContext {
     @Override
     public Map<String, Buffer> resolveUploadedFiles() {
         return this.ctx.fileUploads().stream()
-            .collect(Collectors.toMap(FileUpload::fileName, a -> ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName())));
+            .collect(Collectors.toMap(FileUpload::fileName, a -> ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName()), new BinaryOperator<Buffer>() {
+                @Override
+                public Buffer apply(Buffer buffer, Buffer buffer2) {
+                    return buffer;
+                }
+            }, LinkedHashMap::new));
     }
 }

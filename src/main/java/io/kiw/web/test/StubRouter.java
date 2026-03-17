@@ -10,7 +10,6 @@ import io.kiw.web.test.handler.RouteConfig;
 
 import java.util.*;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class StubRouter extends RouterWrapper {
     private PathMatcher routes = new PathMatcher();
@@ -36,7 +35,7 @@ public class StubRouter extends RouterWrapper {
         routes.putAllMethodRoute(path, flow);
     }
 
-    public StubHttpResponse handle(StubRequest stubRequest, Method method) {
+    public TestHttpResponse handle(StubRequest stubRequest, Method method) {
         if (corsConfig != null && method == Method.OPTIONS) {
             return handlePreflightRequest(stubRequest);
         }
@@ -62,22 +61,22 @@ public class StubRouter extends RouterWrapper {
             }
         }
 
-        StubHttpResponse response = context.getResponse();
+        TestHttpResponse response = context.getResponse();
         if (corsConfig != null) {
             addCorsResponseHeaders(stubRequest, response);
         }
         return response;
     }
 
-    private StubHttpResponse handlePreflightRequest(StubRequest stubRequest) {
+    private TestHttpResponse handlePreflightRequest(StubRequest stubRequest) {
         String origin = stubRequest.headers.get("Origin");
         if (origin == null || !corsConfig.isOriginAllowed(origin)) {
-            return new StubHttpResponse(null).withStatusCode(403);
+            return new TestHttpResponse(null).withStatusCode(403);
         }
 
         String allowOrigin = corsConfig.getAllowedOrigins().contains("*") ? "*" : origin;
 
-        StubHttpResponse response = new StubHttpResponse(null).withStatusCode(204)
+        TestHttpResponse response = new TestHttpResponse(null).withStatusCode(204)
             .withHeader("Access-Control-Allow-Origin", allowOrigin);
 
         if (!corsConfig.getAllowedMethods().isEmpty()) {
@@ -143,7 +142,7 @@ public class StubRouter extends RouterWrapper {
         }
     }
 
-    private void addCorsResponseHeaders(StubRequest stubRequest, StubHttpResponse response) {
+    private void addCorsResponseHeaders(StubRequest stubRequest, TestHttpResponse response) {
         String origin = stubRequest.headers.get("Origin");
         if (origin == null || !corsConfig.isOriginAllowed(origin)) {
             return;
