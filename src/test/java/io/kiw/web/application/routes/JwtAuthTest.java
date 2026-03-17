@@ -41,7 +41,7 @@ public class JwtAuthTest {
         routesRegister.jsonRoute("/protected", Method.GET, state,
             new VertxJsonRoute<EmptyRequest, SubjectResponse, MyApplicationState>() {
                 @Override
-                public RequestPipeline<SubjectResponse> handle(HttpResponseStream<EmptyRequest, MyApplicationState> stream) {
+                public RequestPipeline<SubjectResponse> handle(HttpStream<EmptyRequest, MyApplicationState> stream) {
                     return stream
                         .requireJwt(jwtProvider)
                         .complete(ctx ->

@@ -3,7 +3,7 @@ package io.kiw.web.test.handler;
 import io.kiw.web.test.MyApplicationState;
 
 import io.kiw.web.infrastructure.RequestPipeline;
-import io.kiw.web.infrastructure.HttpResponseStream;
+import io.kiw.web.infrastructure.HttpStream;
 import io.kiw.web.infrastructure.HttpResult;
 import io.kiw.web.infrastructure.VertxFileUploadRoute;
 import io.vertx.core.buffer.Buffer;
@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 
 public class FileUploaderHandler extends VertxFileUploadRoute<FileUploadResponse, MyApplicationState> {
     @Override
-    public RequestPipeline<FileUploadResponse> handle(HttpResponseStream<Map<String, Buffer>, MyApplicationState> e) {
+    public RequestPipeline<FileUploadResponse> handle(HttpStream<Map<String, Buffer>, MyApplicationState> e) {
         return e.complete(ctx -> {
             Map<String, Integer> results = ctx.in().entrySet().stream().collect(Collectors.toMap(
                 Map.Entry::getKey,

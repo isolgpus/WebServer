@@ -53,7 +53,7 @@ public class RoutesRegister {
 
     public <IN, OUT, APP> void jsonRoute(String path, Method method, APP applicationState, VertxJsonRoute<IN, OUT, APP> vertxJsonRoute, RouteConfig routeConfig) {
 
-        HttpResponseStream<IN, APP> httpResponseStream = new HttpResponseStream<>(new ArrayList<>(), true, applicationState, new JsonEnder(objectMapper))
+        HttpStream<IN, APP> httpStream = new HttpStream<>(new ArrayList<>(), true, applicationState, new JsonEnder(objectMapper))
             .flatMap(ctx -> {
                 ctx.http().addResponseHeader("Content-Type", "application/json");
 
@@ -69,7 +69,7 @@ public class RoutesRegister {
                 }
             }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
-        RequestPipeline<OUT> flow = vertxJsonRoute.handle(httpResponseStream);
+        RequestPipeline<OUT> flow = vertxJsonRoute.handle(httpStream);
 
         Type[] typeArgs = TypeResolver.resolveTypeArguments(vertxJsonRoute.getClass(), VertxJsonRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(
@@ -89,8 +89,8 @@ public class RoutesRegister {
     }
 
     public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter, RouteConfig routeConfig) {
-        HttpResponseStream<Void, APP> objectAPPHttpResponseStream = new HttpResponseStream<>(new ArrayList<>(), false, applicationState, null);
-        RequestPipeline flow = jsonFilter.handle(objectAPPHttpResponseStream);
+        HttpStream<Void, APP> objectAPPHttpStream = new HttpStream<>(new ArrayList<>(), false, applicationState, null);
+        RequestPipeline flow = jsonFilter.handle(objectAPPHttpStream);
 
 
         router.route(path, "*", "application/json", flow, routeConfig);
@@ -98,9 +98,9 @@ public class RoutesRegister {
 
     public  <OUT, APP>  void uploadFileRoute(String path, Method method, APP applicationState, VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {
 
-        HttpResponseStream<Map<String, Buffer>, APP> httpResponseStream = new HttpResponseStream<>(new ArrayList<>(), true, applicationState,  new JsonEnder(objectMapper));
+        HttpStream<Map<String, Buffer>, APP> httpStream = new HttpStream<>(new ArrayList<>(), true, applicationState,  new JsonEnder(objectMapper));
 
-        HttpResponseStream<Map<String, Buffer>, APP> fileUploadStream = httpResponseStream.flatMap(ctx -> {
+        HttpStream<Map<String, Buffer>, APP> fileUploadStream = httpStream.flatMap(ctx -> {
             ctx.http().addResponseHeader("Content-Type", "application/json");
 
             Map<String, Buffer> uploadedFile = ctx.http().resolveUploadedFiles();
@@ -137,9 +137,9 @@ public class RoutesRegister {
     }
 
     public <IN, APP> void downloadFileRoute(String path, Method method, APP applicationState, VertxFileDownloadRoute<IN, APP> fileDownloadHandler, String contentType) {
-        HttpResponseStream<IN, APP> httpResponseStream = new HttpResponseStream<>(new ArrayList<>(), true, applicationState, new FileEnder());
+        HttpStream<IN, APP> httpStream = new HttpStream<>(new ArrayList<>(), true, applicationState, new FileEnder());
 
-        HttpResponseStream<IN, APP> fileDownloadStream = httpResponseStream.flatMap(ctx -> {
+        HttpStream<IN, APP> fileDownloadStream = httpStream.flatMap(ctx -> {
             ctx.http().addResponseHeader("Content-Type", contentType);
             ctx.http().addResponseHeader(TRANSFER_ENCODING, "chunked");
             return HttpResult.success(ctx.in());

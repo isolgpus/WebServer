@@ -3,7 +3,7 @@ package io.kiw.web.test.handler;
 import io.kiw.web.test.MyApplicationState;
 
 import io.kiw.web.infrastructure.RequestPipeline;
-import io.kiw.web.infrastructure.HttpResponseStream;
+import io.kiw.web.infrastructure.HttpStream;
 import io.kiw.web.infrastructure.HttpResult;
 import io.kiw.web.infrastructure.VertxJsonRoute;
 
@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class ThrowTestHandler extends VertxJsonRoute<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
-    public RequestPipeline<ThrowResponse> handle(HttpResponseStream<ThrowRequest, MyApplicationState> e) {
+    public RequestPipeline<ThrowResponse> handle(HttpStream<ThrowRequest, MyApplicationState> e) {
         return e.map(ctx -> ctx.in().where).map(ctx -> {
             if("map".equals(ctx.in()))
             {

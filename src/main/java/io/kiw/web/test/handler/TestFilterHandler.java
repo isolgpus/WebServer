@@ -4,14 +4,14 @@ import io.kiw.web.test.MyApplicationState;
 
 
 import io.kiw.web.infrastructure.RequestPipeline;
-import io.kiw.web.infrastructure.HttpResponseStream;
+import io.kiw.web.infrastructure.HttpStream;
 import io.kiw.web.infrastructure.HttpResult;
 import io.kiw.web.infrastructure.VertxJsonRoute;
 
 public class TestFilterHandler extends VertxJsonRoute<TestFilterRequest, TestFilterResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<TestFilterResponse> handle(HttpResponseStream<TestFilterRequest, MyApplicationState> e) {
+    public RequestPipeline<TestFilterResponse> handle(HttpStream<TestFilterRequest, MyApplicationState> e) {
         return e.complete(ctx ->
             HttpResult.success(new TestFilterResponse("hit handler")));
     }

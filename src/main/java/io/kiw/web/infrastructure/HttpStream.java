@@ -6,42 +6,41 @@ import io.kiw.web.infrastructure.jwt.JwtClaims;
 import io.kiw.web.infrastructure.jwt.JwtProvider;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
-public class HttpResponseStream<IN, APP> {
+public class HttpStream<IN, APP> {
     private final List<MapInstruction> instructionChain;
     private final boolean canFinishSuccessfully;
     private final APP applicationState;
     private final Ender ender;
 
-    public HttpResponseStream(List<MapInstruction> instructionChain, boolean canFinishSuccessfully, APP applicationState, Ender ender) {
+    public HttpStream(List<MapInstruction> instructionChain, boolean canFinishSuccessfully, APP applicationState, Ender ender) {
         this.instructionChain = instructionChain;
         this.canFinishSuccessfully = canFinishSuccessfully;
         this.applicationState = applicationState;
         this.ender = ender;
     }
 
-    public <OUT> HttpResponseStream<OUT, APP> map(HttpControlStreamMapper<IN, OUT, APP> flowHandler)
+    public <OUT> HttpStream<OUT, APP> map(HttpControlStreamMapper<IN, OUT, APP> flowHandler)
     {
 
         return flatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public <OUT> HttpResponseStream<OUT, APP> flatMap(HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper)
+    public <OUT> HttpStream<OUT, APP> flatMap(HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper)
     {
         instructionChain.add(new MapInstruction<>(false, httpControlStreamFlatMapper, false));
-        return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
     }
 
 
-    public <OUT> HttpResponseStream<OUT, APP> blockingMap(HttpControlStreamBlockingMapper<IN, OUT> flowHandler)
+    public <OUT> HttpStream<OUT, APP> blockingMap(HttpControlStreamBlockingMapper<IN, OUT> flowHandler)
     {
 
         return blockingFlatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public HttpResponseStream<IN, APP> validate(Consumer<Validator<IN>> config) {
+    public HttpStream<IN, APP> validate(Consumer<Validator<IN>> config) {
         return flatMap(ctx -> {
             Validator<IN> v = new Validator<>(ctx.in(), ctx.http(), "");
             config.accept(v);
@@ -49,7 +48,7 @@ public class HttpResponseStream<IN, APP> {
         });
     }
 
-    public HttpResponseStream<IN, APP> requireJwt(JwtProvider jwtProvider) {
+    public HttpStream<IN, APP> requireJwt(JwtProvider jwtProvider) {
         return flatMap(ctx -> {
             String authHeader = ctx.http().getRequestHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
@@ -67,32 +66,32 @@ public class HttpResponseStream<IN, APP> {
         });
     }
 
-    public <OUT> HttpResponseStream<OUT, APP> blockingFlatMap(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
+    public <OUT> HttpStream<OUT, APP> blockingFlatMap(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
     {
         instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, false));
-        return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
     }
 
-    public <OUT> HttpResponseStream<OUT, APP> asyncMap(HttpControlStreamAsyncMapper<IN, OUT, APP> flowHandler)
+    public <OUT> HttpStream<OUT, APP> asyncMap(HttpControlStreamAsyncMapper<IN, OUT, APP> flowHandler)
     {
         return asyncFlatMap(ctx -> flowHandler.handle(ctx).thenApply(Result::success));
     }
 
-    public <OUT> HttpResponseStream<OUT, APP> asyncFlatMap(HttpControlStreamAsyncFlatMapper<IN, OUT, APP> mapper)
+    public <OUT> HttpStream<OUT, APP> asyncFlatMap(HttpControlStreamAsyncFlatMapper<IN, OUT, APP> mapper)
     {
         instructionChain.add(new MapInstruction<>(mapper, false));
-        return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
     }
 
-    public <OUT> HttpResponseStream<OUT, APP> asyncBlockingMap(HttpControlStreamAsyncBlockingMapper<IN, OUT> flowHandler)
+    public <OUT> HttpStream<OUT, APP> asyncBlockingMap(HttpControlStreamAsyncBlockingMapper<IN, OUT> flowHandler)
     {
         return asyncBlockingFlatMap(ctx -> flowHandler.handle(ctx).thenApply(Result::success));
     }
 
-    public <OUT> HttpResponseStream<OUT, APP> asyncBlockingFlatMap(HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> mapper)
+    public <OUT> HttpStream<OUT, APP> asyncBlockingFlatMap(HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> mapper)
     {
         instructionChain.add(new MapInstruction<>(mapper, false));
-        return new HttpResponseStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
     }
 
     public <OUT> RequestPipeline<OUT> complete(HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper)

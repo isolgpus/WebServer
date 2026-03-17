@@ -2,7 +2,7 @@ package io.kiw.web.infrastructure.openapi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.kiw.web.infrastructure.HttpResponseStream;
+import io.kiw.web.infrastructure.HttpStream;
 import io.kiw.web.infrastructure.HttpResult;
 import io.kiw.web.infrastructure.RequestPipeline;
 import io.kiw.web.infrastructure.VertxJsonRoute;
@@ -25,7 +25,7 @@ public class OpenApiRoute extends VertxJsonRoute<Void, ObjectNode, Object> {
     }
 
     @Override
-    public RequestPipeline<ObjectNode> handle(HttpResponseStream<Void, Object> e) {
+    public RequestPipeline<ObjectNode> handle(HttpStream<Void, Object> e) {
         return e.complete(ctx -> {
             if (cachedSpec == null) {
                 OpenApiSpecGenerator generator = new OpenApiSpecGenerator(collector, objectMapper);

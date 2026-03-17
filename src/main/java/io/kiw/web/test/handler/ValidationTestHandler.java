@@ -1,6 +1,6 @@
 package io.kiw.web.test.handler;
 
-import io.kiw.web.infrastructure.HttpResponseStream;
+import io.kiw.web.infrastructure.HttpStream;
 import io.kiw.web.infrastructure.RequestPipeline;
 import io.kiw.web.infrastructure.VertxJsonRoute;
 import io.kiw.web.test.MyApplicationState;
@@ -10,8 +10,8 @@ import static io.kiw.web.infrastructure.HttpResult.success;
 public class ValidationTestHandler extends VertxJsonRoute<ValidationRequest, ValidationResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<ValidationResponse> handle(HttpResponseStream<ValidationRequest, MyApplicationState> httpResponseStream) {
-        return httpResponseStream
+    public RequestPipeline<ValidationResponse> handle(HttpStream<ValidationRequest, MyApplicationState> httpStream) {
+        return httpStream
             .validate(v -> {
                 v.jsonField("name", r -> r.name).required().minLength(2);
                 v.jsonField("email", r -> r.email).required().email();

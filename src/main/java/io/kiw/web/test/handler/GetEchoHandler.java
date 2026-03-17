@@ -7,9 +7,9 @@ import io.vertx.core.http.Cookie;
 public class GetEchoHandler extends VertxJsonRoute<EmptyRequest, EchoResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<EchoResponse> handle(HttpResponseStream<EmptyRequest, MyApplicationState> httpResponseStream) {
+    public RequestPipeline<EchoResponse> handle(HttpStream<EmptyRequest, MyApplicationState> httpStream) {
         return
-            httpResponseStream
+            httpStream
                 .complete(ctx -> {
                     Cookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
 

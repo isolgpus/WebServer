@@ -1,7 +1,7 @@
 package io.kiw.web.test.documentation;
 
 import io.kiw.web.infrastructure.RequestPipeline;
-import io.kiw.web.infrastructure.HttpResponseStream;
+import io.kiw.web.infrastructure.HttpStream;
 import io.kiw.web.infrastructure.HttpResult;
 import io.kiw.web.infrastructure.VertxJsonRoute;
 
@@ -9,7 +9,7 @@ public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWo
 
 
     @Override
-    public RequestPipeline<HelloWorldResponse> handle(HttpResponseStream<HelloWorldRequest, HelloWorldState> e) {
+    public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, HelloWorldState> e) {
         return e.complete(ctx -> HttpResult.success(new HelloWorldResponse()));
     }
 }
