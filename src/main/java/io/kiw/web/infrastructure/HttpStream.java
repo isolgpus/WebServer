@@ -100,6 +100,12 @@ public class HttpStream<IN, APP> {
         return new RequestPipeline<>(instructionChain, applicationState, ender);
     }
 
+    public <OUT> RequestPipeline<OUT> complete()
+    {
+        return complete(a -> HttpResult.success());
+    }
+
+
     public <OUT> RequestPipeline<OUT>  blockingComplete(HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper)
     {
         instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, canFinishSuccessfully));

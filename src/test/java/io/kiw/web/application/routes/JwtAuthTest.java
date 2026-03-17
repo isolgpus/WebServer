@@ -1,62 +1,44 @@
 package io.kiw.web.application.routes;
 
-import io.kiw.web.infrastructure.*;
-import io.kiw.web.test.MyApplicationState;
+import io.kiw.web.test.TestApplicationClient;
+import io.kiw.web.test.TestApplicationRoutes;
 import io.kiw.web.test.TestHttpResponse;
 import io.kiw.web.test.StubRequest;
-import io.kiw.web.test.StubRouter;
 import io.kiw.web.test.jwt.StubJwtProvider;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 
+import static io.kiw.web.application.routes.TestApplicationClientCreator.createApplicationClient;
 import static io.kiw.web.test.TestHelper.json;
 import static org.junit.Assert.assertEquals;
 
 public class JwtAuthTest {
 
-    private static final String SECRET = "test-secret-key-for-unit-tests";
-
+    private TestApplicationClient client;
     private StubJwtProvider jwtProvider;
-    private StubRouter router;
-    private List<Exception> exceptions;
-
-    public static class SubjectResponse {
-        public final String subject;
-        public SubjectResponse(String subject) { this.subject = subject; }
-    }
 
     @Before
     public void setUp() {
-        jwtProvider = new StubJwtProvider(SECRET);
-        exceptions = new ArrayList<>();
-        router = new StubRouter(exceptions::add);
+        jwtProvider = new StubJwtProvider(TestApplicationRoutes.JWT_SECRET);
+        client = createApplicationClient();
+    }
 
-        RoutesRegister routesRegister = new RoutesRegister(router);
-        MyApplicationState state = new MyApplicationState();
-
-        routesRegister.jsonRoute("/protected", Method.GET, state,
-            new VertxJsonRoute<EmptyRequest, SubjectResponse, MyApplicationState>() {
-                @Override
-                public RequestPipeline<SubjectResponse> handle(HttpStream<EmptyRequest, MyApplicationState> stream) {
-                    return stream
-                        .requireJwt(jwtProvider)
-                        .complete(ctx ->
-                            HttpResult.success(new SubjectResponse(ctx.http().getJwtClaims().getSubject())));
-                }
-            });
+    @After
+    public void tearDown() {
+        client.assertNoMoreExceptions();
+        client.stop();
     }
 
     @Test
     public void shouldAllowRequestWithValidJwt() {
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
 
-        TestHttpResponse response = router.handle(
-            StubRequest.request("/protected").headerParam("Authorization", "Bearer " + token),
-            Method.GET);
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/protected")
+                .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
             TestHttpResponse.response(json().put("subject", "user123").toString()),
@@ -67,9 +49,9 @@ public class JwtAuthTest {
     public void shouldExposeAllClaimsFromToken() {
         String token = jwtProvider.generateToken(Map.of("sub", "user456", "role", "admin"));
 
-        TestHttpResponse response = router.handle(
-            StubRequest.request("/protected").headerParam("Authorization", "Bearer " + token),
-            Method.GET);
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/protected")
+                .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
             TestHttpResponse.response(json().put("subject", "user456").toString()),
@@ -78,9 +60,8 @@ public class JwtAuthTest {
 
     @Test
     public void shouldRejectRequestWithNoAuthorizationHeader() {
-        TestHttpResponse response = router.handle(
-            StubRequest.request("/protected"),
-            Method.GET);
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/protected"));
 
         assertEquals(
             TestHttpResponse.response(json()
@@ -92,9 +73,9 @@ public class JwtAuthTest {
 
     @Test
     public void shouldRejectRequestWithMalformedBearerToken() {
-        TestHttpResponse response = router.handle(
-            StubRequest.request("/protected").headerParam("Authorization", "Bearer header.payload.badsignature"),
-            Method.GET);
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/protected")
+                .headerParam("Authorization", "Bearer header.payload.badsignature"));
 
         assertEquals(
             TestHttpResponse.response(json()
@@ -109,9 +90,9 @@ public class JwtAuthTest {
         StubJwtProvider otherProvider = new StubJwtProvider("a-completely-different-secret");
         String token = otherProvider.generateToken(Map.of("sub", "attacker"));
 
-        TestHttpResponse response = router.handle(
-            StubRequest.request("/protected").headerParam("Authorization", "Bearer " + token),
-            Method.GET);
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/protected")
+                .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
             TestHttpResponse.response(json()
@@ -126,9 +107,9 @@ public class JwtAuthTest {
         long oneHourAgo = System.currentTimeMillis() / 1000 - 3600;
         String token = jwtProvider.generateToken(Map.of("sub", "user789", "exp", oneHourAgo));
 
-        TestHttpResponse response = router.handle(
-            StubRequest.request("/protected").headerParam("Authorization", "Bearer " + token),
-            Method.GET);
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/protected")
+                .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
             TestHttpResponse.response(json()
@@ -142,9 +123,112 @@ public class JwtAuthTest {
     public void shouldRejectTokenWithWrongHeaderFormat() {
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
 
-        TestHttpResponse response = router.handle(
-            StubRequest.request("/protected").headerParam("Authorization", "Basic " + token),
-            Method.GET);
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/protected")
+                .headerParam("Authorization", "Basic " + token));
+
+        assertEquals(
+            TestHttpResponse.response(json()
+                .put("message", "Missing or invalid Authorization header")
+                .set("errors", json())
+                .toString()).withStatusCode(401),
+            response);
+    }
+
+    @Test
+    public void filterShouldAllowRequestWithValidJwt() {
+        String token = jwtProvider.generateToken(Map.of("sub", "user123"));
+
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/filter/test")
+                .headerParam("Authorization", "Bearer " + token));
+
+        assertEquals(
+            TestHttpResponse.response(json().put("subject", "user123").toString()),
+            response);
+    }
+
+    @Test
+    public void filterShouldExposeAllClaimsFromToken() {
+        String token = jwtProvider.generateToken(Map.of("sub", "user456", "role", "admin"));
+
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/filter/test")
+                .headerParam("Authorization", "Bearer " + token));
+
+        assertEquals(
+            TestHttpResponse.response(json().put("subject", "user456").toString()),
+            response);
+    }
+
+    @Test
+    public void filterShouldRejectRequestWithNoAuthorizationHeader() {
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/filter/test"));
+
+        assertEquals(
+            TestHttpResponse.response(json()
+                .put("message", "Missing or invalid Authorization header")
+                .set("errors", json())
+                .toString()).withStatusCode(401),
+            response);
+    }
+
+    @Test
+    public void filterShouldRejectRequestWithMalformedBearerToken() {
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/filter/test")
+                .headerParam("Authorization", "Bearer header.payload.badsignature"));
+
+        assertEquals(
+            TestHttpResponse.response(json()
+                .put("message", "Invalid token signature")
+                .set("errors", json())
+                .toString()).withStatusCode(401),
+            response);
+    }
+
+    @Test
+    public void filterShouldRejectRequestWithTokenSignedByDifferentSecret() {
+        StubJwtProvider otherProvider = new StubJwtProvider("a-completely-different-secret");
+        String token = otherProvider.generateToken(Map.of("sub", "attacker"));
+
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/filter/test")
+                .headerParam("Authorization", "Bearer " + token));
+
+        assertEquals(
+            TestHttpResponse.response(json()
+                .put("message", "Invalid token signature")
+                .set("errors", json())
+                .toString()).withStatusCode(401),
+            response);
+    }
+
+    @Test
+    public void filterShouldRejectExpiredToken() {
+        long oneHourAgo = System.currentTimeMillis() / 1000 - 3600;
+        String token = jwtProvider.generateToken(Map.of("sub", "user789", "exp", oneHourAgo));
+
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/filter/test")
+                .headerParam("Authorization", "Bearer " + token));
+
+        assertEquals(
+            TestHttpResponse.response(json()
+                .put("message", "Token has expired")
+                .set("errors", json())
+                .toString()).withStatusCode(401),
+            response);
+    }
+
+    @Test
+    public void filterShouldRejectTokenWithWrongHeaderFormat() {
+        String token = jwtProvider.generateToken(Map.of("sub", "user123"));
+
+        TestHttpResponse response = client.get(
+            StubRequest.request("/jwt/filter/test")
+                .headerParam("Authorization", "Basic " + token));
 
         assertEquals(
             TestHttpResponse.response(json()

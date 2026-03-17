@@ -3,12 +3,17 @@ package io.kiw.web.test;
 import io.kiw.web.infrastructure.Method;
 import io.kiw.web.infrastructure.RoutesRegister;
 import io.kiw.web.test.handler.*;
+import io.kiw.web.test.jwt.StubJwtProvider;
 
 public class TestApplicationRoutes {
+    public static final String JWT_SECRET = "test-secret-key-for-unit-tests";
+
     public static MyApplicationState registerRoutes(RoutesRegister routesRegister, MyApplicationState state) {
+        StubJwtProvider jwtProvider = new StubJwtProvider(JWT_SECRET);
 
         routesRegister.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
         routesRegister.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+        routesRegister.jsonFilter("/jwt/filter/*", state, new JwtFilter(jwtProvider));
         routesRegister.jsonFilter("/root/somethingElse/*", state, new TestFilter("otherFilter"));
         routesRegister.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
         routesRegister.jsonRoute("/root/filter/test", Method.GET, state, new GetTestFilterHandler());
@@ -40,6 +45,8 @@ public class TestApplicationRoutes {
         routesRegister.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         routesRegister.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
         routesRegister.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
+        routesRegister.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(jwtProvider));
+        routesRegister.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
         return state;
     }
 }

@@ -666,7 +666,7 @@ public class JsonHttpInfrastructureTest {
         TestHttpResponse response = testApplicationClient.get(StubRequest.request("/protected/resource"));
 
         Assert.assertEquals(
-            new TestHttpResponse(json()
+            TestHttpResponse.response(json()
                 .put("message", "filter blocked")
                 .set("errors", json())
                 .toString()).withStatusCode(401),

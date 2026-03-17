@@ -69,7 +69,7 @@ public class RoutesRegister {
                 }
             }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
-        RequestPipeline<OUT> flow = vertxJsonRoute.handle(httpStream);
+        RequestPipeline flow = vertxJsonRoute.handle(httpStream);
 
         Type[] typeArgs = TypeResolver.resolveTypeArguments(vertxJsonRoute.getClass(), VertxJsonRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(
@@ -84,13 +84,17 @@ public class RoutesRegister {
         router.route(path, method, "*", "application/json", flow, routeConfig);
     }
 
-    public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter) {
+    public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter<APP> jsonFilter) {
        jsonFilter(path, applicationState, jsonFilter, new RouteConfigBuilder().build());
     }
 
-    public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter jsonFilter, RouteConfig routeConfig) {
-        HttpStream<Void, APP> objectAPPHttpStream = new HttpStream<>(new ArrayList<>(), false, applicationState, null);
-        RequestPipeline flow = jsonFilter.handle(objectAPPHttpStream);
+    public <APP> void jsonFilter(final String path, APP applicationState, VertxJsonFilter<APP> jsonFilter, RouteConfig routeConfig) {
+        HttpStream<Void, APP> httpStream = new HttpStream<>(new ArrayList<>(), false, applicationState, null)
+            .map(ctx -> {
+                ctx.http().addResponseHeader("Content-Type", "application/json");
+                return null;
+            });
+        RequestPipeline<Void> flow = jsonFilter.handle(httpStream);
 
 
         router.route(path, "*", "application/json", flow, routeConfig);
@@ -106,7 +110,7 @@ public class RoutesRegister {
             Map<String, Buffer> uploadedFile = ctx.http().resolveUploadedFiles();
             return HttpResult.success(uploadedFile);
         });
-        RequestPipeline flow = fileUploaderHandler.handle(fileUploadStream);
+        RequestPipeline<OUT> flow = fileUploaderHandler.handle(fileUploadStream);
 
         Type[] typeArgs = TypeResolver.resolveTypeArguments(fileUploaderHandler.getClass(), VertxFileUploadRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(
