@@ -1,6 +1,7 @@
 package io.kiw.web.application.routes;
 
 import io.kiw.web.test.*;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -10,11 +11,14 @@ import static org.junit.Assert.fail;
 
 public class WebSocketTest {
 
+    private TestWebSocketClient ws;
+    private TestApplicationClient client;
+
     @Test
     public void shouldEchoWebSocketMessage() {
-        TestApplicationClient client = createApplicationClient();
+        client = createApplicationClient();
 
-        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
+        ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"hello\"}");
 
         ws.onResponses(received -> {
@@ -27,9 +31,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleMultipleMessages() {
-        TestApplicationClient client = createApplicationClient();
+        client = createApplicationClient();
 
-        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
+        ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"first\"}");
         ws.send("{\"message\":\"second\"}");
 
@@ -45,9 +49,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldSendMessageOnConnect() {
-        TestApplicationClient client = createApplicationClient();
+        client = createApplicationClient();
 
-        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
+        ws = client.webSocket(StubRequest.request("/ws/chat/general"));
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -59,9 +63,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldCloseWebSocket() {
-        TestApplicationClient client = createApplicationClient();
+        client = createApplicationClient();
 
-        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
+        ws = client.webSocket(StubRequest.request("/ws/chat/general"));
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
@@ -76,9 +80,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldSupportPathParams() {
-        TestApplicationClient client = createApplicationClient();
+        client = createApplicationClient();
 
-        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
+        ws = client.webSocket(StubRequest.request("/ws/chat/general"));
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
@@ -95,9 +99,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldSupportQueryParams() {
-        TestApplicationClient client = createApplicationClient();
+        client = createApplicationClient();
 
-        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/lobby").queryParam("user", "alice"));
+        ws = client.webSocket(StubRequest.request("/ws/chat/lobby").queryParam("user", "alice"));
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
@@ -114,7 +118,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldThrowWhenNoWebSocketRouteMatches() {
-        TestApplicationClient client = createApplicationClient();
+        client = createApplicationClient();
 
         try {
             client.webSocket(StubRequest.request("/ws/nonexistent"));
@@ -129,9 +133,9 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleInvalidJsonGracefully() {
-        TestApplicationClient client = createApplicationClient();
+        client = createApplicationClient();
 
-        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
+        ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("not valid json");
 
         ws.onResponses(received -> {
@@ -141,5 +145,14 @@ public class WebSocketTest {
 
             client.assertNoMoreExceptions();
         });
+    }
+    
+    @After
+    public void tearDown() {
+        if(ws != null)
+        {
+            ws.close();
+        }
+        client.stop();
     }
 }

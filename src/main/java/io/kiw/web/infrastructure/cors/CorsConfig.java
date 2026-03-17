@@ -45,10 +45,4 @@ public class CorsConfig {
         return maxAgeSeconds;
     }
 
-    public boolean isOriginAllowed(String origin) {
-        if (origin == null) {
-            return false;
-        }
-        return allowedOrigins.contains("*") || allowedOrigins.contains(origin);
-    }
 }

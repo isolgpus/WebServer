@@ -18,4 +18,6 @@ public interface TestApplicationClient {
     void assertException(String expected);
 
     void assertNoMoreExceptions();
+
+    void stop();
 }

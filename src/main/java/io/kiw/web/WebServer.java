@@ -1,10 +1,12 @@
 package io.kiw.web;
 
 import io.kiw.web.infrastructure.RoutesRegistrar;
+import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
 
+import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 
 public class WebServer<APP> {
@@ -28,11 +30,15 @@ public class WebServer<APP> {
 
         APP applicationState = RoutesRegistrar.register(router, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig);
 
-        httpServer.requestHandler(router).listen(webServerConfig.port);
+        httpServer.requestHandler(router).listen(webServerConfig.port).toCompletionStage().toCompletableFuture().join();
         return new WebServer<>(vertx, applicationState);
     }
 
     public <IN> void apply(IN immutableState, BiConsumer<IN, APP> applicationStateConsumer) {
         vertx.runOnContext((v) -> applicationStateConsumer.accept(immutableState, applicationState));
+    }
+
+    public void stop() {
+        vertx.close().toCompletionStage().toCompletableFuture().join();
     }
 }

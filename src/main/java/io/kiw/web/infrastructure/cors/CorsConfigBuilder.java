@@ -1,6 +1,5 @@
 package io.kiw.web.infrastructure.cors;
 
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 

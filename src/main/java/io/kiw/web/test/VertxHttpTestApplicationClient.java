@@ -1,5 +1,6 @@
 package io.kiw.web.test;
 
+import io.kiw.web.WebServer;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
@@ -17,16 +18,14 @@ public class VertxHttpTestApplicationClient implements TestApplicationClient, Au
     private final HttpClient httpClient;
     private final String host;
     private final int port;
+    private final WebServer<MyApplicationState> webServer;
     private final long timeoutSeconds;
 
-    public VertxHttpTestApplicationClient(String host, int port) {
-        this(host, port, 10);
-    }
-
-    public VertxHttpTestApplicationClient(String host, int port, long timeoutSeconds) {
+    public VertxHttpTestApplicationClient(String host, int port, WebServer<MyApplicationState> webServer) {
         this.host = host;
         this.port = port;
-        this.timeoutSeconds = timeoutSeconds;
+        this.webServer = webServer;
+        this.timeoutSeconds = 10;
         this.vertx = Vertx.vertx();
         this.httpClient = vertx.createHttpClient();
     }
@@ -74,6 +73,11 @@ public class VertxHttpTestApplicationClient implements TestApplicationClient, Au
     @Override
     public void assertNoMoreExceptions() {
 
+    }
+
+    @Override
+    public void stop() {
+        webServer.stop();
     }
 
     public TestWebSocketClient webSocketConnection(StubRequest stubRequest) {

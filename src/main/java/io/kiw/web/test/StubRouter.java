@@ -36,8 +36,23 @@ public class StubRouter extends RouterWrapper {
     }
 
     public TestHttpResponse handle(StubRequest stubRequest, Method method) {
-        if (corsConfig != null && method == Method.OPTIONS) {
-            return handlePreflightRequest(stubRequest);
+        if (corsConfig != null) {
+            String origin = stubRequest.headers.get("Origin");
+            if (method == Method.OPTIONS) {
+                if (origin != null) {
+                    return handlePreflightRequest(stubRequest);
+                }
+                return new TestHttpResponse(null).withStatusCode(405);
+            }
+            if (origin != null) {
+                boolean result = false;
+                if (origin != null) {
+                    result = corsConfig.getAllowedOrigins().contains("*") || corsConfig.getAllowedOrigins().contains(origin);
+                }
+                if (!result) {
+                    return new TestHttpResponse(null).withStatusCode(403);
+                }
+            }
         }
 
         StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies, stubRequest.fileUploads);
@@ -70,31 +85,35 @@ public class StubRouter extends RouterWrapper {
 
     private TestHttpResponse handlePreflightRequest(StubRequest stubRequest) {
         String origin = stubRequest.headers.get("Origin");
-        if (origin == null || !corsConfig.isOriginAllowed(origin)) {
+        boolean result = false;
+        if (origin != null) {
+            result = corsConfig.getAllowedOrigins().contains("*") || corsConfig.getAllowedOrigins().contains(origin);
+        }
+        if (origin == null || !result) {
             return new TestHttpResponse(null).withStatusCode(403);
         }
 
         String allowOrigin = corsConfig.getAllowedOrigins().contains("*") ? "*" : origin;
 
         TestHttpResponse response = new TestHttpResponse(null).withStatusCode(204)
-            .withHeader("Access-Control-Allow-Origin", allowOrigin);
+            .withHeader("access-control-allow-origin", allowOrigin);
 
         if (!corsConfig.getAllowedMethods().isEmpty()) {
-            response.withHeader("Access-Control-Allow-Methods",
+            response.withHeader("access-control-allow-methods",
                 String.join(",", corsConfig.getAllowedMethods()));
         }
 
         if (!corsConfig.getAllowedHeaders().isEmpty()) {
-            response.withHeader("Access-Control-Allow-Headers",
+            response.withHeader("access-control-allow-headers",
                 String.join(",", corsConfig.getAllowedHeaders()));
         }
 
         if (corsConfig.isAllowCredentials()) {
-            response.withHeader("Access-Control-Allow-Credentials", "true");
+            response.withHeader("access-control-allow-credentials", "true");
         }
 
         if (corsConfig.getMaxAgeSeconds() >= 0) {
-            response.withHeader("Access-Control-Max-Age", String.valueOf(corsConfig.getMaxAgeSeconds()));
+            response.withHeader("access-control-max-age", String.valueOf(corsConfig.getMaxAgeSeconds()));
         }
 
         return response;
@@ -144,19 +163,23 @@ public class StubRouter extends RouterWrapper {
 
     private void addCorsResponseHeaders(StubRequest stubRequest, TestHttpResponse response) {
         String origin = stubRequest.headers.get("Origin");
-        if (origin == null || !corsConfig.isOriginAllowed(origin)) {
+        boolean result = false;
+        if (origin != null) {
+            result = corsConfig.getAllowedOrigins().contains("*") || corsConfig.getAllowedOrigins().contains(origin);
+        }
+        if (origin == null || !result) {
             return;
         }
 
         String allowOrigin = corsConfig.getAllowedOrigins().contains("*") ? "*" : origin;
-        response.withHeader("Access-Control-Allow-Origin", allowOrigin);
+        response.withHeader("access-control-allow-origin", allowOrigin);
 
         if (corsConfig.isAllowCredentials()) {
-            response.withHeader("Access-Control-Allow-Credentials", "true");
+            response.withHeader("access-control-allow-credentials", "true");
         }
 
         if (!corsConfig.getExposedHeaders().isEmpty()) {
-            response.withHeader("Access-Control-Expose-Headers",
+            response.withHeader("access-control-expose-headers",
                 String.join(",", corsConfig.getExposedHeaders()));
         }
     }

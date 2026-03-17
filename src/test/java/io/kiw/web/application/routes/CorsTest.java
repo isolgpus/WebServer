@@ -3,19 +3,23 @@ package io.kiw.web.application.routes;
 import io.kiw.web.infrastructure.cors.CorsConfig;
 import io.kiw.web.infrastructure.cors.CorsConfigBuilder;
 import io.kiw.web.test.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import static io.kiw.web.application.routes.TestApplicationClientCreator.createApplicationClient;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 public class CorsTest {
 
+
+    private CorsConfig defaultCorsConfig;
     private TestApplicationClient client;
 
     @Before
     public void setUp() {
-        CorsConfig corsConfig = new CorsConfigBuilder()
+        defaultCorsConfig = new CorsConfigBuilder()
             .allowOrigin("http://allowed.example.com")
             .allowOrigin("http://another.example.com")
             .allowMethod("GET")
@@ -27,169 +31,200 @@ public class CorsTest {
             .allowCredentials(true)
             .maxAgeSeconds(3600)
             .build();
-        client = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), corsConfig);
     }
 
     @Test
     public void shouldReturnCorsHeadersOnPreflightRequest() {
+
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
                 .headerParam("Origin", "http://allowed.example.com")
                 .headerParam("Access-Control-Request-Method", "POST"));
 
         assertEquals(204, response.statusCode);
-        assertEquals("http://allowed.example.com", response.getHeader("Access-Control-Allow-Origin"));
-        assertEquals("GET,POST,PUT", response.getHeader("Access-Control-Allow-Methods"));
-        assertEquals("Content-Type,Authorization", response.getHeader("Access-Control-Allow-Headers"));
-        assertEquals("true", response.getHeader("Access-Control-Allow-Credentials"));
-        assertEquals("3600", response.getHeader("Access-Control-Max-Age"));
+        assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));
+        assertEquals("GET,POST,PUT", response.getHeader("access-control-allow-methods"));
+        assertEquals("Content-Type,Authorization", response.getHeader("access-control-allow-headers"));
+        assertEquals("true", response.getHeader("access-control-allow-credentials"));
+        assertEquals("3600", response.getHeader("access-control-max-age"));
     }
 
     @Test
     public void shouldReturnCorsHeadersOnPreflightForSecondAllowedOrigin() {
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
                 .headerParam("Origin", "http://another.example.com")
                 .headerParam("Access-Control-Request-Method", "GET"));
 
         assertEquals(204, response.statusCode);
-        assertEquals("http://another.example.com", response.getHeader("Access-Control-Allow-Origin"));
+        assertEquals("http://another.example.com", response.getHeader("access-control-allow-origin"));
     }
 
     @Test
     public void shouldRejectPreflightFromDisallowedOrigin() {
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
                 .headerParam("Origin", "http://evil.example.com")
                 .headerParam("Access-Control-Request-Method", "POST"));
 
         assertEquals(403, response.statusCode);
-        assertNull(response.getHeader("Access-Control-Allow-Origin"));
+        assertNull(response.getHeader("access-control-allow-origin"));
     }
 
     @Test
     public void shouldRejectPreflightWithNoOrigin() {
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.options(
             StubRequest.request("/echo"));
 
-        assertEquals(403, response.statusCode);
-        assertNull(response.getHeader("Access-Control-Allow-Origin"));
+        assertEquals(405, response.statusCode);
+        assertNull(response.getHeader("access-control-allow-origin"));
     }
 
     @Test
     public void shouldAddCorsHeadersToNormalGetResponse() {
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.get(
             StubRequest.request("/echo")
                 .headerParam("Origin", "http://allowed.example.com"));
 
         assertEquals(200, response.statusCode);
-        assertEquals("http://allowed.example.com", response.getHeader("Access-Control-Allow-Origin"));
-        assertEquals("true", response.getHeader("Access-Control-Allow-Credentials"));
-        assertEquals("X-Custom-Header", response.getHeader("Access-Control-Expose-Headers"));
+        assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));
+        assertEquals("true", response.getHeader("access-control-allow-credentials"));
+        assertEquals("X-Custom-Header", response.getHeader("access-control-expose-headers"));
     }
 
     @Test
     public void shouldAddCorsHeadersToNormalPostResponse() {
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.post(
             StubRequest.request("/echo")
                 .headerParam("Origin", "http://allowed.example.com")
-                .body("{}"));
+                .body("{" +
+                    "}"));
 
         assertEquals(200, response.statusCode);
-        assertEquals("http://allowed.example.com", response.getHeader("Access-Control-Allow-Origin"));
-        assertEquals("true", response.getHeader("Access-Control-Allow-Credentials"));
+        assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));
+        assertEquals("true", response.getHeader("access-control-allow-credentials"));
     }
 
     @Test
     public void shouldNotAddCorsHeadersForDisallowedOriginOnNormalRequest() {
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.get(
             StubRequest.request("/echo")
                 .headerParam("Origin", "http://evil.example.com"));
 
-        assertEquals(200, response.statusCode);
-        assertNull(response.getHeader("Access-Control-Allow-Origin"));
+        assertEquals(403, response.statusCode);
+        assertNull(response.getHeader("access-control-allow-origin"));
     }
 
     @Test
     public void shouldNotAddCorsHeadersWhenNoOriginOnNormalRequest() {
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.get(
             StubRequest.request("/echo"));
 
         assertEquals(200, response.statusCode);
-        assertNull(response.getHeader("Access-Control-Allow-Origin"));
+        assertNull(response.getHeader("access-control-allow-origin"));
     }
 
     @Test
     public void shouldHandleWildcardOrigin() {
+
         CorsConfig wildcardConfig = new CorsConfigBuilder()
             .allowOrigin("*")
             .allowMethod("GET")
             .build();
-        TestApplicationClient wildcardClient = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), wildcardConfig);
+        this.client = createApplicationClient(wildcardConfig);
 
-        TestHttpResponse preflight = wildcardClient.options(
+        TestHttpResponse preflight = client.options(
             StubRequest.request("/echo")
                 .headerParam("Origin", "http://any-origin.com")
                 .headerParam("Access-Control-Request-Method", "GET"));
 
         assertEquals(204, preflight.statusCode);
-        assertEquals("*", preflight.getHeader("Access-Control-Allow-Origin"));
+        assertEquals("*", preflight.getHeader("access-control-allow-origin"));
 
-        TestHttpResponse normal = wildcardClient.get(
+        TestHttpResponse normal = client.get(
             StubRequest.request("/echo")
                 .headerParam("Origin", "http://any-origin.com"));
 
         assertEquals(200, normal.statusCode);
-        assertEquals("*", normal.getHeader("Access-Control-Allow-Origin"));
+        assertEquals("*", normal.getHeader("access-control-allow-origin"));
     }
 
     @Test
     public void shouldWorkWithoutCredentialsOrMaxAge() {
+
         CorsConfig simpleConfig = new CorsConfigBuilder()
             .allowOrigin("http://simple.example.com")
             .allowMethod("GET")
             .build();
-        TestApplicationClient simpleClient = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), simpleConfig);
+        client = createApplicationClient(simpleConfig);
 
-        TestHttpResponse response = simpleClient.options(
+        TestHttpResponse response = client.options(
             StubRequest.request("/echo")
                 .headerParam("Origin", "http://simple.example.com")
                 .headerParam("Access-Control-Request-Method", "GET"));
 
         assertEquals(204, response.statusCode);
-        assertEquals("http://simple.example.com", response.getHeader("Access-Control-Allow-Origin"));
-        assertNull(response.getHeader("Access-Control-Allow-Credentials"));
+        assertEquals("http://simple.example.com", response.getHeader("access-control-allow-origin"));
+        assertNull(response.getHeader("access-control-allow-credentials"));
     }
 
     @Test
     public void shouldNotInterfereWithNormalRequestsWhenNoCorsConfigured() {
-        TestApplicationClient noCorsClient = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
+        this.client = createApplicationClient();
 
-        TestHttpResponse response = noCorsClient.get(StubRequest.request("/echo"));
+        TestHttpResponse response = client.get(StubRequest.request("/echo"));
 
         assertEquals(200, response.statusCode);
-        assertNull(response.getHeader("Access-Control-Allow-Origin"));
+        assertNull(response.getHeader("access-control-allow-origin"));
     }
 
     @Test
     public void shouldAddCorsHeadersToFilteredRoutes() {
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.post(
             StubRequest.request("/root/filter/test")
                 .headerParam("Origin", "http://allowed.example.com")
-                .body("{}"));
+                .body("{" +
+                    "}"));
 
         assertEquals(200, response.statusCode);
-        assertEquals("http://allowed.example.com", response.getHeader("Access-Control-Allow-Origin"));
+        assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));
     }
 
     @Test
     public void shouldHandlePreflightOnFilteredRoutes() {
+        client = createApplicationClient(defaultCorsConfig);
+
         TestHttpResponse response = client.options(
             StubRequest.request("/root/filter/test")
                 .headerParam("Origin", "http://allowed.example.com")
                 .headerParam("Access-Control-Request-Method", "POST"));
 
         assertEquals(204, response.statusCode);
-        assertEquals("http://allowed.example.com", response.getHeader("Access-Control-Allow-Origin"));
+        assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));
     }
+
+
+    @After
+    public void tearDown() {
+        client.stop();
+    }
+
 }

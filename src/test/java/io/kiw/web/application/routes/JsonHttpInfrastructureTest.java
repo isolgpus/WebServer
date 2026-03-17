@@ -32,6 +32,7 @@ public class JsonHttpInfrastructureTest {
     @After
     public void tearDown() throws Exception {
         testApplicationClient.assertNoMoreExceptions();
+        testApplicationClient.stop();
     }
 
     @Test

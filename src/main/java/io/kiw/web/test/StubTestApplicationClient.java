@@ -16,12 +16,13 @@ public class StubTestApplicationClient implements TestApplicationClient {
     private final StubRouter router = new StubRouter(seenExceptions::add);
 
     public StubTestApplicationClient(final Consumer<RoutesRegister> registerRoutes) {
-        RoutesRegister routesRegister = new RoutesRegister(router);
-        registerRoutes.accept(routesRegister);
+        this(registerRoutes, null);
     }
 
     public StubTestApplicationClient(final Consumer<RoutesRegister> registerRoutes, CorsConfig corsConfig) {
-        router.configureCors(corsConfig);
+        if(corsConfig != null) {
+            router.configureCors(corsConfig);
+        }
         RoutesRegister routesRegister = new RoutesRegister(router);
         registerRoutes.accept(routesRegister);
     }
@@ -71,6 +72,11 @@ public class StubTestApplicationClient implements TestApplicationClient {
             throw new AssertionError("Expected to find no exceptions but found " + seenExceptions.stream()
                 .map(Throwable::getMessage).collect(Collectors.toList()));
         }
+    }
+
+    @Override
+    public void stop() {
+
     }
 
     public void assertException(String message) {
