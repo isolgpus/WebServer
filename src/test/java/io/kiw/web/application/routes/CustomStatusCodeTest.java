@@ -10,21 +10,21 @@ import static io.kiw.web.test.TestHelper.json;
 
 public class CustomStatusCodeTest {
 
-    private TestApplicationClient testApplicationClient;
+    private StubTestApplicationClient stubApplicationClient;
 
     @Before
     public void setUp() {
-        testApplicationClient = new TestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
+        stubApplicationClient = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
     }
 
     @After
     public void tearDown() {
-        testApplicationClient.assertNoMoreExceptions();
+        stubApplicationClient.assertNoMoreExceptions();
     }
 
     @Test
     public void shouldAllowHandlerToSetCreatedStatusCode() {
-        TestHttpResponse response = testApplicationClient.post(
+        TestHttpResponse response = stubApplicationClient.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "CREATED").put("value", "created").toString()));
 
@@ -35,7 +35,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetNoContentStatusCode() {
-        TestHttpResponse response = testApplicationClient.post(
+        TestHttpResponse response = stubApplicationClient.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "NO_CONTENT").put("value", "done").toString()));
 
@@ -46,7 +46,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldDefaultToOkWhenStatusCodeNotSet() {
-        TestHttpResponse response = testApplicationClient.post(
+        TestHttpResponse response = stubApplicationClient.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "OK").put("value", "ok").toString()));
 

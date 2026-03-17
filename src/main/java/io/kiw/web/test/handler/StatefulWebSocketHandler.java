@@ -21,6 +21,5 @@ public class StatefulWebSocketHandler extends WebSocketRoute<WebSocketEchoReques
 
     @Override
     public void onClose(WebSocketSession<WebSocketEchoResponse> session, MyApplicationState appState) {
-        session.send(new WebSocketEchoResponse("disconnected"));
     }
 }

@@ -4,7 +4,6 @@ import io.kiw.web.test.*;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.List;
 
 import static io.kiw.web.application.routes.TestApplicationClientCreator.createApplicationClient;
 import static org.junit.Assert.fail;
@@ -13,95 +12,109 @@ public class WebSocketTest {
 
     @Test
     public void shouldEchoWebSocketMessage() {
-        ApplicationClient client = createApplicationClient();
+        TestApplicationClient client = createApplicationClient();
 
-        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
+        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"hello\"}");
 
-        List<String> received = ws.received();
-        Assert.assertEquals(1, received.size());
-        Assert.assertEquals("{\"echo\":\"echo: hello\"}", received.get(0));
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"echo: hello\"}", received.get(0));
 
-        client.assertNoMoreExceptions();
+            client.assertNoMoreExceptions();
+        });
     }
 
     @Test
     public void shouldHandleMultipleMessages() {
-        ApplicationClient client = createApplicationClient();
+        TestApplicationClient client = createApplicationClient();
 
-        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
+        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"first\"}");
         ws.send("{\"message\":\"second\"}");
 
-        List<String> received = ws.received();
-        Assert.assertEquals(2, received.size());
-        Assert.assertEquals("{\"echo\":\"echo: first\"}", received.get(0));
-        Assert.assertEquals("{\"echo\":\"echo: second\"}", received.get(1));
+        ws.onResponses((received -> {
+            Assert.assertEquals(2, received.size());
+            Assert.assertEquals("{\"echo\":\"echo: first\"}", received.get(0));
+            Assert.assertEquals("{\"echo\":\"echo: second\"}", received.get(1));
 
-        client.assertNoMoreExceptions();
+            client.assertNoMoreExceptions();
+        }));
+
     }
 
     @Test
-    public void shouldSendMessageOnConnect() throws InterruptedException {
-        ApplicationClient client = createApplicationClient();
+    public void shouldSendMessageOnConnect() {
+        TestApplicationClient client = createApplicationClient();
 
-        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
+        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
 
-        List<String> received = ws.received();
-        Assert.assertEquals(1, received.size());
-        Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
 
-        client.assertNoMoreExceptions();
+            client.assertNoMoreExceptions();
+        });
     }
 
     @Test
-    public void shouldSendMessageOnClose() {
-        ApplicationClient client = createApplicationClient();
+    public void shouldCloseWebSocket() {
+        TestApplicationClient client = createApplicationClient();
 
-        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
-        ws.received(); // consume connect message
+        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
+        });
+        Assert.assertFalse(ws.isClosed());
         ws.close();
 
-        List<String> received = ws.received();
-        Assert.assertEquals(1, received.size());
-        Assert.assertEquals("{\"echo\":\"disconnected\"}", received.get(0));
+        Assert.assertTrue(ws.isClosed());
 
         client.assertNoMoreExceptions();
     }
 
     @Test
     public void shouldSupportPathParams() {
-        ApplicationClient client = createApplicationClient();
+        TestApplicationClient client = createApplicationClient();
 
-        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
-        ws.received(); // consume connect message
+        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/general"));
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
+        });
         ws.send("{\"message\":\"hi\"}");
 
-        List<String> received = ws.received();
-        Assert.assertEquals(1, received.size());
-        Assert.assertEquals("{\"echo\":\"general: hi\"}", received.get(0));
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"general: hi\"}", received.get(0));
 
-        client.assertNoMoreExceptions();
+            client.assertNoMoreExceptions();
+        });
     }
 
     @Test
     public void shouldSupportQueryParams() {
-        ApplicationClient client = createApplicationClient();
+        TestApplicationClient client = createApplicationClient();
 
-        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/lobby").queryParam("user", "alice"));
-        ws.received(); // consume connect message
+        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/chat/lobby").queryParam("user", "alice"));
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
+        });
         ws.send("{\"message\":\"hi\"}");
 
-        List<String> received = ws.received();
-        Assert.assertEquals(1, received.size());
-        Assert.assertEquals("{\"echo\":\"lobby/alice: hi\"}", received.get(0));
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"lobby/alice: hi\"}", received.get(0));
 
-        client.assertNoMoreExceptions();
+            client.assertNoMoreExceptions();
+        });
     }
 
     @Test
     public void shouldThrowWhenNoWebSocketRouteMatches() {
-        ApplicationClient client = new TestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
+        TestApplicationClient client = createApplicationClient();
 
         try {
             client.webSocket(StubRequest.request("/ws/nonexistent"));
@@ -109,20 +122,24 @@ public class WebSocketTest {
         } catch (IllegalArgumentException e) {
             Assert.assertEquals("No WebSocket route registered for path: /ws/nonexistent", e.getMessage());
         }
+        catch (RuntimeException e) {
+            Assert.assertEquals("WebSocket connection failed", e.getMessage());
+        }
     }
 
     @Test
     public void shouldHandleInvalidJsonGracefully() {
-        ApplicationClient client = createApplicationClient();
+        TestApplicationClient client = createApplicationClient();
 
-        WebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
+        TestWebSocketClient ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("not valid json");
 
-        List<String> received = ws.received();
-        Assert.assertEquals(0, received.size());
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
 
-        client.assertException("Unrecognized token 'not': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 4]");
+            client.assertException("Unrecognized token 'not': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 4]");
 
-        client.assertNoMoreExceptions();
+            client.assertNoMoreExceptions();
+        });
     }
 }

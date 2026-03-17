@@ -1,7 +1,5 @@
 package io.kiw.web.application.routes;
 
-import io.kiw.web.WebServer;
-import io.kiw.web.WebServiceConfigBuilder;
 import io.kiw.web.test.*;
 import io.vertx.core.http.impl.CookieImpl;
 import org.junit.After;
@@ -15,7 +13,7 @@ import static org.junit.Assert.assertEquals;
 
 public class JsonHttpInfrastructureTest {
 
-    private ApplicationClient testApplicationClient;
+    private TestApplicationClient testApplicationClient;
     private static final String DEFAULT_POST_RESPONSE = json()
             .put("intExample", 0)
             .putNull("stringExample")

@@ -5,7 +5,7 @@ import io.kiw.web.WebServiceConfigBuilder;
 import io.kiw.web.test.*;
 
 public class TestApplicationClientCreator {
-    public static ApplicationClient createApplicationClient() {
+    public static TestApplicationClient createApplicationClient() {
 
         if("REAL_WEB_SERVER".equals(System.getenv("TEST_MODE")))
         {
@@ -14,11 +14,11 @@ public class TestApplicationClientCreator {
                 TestApplicationRoutes.registerRoutes(routesRegister, state);
                 return state;
             }, new WebServiceConfigBuilder().setPort(8080).build());
-            return new VertxHttpApplicationClient("127.0.0.1", 8080);
+            return new VertxHttpTestApplicationClient("127.0.0.1", 8080);
         }
         else
         {
-            return new TestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
+            return new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
         }
     }
 }

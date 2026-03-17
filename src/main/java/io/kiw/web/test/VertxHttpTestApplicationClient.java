@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class VertxHttpApplicationClient implements ApplicationClient, AutoCloseable {
+public class VertxHttpTestApplicationClient implements TestApplicationClient, AutoCloseable {
 
     private final Vertx vertx;
     private final HttpClient httpClient;
@@ -19,11 +19,11 @@ public class VertxHttpApplicationClient implements ApplicationClient, AutoClosea
     private final int port;
     private final long timeoutSeconds;
 
-    public VertxHttpApplicationClient(String host, int port) {
+    public VertxHttpTestApplicationClient(String host, int port) {
         this(host, port, 10);
     }
 
-    public VertxHttpApplicationClient(String host, int port, long timeoutSeconds) {
+    public VertxHttpTestApplicationClient(String host, int port, long timeoutSeconds) {
         this.host = host;
         this.port = port;
         this.timeoutSeconds = timeoutSeconds;
@@ -62,7 +62,7 @@ public class VertxHttpApplicationClient implements ApplicationClient, AutoClosea
     }
 
     @Override
-    public WebSocketClient webSocket(StubRequest stubRequest) {
+    public TestWebSocketClient webSocket(StubRequest stubRequest) {
         return webSocketConnection(stubRequest);
     }
 
@@ -76,8 +76,8 @@ public class VertxHttpApplicationClient implements ApplicationClient, AutoClosea
 
     }
 
-    public WebSocketClient webSocketConnection(StubRequest stubRequest) {
-        CompletableFuture<VertxWebSocketClient> future = new CompletableFuture<>();
+    public TestWebSocketClient webSocketConnection(StubRequest stubRequest) {
+        CompletableFuture<VertxTestWebSocketClient> future = new CompletableFuture<>();
 
         String uri = buildUri(stubRequest);
         WebSocketConnectOptions options = new WebSocketConnectOptions()
@@ -90,7 +90,7 @@ public class VertxHttpApplicationClient implements ApplicationClient, AutoClosea
         }
 
         httpClient.webSocket(options)
-            .onSuccess(ws -> future.complete(new VertxWebSocketClient(ws)))
+            .onSuccess(ws -> future.complete(new VertxTestWebSocketClient(ws)))
             .onFailure(future::completeExceptionally);
 
         try {

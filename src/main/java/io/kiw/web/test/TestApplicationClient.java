@@ -1,92 +1,21 @@
 package io.kiw.web.test;
 
-import io.kiw.web.infrastructure.Method;
-import io.kiw.web.infrastructure.RoutesRegister;
-import io.kiw.web.infrastructure.cors.CorsConfig;
+public interface TestApplicationClient {
+    TestHttpResponse post(StubRequest stubRequest);
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
+    TestHttpResponse put(StubRequest stubRequest);
 
-public class TestApplicationClient implements ApplicationClient {
+    TestHttpResponse delete(StubRequest stubRequest);
 
-    private List<Exception> seenExceptions = new ArrayList<>();
-    private final StubRouter router = new StubRouter(seenExceptions::add);
+    TestHttpResponse patch(StubRequest stubRequest);
 
-    public TestApplicationClient(final Consumer<RoutesRegister> registerRoutes) {
-        RoutesRegister routesRegister = new RoutesRegister(router);
-        registerRoutes.accept(routesRegister);
-    }
+    TestHttpResponse get(StubRequest stubRequest);
 
-    public TestApplicationClient(final Consumer<RoutesRegister> registerRoutes, CorsConfig corsConfig) {
-        router.configureCors(corsConfig);
-        RoutesRegister routesRegister = new RoutesRegister(router);
-        registerRoutes.accept(routesRegister);
-    }
+    TestHttpResponse options(StubRequest stubRequest);
 
-    @Override
-    public TestHttpResponse post(StubRequest stubRequest) {
+    TestWebSocketClient webSocket(StubRequest stubRequest);
 
-        return router.handle(stubRequest, Method.POST);
-    }
+    void assertException(String expected);
 
-    @Override
-    public TestHttpResponse put(StubRequest stubRequest) {
-
-        return router.handle(stubRequest, Method.PUT);
-    }
-
-    @Override
-    public TestHttpResponse delete(StubRequest stubRequest) {
-
-        return router.handle(stubRequest, Method.DELETE);
-    }
-
-    @Override
-    public TestHttpResponse patch(StubRequest stubRequest) {
-
-        return router.handle(stubRequest, Method.PATCH);
-    }
-
-    @Override
-    public TestHttpResponse get(StubRequest stubRequest) {
-        return router.handle(stubRequest, Method.GET);
-    }
-
-    @Override
-    public TestHttpResponse options(StubRequest stubRequest) {
-        return router.handle(stubRequest, Method.OPTIONS);
-    }
-
-    @Override
-    public StubWebSocketClient webSocket(StubRequest stubRequest) {
-        return router.webSocket(stubRequest);
-    }
-
-    public void assertNoMoreExceptions(){
-        if(!this.seenExceptions.isEmpty())
-        {
-            throw new AssertionError("Expected to find no exceptions but found " + seenExceptions.stream()
-                .map(Throwable::getMessage).collect(Collectors.toList()));
-        }
-    }
-
-    public void assertException(String message) {
-        Iterator<Exception> iterator = this.seenExceptions.iterator();
-        while(iterator.hasNext())
-        {
-            Exception exception = iterator.next();
-
-            if(exception.getMessage().equals(message))
-            {
-                iterator.remove();
-                return;
-            }
-        }
-
-        throw new AssertionError("Unable to find exception in seen exceptions " + seenExceptions.stream()
-            .map(Throwable::getMessage).collect(Collectors.toList()));
-    }
+    void assertNoMoreExceptions();
 }

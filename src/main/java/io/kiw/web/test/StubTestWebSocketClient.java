@@ -6,15 +6,16 @@ import io.kiw.web.infrastructure.WebSocketSession;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
-public class StubWebSocketClient implements WebSocketClient {
+public class StubTestWebSocketClient implements TestWebSocketClient {
 
     private final List<String> receivedMessages = new ArrayList<>();
     private final WebSocketRouteHandler<?, ?, ?> handler;
     private final WebSocketSession<?> session;
     private final StubWebSocketConnection connection;
 
-    StubWebSocketClient(WebSocketRouteHandler<?, ?, ?> handler, Map<String, String> pathParams, Map<String, String> queryParams) {
+    StubTestWebSocketClient(WebSocketRouteHandler<?, ?, ?> handler, Map<String, String> pathParams, Map<String, String> queryParams) {
         this.handler = handler;
         this.connection = new StubWebSocketConnection(receivedMessages, pathParams, queryParams);
         this.session = handler.createSession(connection);
@@ -26,16 +27,17 @@ public class StubWebSocketClient implements WebSocketClient {
         handler.onMessage(jsonMessage, session);
     }
 
+
     @Override
-    public List<String> received() {
-        List<String> messages = new ArrayList<>(receivedMessages);
+    public void onResponses(Consumer<List<String>> receivedMessageConsumer) {
+        receivedMessageConsumer.accept(receivedMessages);
         receivedMessages.clear();
-        return messages;
     }
 
     @Override
     public void close() {
         handler.onClose(session);
+        connection.close();
     }
 
     @Override

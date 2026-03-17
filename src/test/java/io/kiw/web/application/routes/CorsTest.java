@@ -11,7 +11,7 @@ import static org.junit.Assert.assertNull;
 
 public class CorsTest {
 
-    private ApplicationClient client;
+    private TestApplicationClient client;
 
     @Before
     public void setUp() {
@@ -27,7 +27,7 @@ public class CorsTest {
             .allowCredentials(true)
             .maxAgeSeconds(3600)
             .build();
-        client = new TestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), corsConfig);
+        client = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), corsConfig);
     }
 
     @Test
@@ -125,7 +125,7 @@ public class CorsTest {
             .allowOrigin("*")
             .allowMethod("GET")
             .build();
-        ApplicationClient wildcardClient = new TestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), wildcardConfig);
+        TestApplicationClient wildcardClient = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), wildcardConfig);
 
         TestHttpResponse preflight = wildcardClient.options(
             StubRequest.request("/echo")
@@ -149,7 +149,7 @@ public class CorsTest {
             .allowOrigin("http://simple.example.com")
             .allowMethod("GET")
             .build();
-        ApplicationClient simpleClient = new TestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), simpleConfig);
+        TestApplicationClient simpleClient = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), simpleConfig);
 
         TestHttpResponse response = simpleClient.options(
             StubRequest.request("/echo")
@@ -163,7 +163,7 @@ public class CorsTest {
 
     @Test
     public void shouldNotInterfereWithNormalRequestsWhenNoCorsConfigured() {
-        ApplicationClient noCorsClient = new TestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
+        TestApplicationClient noCorsClient = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
 
         TestHttpResponse response = noCorsClient.get(StubRequest.request("/echo"));
 
