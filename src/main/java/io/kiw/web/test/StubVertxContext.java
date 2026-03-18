@@ -31,7 +31,6 @@ public class StubVertxContext implements VertxContext {
         this.fileUploads = fileUploads;
     }
 
-
     @Override
     public Cookie getRequestCookie(String key) {
         return this.requestCookies.get(key);

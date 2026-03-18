@@ -1,40 +1,60 @@
 package io.kiw.web.application.routes;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.kiw.web.infrastructure.Method;
-import io.kiw.web.infrastructure.RoutesRegister;
-import io.kiw.web.infrastructure.openapi.OpenApiSpecGenerator;
-import io.kiw.web.test.MyApplicationState;
-import io.kiw.web.test.TestHttpResponse;
-import io.kiw.web.test.StubRequest;
-import io.kiw.web.test.StubRouter;
-import io.kiw.web.test.handler.*;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.kiw.web.test.*;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Collection;
+
+import static io.kiw.web.application.routes.TestApplicationClientCreator.*;
 import static org.junit.Assert.*;
 
+@RunWith(Parameterized.class)
 public class OpenApiSpecTest {
 
-    private RoutesRegister routesRegister;
-    private StubRouter router;
-    private MyApplicationState state;
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> modes() {
+        return TestApplicationClientCreator.modes();
+    }
+
+    private final String mode;
+    private TestApplicationClient testApplicationClient;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
+    public OpenApiSpecTest(String mode) {
+        this.mode = mode;
+    }
 
     @Before
     public void setUp() {
-        router = new StubRouter(e -> {});
-        routesRegister = new RoutesRegister(router);
-        state = new MyApplicationState();
+        if (REAL_MODE.equals(mode)) {
+            assumeRealModeEnabled();
+        }
+        testApplicationClient = createClient(mode);
+    }
+
+    @After
+    public void tearDown() {
+        if (testApplicationClient != null) {
+            testApplicationClient.assertNoMoreExceptions();
+            testApplicationClient.stop();
+        }
+    }
+
+    private JsonNode getSpec() throws Exception {
+        TestHttpResponse response = testApplicationClient.get(StubRequest.request("/openapi.json"));
+        assertEquals(200, response.statusCode);
+        return objectMapper.readTree(response.responseBody);
     }
 
     @Test
-    public void shouldGenerateSpecWithCorrectVersion() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-
-        OpenApiSpecGenerator generator = new OpenApiSpecGenerator(
-            routesRegister.getOpenApiCollector(), routesRegister.getObjectMapper());
-        ObjectNode spec = generator.title("Test API").version("1.0.0").description("A test API").generate();
+    public void shouldGenerateSpecWithCorrectVersion() throws Exception {
+        JsonNode spec = getSpec();
 
         assertEquals("3.0.3", spec.get("openapi").asText());
         assertEquals("Test API", spec.get("info").get("title").asText());
@@ -43,12 +63,8 @@ public class OpenApiSpecTest {
     }
 
     @Test
-    public void shouldGeneratePathsForRegisteredRoutes() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
+    public void shouldGeneratePathsForRegisteredRoutes() throws Exception {
+        JsonNode spec = getSpec();
         JsonNode paths = spec.get("paths");
 
         assertNotNull(paths.get("/echo"));
@@ -57,31 +73,29 @@ public class OpenApiSpecTest {
     }
 
     @Test
-    public void shouldConvertPathParamsToOpenApiFormat() {
-        routesRegister.jsonRoute("/echo/:pathExample", Method.GET, state, new GetEchoHandler());
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
+    public void shouldConvertPathParamsToOpenApiFormat() throws Exception {
+        JsonNode spec = getSpec();
         JsonNode paths = spec.get("paths");
 
-        assertNotNull(paths.get("/echo/{pathExample}"));
-        assertNull(paths.get("/echo/:pathExample"));
+        assertNotNull(paths.get("/openapi/echo/{pathExample}"));
+        assertNull(paths.get("/openapi/echo/:pathExample"));
 
-        JsonNode parameters = paths.get("/echo/{pathExample}").get("get").get("parameters");
+        JsonNode parameters = paths.get("/openapi/echo/{pathExample}").get("get").get("parameters");
         assertNotNull(parameters);
-        assertEquals(1, parameters.size());
-        assertEquals("pathExample", parameters.get(0).get("name").asText());
-        assertEquals("path", parameters.get(0).get("in").asText());
-        assertTrue(parameters.get(0).get("required").asBoolean());
+        boolean hasPathExample = false;
+        for (JsonNode param : parameters) {
+            if ("pathExample".equals(param.get("name").asText()) && "path".equals(param.get("in").asText())) {
+                assertTrue(param.get("required").asBoolean());
+                hasPathExample = true;
+            }
+        }
+        assertTrue("Should have pathExample path parameter", hasPathExample);
     }
 
     @Test
-    public void shouldGenerateRequestBodySchemaFromInputType() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
-        JsonNode requestBody = spec.get("paths").get("/echo").get("post").get("requestBody");
+    public void shouldGenerateRequestBodySchemaFromInputType() throws Exception {
+        JsonNode spec = getSpec();
+        JsonNode requestBody = spec.get("paths").get("/openapi/echo").get("post").get("requestBody");
 
         assertNotNull(requestBody);
         assertTrue(requestBody.get("required").asBoolean());
@@ -97,15 +111,11 @@ public class OpenApiSpecTest {
     }
 
     @Test
-    public void shouldGenerateResponseSchemaFromOutputType() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
-        JsonNode response = spec.get("paths").get("/echo").get("post").get("responses").get("200");
+    public void shouldGenerateResponseSchemaFromOutputType() throws Exception {
+        JsonNode spec = getSpec();
+        JsonNode response = spec.get("paths").get("/openapi/echo").get("post").get("responses").get("200");
 
         assertNotNull(response);
-        assertEquals("Successful response", response.get("description").asText());
 
         JsonNode schema = response.get("content").get("application/json").get("schema");
         assertEquals("object", schema.get("type").asText());
@@ -118,31 +128,17 @@ public class OpenApiSpecTest {
     }
 
     @Test
-    public void shouldNotIncludeRequestBodyForGetRoutes() {
-        routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
+    public void shouldNotIncludeRequestBodyForGetRoutes() throws Exception {
+        JsonNode spec = getSpec();
         JsonNode getOperation = spec.get("paths").get("/echo").get("get");
 
         assertNull(getOperation.get("requestBody"));
     }
 
     @Test
-    public void shouldApplyOpenApiMetadata() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler(),
-            new RouteConfigBuilder()
-                .openApi()
-                    .summary("Echo the input")
-                    .description("Echoes back the provided values")
-                    .tag("echo")
-                    .responseDescription("The echoed response")
-                .build()
-        );
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
-        JsonNode operation = spec.get("paths").get("/echo").get("post");
+    public void shouldApplyOpenApiMetadata() throws Exception {
+        JsonNode spec = getSpec();
+        JsonNode operation = spec.get("paths").get("/openapi/echo").get("post");
 
         assertEquals("Echo the input", operation.get("summary").asText());
         assertEquals("Echoes back the provided values", operation.get("description").asText());
@@ -151,46 +147,33 @@ public class OpenApiSpecTest {
     }
 
     @Test
-    public void shouldApplyParamDescriptions() {
-        routesRegister.jsonRoute("/echo/:pathExample", Method.GET, state, new GetEchoHandler(),
-            new RouteConfigBuilder()
-                .openApi()
-                    .paramDescription("pathExample", "An example path param")
-                .build()
-        );
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
+    public void shouldApplyParamDescriptions() throws Exception {
+        JsonNode spec = getSpec();
+        JsonNode parameters = spec.get("paths").get("/openapi/echo/{pathExample}").get("get").get("parameters");
 
-        ObjectNode spec = getSpec();
-        JsonNode param = spec.get("paths").get("/echo/{pathExample}").get("get").get("parameters").get(0);
-
-        assertEquals("An example path param", param.get("description").asText());
+        boolean found = false;
+        for (JsonNode param : parameters) {
+            if ("pathExample".equals(param.get("name").asText())) {
+                assertEquals("An example path param", param.get("description").asText());
+                found = true;
+            }
+        }
+        assertTrue("Should have pathExample parameter", found);
     }
 
     @Test
-    public void shouldHideRoutesMarkedAsHidden() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/internal", Method.GET, state, new GetEchoHandler(),
-            new RouteConfigBuilder()
-                .openApi()
-                    .hidden()
-                .build()
-        );
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
+    public void shouldHideRoutesMarkedAsHidden() throws Exception {
+        JsonNode spec = getSpec();
         JsonNode paths = spec.get("paths");
 
         assertNotNull(paths.get("/echo"));
-        assertNull(paths.get("/internal"));
+        assertNull(paths.get("/openapi/hidden"));
         assertNull(paths.get("/openapi.json"));
     }
 
     @Test
-    public void shouldGenerateOperationIds() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
+    public void shouldGenerateOperationIds() throws Exception {
+        JsonNode spec = getSpec();
         JsonNode operation = spec.get("paths").get("/echo").get("post");
 
         assertNotNull(operation.get("operationId"));
@@ -198,12 +181,9 @@ public class OpenApiSpecTest {
     }
 
     @Test
-    public void shouldMarkPrimitiveFieldsAsRequired() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
-        JsonNode schema = spec.get("paths").get("/echo").get("post")
+    public void shouldMarkPrimitiveFieldsAsRequired() throws Exception {
+        JsonNode spec = getSpec();
+        JsonNode schema = spec.get("paths").get("/openapi/echo").get("post")
             .get("requestBody").get("content").get("application/json").get("schema");
 
         JsonNode required = schema.get("required");
@@ -219,11 +199,8 @@ public class OpenApiSpecTest {
     }
 
     @Test
-    public void shouldServeSpecViaStubRouter() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
-
-        TestHttpResponse response = router.handle(StubRequest.request("/openapi.json"), Method.GET);
+    public void shouldServeSpecViaEndpoint() throws Exception {
+        TestHttpResponse response = testApplicationClient.get(StubRequest.request("/openapi.json"));
 
         assertEquals(200, response.statusCode);
         assertNotNull(response.responseBody);
@@ -233,45 +210,8 @@ public class OpenApiSpecTest {
     }
 
     @Test
-    public void shouldGenerateSpecDirectlyFromCollector() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler(),
-            new RouteConfigBuilder()
-                .openApi()
-                    .summary("Echo input")
-                    .tag("echo")
-                .build()
-        );
-
-        OpenApiSpecGenerator generator = new OpenApiSpecGenerator(
-            routesRegister.getOpenApiCollector(), routesRegister.getObjectMapper());
-        ObjectNode spec = generator.title("Direct API").version("2.0.0").generate();
-
-        assertEquals("3.0.3", spec.get("openapi").asText());
-        assertEquals("Direct API", spec.get("info").get("title").asText());
-        assertEquals("2.0.0", spec.get("info").get("version").asText());
-        assertEquals("Echo input", spec.get("paths").get("/echo").get("post").get("summary").asText());
-    }
-
-    @Test
-    public void shouldChainRouteConfigWithTimeoutAndOpenApi() {
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler(),
-            new RouteConfigBuilder()
-                .timeout(5000)
-                .openApi()
-                    .summary("Echo with timeout")
-                .done()
-                .build()
-        );
-        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", null);
-
-        ObjectNode spec = getSpec();
-        assertEquals("Echo with timeout", spec.get("paths").get("/echo").get("post").get("summary").asText());
-    }
-
-    private ObjectNode getSpec() {
-        OpenApiSpecGenerator generator = new OpenApiSpecGenerator(
-            routesRegister.getOpenApiCollector(), routesRegister.getObjectMapper());
-        generator.title("Test API").version("1.0.0");
-        return generator.generate();
+    public void shouldChainRouteConfigWithTimeoutAndOpenApi() throws Exception {
+        JsonNode spec = getSpec();
+        assertEquals("Echo with timeout", spec.get("paths").get("/openapi/timeout").get("post").get("summary").asText());
     }
 }

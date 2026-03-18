@@ -134,11 +134,15 @@ public class OpenApiSpecGenerator {
 
         if (desc.outputType != null && desc.outputType != Void.class) {
             ObjectNode respContent = successResponse.putObject("content");
-            ObjectNode respMediaType = respContent.putObject(desc.produces);
-            ObjectNode schema = schemaGenerator.generateSchema(desc.outputType);
-            if (schema != null) {
-                respMediaType.set("schema", schema);
+            if(desc.produces != null)
+            {
+                ObjectNode respMediaType = respContent.putObject(desc.produces);
+                ObjectNode schema = schemaGenerator.generateSchema(desc.outputType);
+                if (schema != null) {
+                    respMediaType.set("schema", schema);
+                }
             }
+
         }
     }
 

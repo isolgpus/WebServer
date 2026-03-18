@@ -3,6 +3,7 @@ package io.kiw.web.test;
 import io.kiw.web.infrastructure.Method;
 import io.kiw.web.infrastructure.RoutesRegister;
 import io.kiw.web.test.handler.*;
+import io.kiw.web.test.handler.RouteConfigBuilder;
 import io.kiw.web.test.jwt.StubJwtProvider;
 
 public class TestApplicationRoutes {
@@ -48,6 +49,38 @@ public class TestApplicationRoutes {
         routesRegister.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         routesRegister.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(jwtProvider));
         routesRegister.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
+
+        routesRegister.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
+            new RouteConfigBuilder()
+                .openApi()
+                    .summary("Echo the input")
+                    .description("Echoes back the provided values")
+                    .tag("echo")
+                    .responseDescription("The echoed response")
+                .build()
+        );
+        routesRegister.jsonRoute("/openapi/echo/:pathExample", Method.GET, state, new GetEchoHandler(),
+            new RouteConfigBuilder()
+                .openApi()
+                    .paramDescription("pathExample", "An example path param")
+                .build()
+        );
+        routesRegister.jsonRoute("/openapi/hidden", Method.GET, state, new GetEchoHandler(),
+            new RouteConfigBuilder()
+                .openApi()
+                    .hidden()
+                .build()
+        );
+        routesRegister.jsonRoute("/openapi/timeout", Method.POST, state, new PostEchoHandler(),
+            new RouteConfigBuilder()
+                .timeout(5000)
+                .openApi()
+                    .summary("Echo with timeout")
+                .done()
+                .build()
+        );
+        routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
+
         return state;
     }
 }
