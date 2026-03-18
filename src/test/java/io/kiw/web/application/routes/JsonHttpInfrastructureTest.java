@@ -341,6 +341,32 @@ public class JsonHttpInfrastructureTest {
 
 
     @Test
+    public void shouldAccessRequestBodyInHandlerWhenRoutedThroughFilter() {
+        String requestBody = json()
+            .put("intExample", 42)
+            .put("stringExample", "through filter")
+            .toString();
+
+        TestHttpResponse response = testApplicationClient.post(
+            StubRequest.request("/root/filter/echo").body(requestBody));
+
+        String expectedResponse = json()
+            .put("intExample", 42)
+            .put("stringExample", "through filter")
+            .putNull("pathExample")
+            .putNull("queryExample")
+            .putNull("requestHeaderExample")
+            .putNull("requestCookieExample")
+            .toString();
+
+        Assert.assertEquals(
+            TestHttpResponse.response(expectedResponse)
+                .withCookie(new CookieImpl("rootFilter", "hitfilter"))
+                .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            response);
+    }
+
+    @Test
     public void shouldApplyFilterBeforeHandle() {
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/root/filter/test")
