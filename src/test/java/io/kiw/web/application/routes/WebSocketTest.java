@@ -3,20 +3,42 @@ package io.kiw.web.application.routes;
 import io.kiw.web.test.*;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Collection;
 
-import static io.kiw.web.application.routes.TestApplicationClientCreator.createApplicationClient;
+import static io.kiw.web.application.routes.TestApplicationClientCreator.*;
 import static org.junit.Assert.fail;
 
+@RunWith(Parameterized.class)
 public class WebSocketTest {
 
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> modes() {
+        return TestApplicationClientCreator.modes();
+    }
+
+    private final String mode;
     private TestWebSocketClient ws;
     private TestApplicationClient client;
 
+    public WebSocketTest(String mode) {
+        this.mode = mode;
+    }
+
+    @Before
+    public void setUp() {
+        if (REAL_MODE.equals(mode)) {
+            assumeRealModeEnabled();
+        }
+    }
+
     @Test
     public void shouldEchoWebSocketMessage() {
-        client = createApplicationClient();
+        client = createClient(mode);
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"hello\"}");
@@ -31,7 +53,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleMultipleMessages() {
-        client = createApplicationClient();
+        client = createClient(mode);
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"first\"}");
@@ -49,7 +71,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldSendMessageOnConnect() {
-        client = createApplicationClient();
+        client = createClient(mode);
 
         ws = client.webSocket(StubRequest.request("/ws/chat/general"));
 
@@ -63,7 +85,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldCloseWebSocket() {
-        client = createApplicationClient();
+        client = createClient(mode);
 
         ws = client.webSocket(StubRequest.request("/ws/chat/general"));
         ws.onResponses(received -> {
@@ -80,7 +102,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldSupportPathParams() {
-        client = createApplicationClient();
+        client = createClient(mode);
 
         ws = client.webSocket(StubRequest.request("/ws/chat/general"));
         ws.onResponses(received -> {
@@ -99,7 +121,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldSupportQueryParams() {
-        client = createApplicationClient();
+        client = createClient(mode);
 
         ws = client.webSocket(StubRequest.request("/ws/chat/lobby").queryParam("user", "alice"));
         ws.onResponses(received -> {
@@ -118,7 +140,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldThrowWhenNoWebSocketRouteMatches() {
-        client = createApplicationClient();
+        client = createClient(mode);
 
         try {
             client.webSocket(StubRequest.request("/ws/nonexistent"));
@@ -133,7 +155,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleInvalidJsonGracefully() {
-        client = createApplicationClient();
+        client = createClient(mode);
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("not valid json");
@@ -149,10 +171,11 @@ public class WebSocketTest {
     
     @After
     public void tearDown() {
-        if(ws != null)
-        {
+        if (ws != null) {
             ws.close();
         }
-        client.stop();
+        if (client != null) {
+            client.stop();
+        }
     }
 }

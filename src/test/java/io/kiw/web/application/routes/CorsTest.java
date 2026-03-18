@@ -6,19 +6,36 @@ import io.kiw.web.test.*;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import static io.kiw.web.application.routes.TestApplicationClientCreator.createApplicationClient;
+import java.util.Collection;
+
+import static io.kiw.web.application.routes.TestApplicationClientCreator.*;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
+@RunWith(Parameterized.class)
 public class CorsTest {
 
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> modes() {
+        return TestApplicationClientCreator.modes();
+    }
 
+    private final String mode;
     private CorsConfig defaultCorsConfig;
     private TestApplicationClient client;
 
+    public CorsTest(String mode) {
+        this.mode = mode;
+    }
+
     @Before
     public void setUp() {
+        if (REAL_MODE.equals(mode)) {
+            assumeRealModeEnabled();
+        }
         defaultCorsConfig = new CorsConfigBuilder()
             .allowOrigin("http://allowed.example.com")
             .allowOrigin("http://another.example.com")
@@ -36,7 +53,7 @@ public class CorsTest {
     @Test
     public void shouldReturnCorsHeadersOnPreflightRequest() {
 
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -53,7 +70,7 @@ public class CorsTest {
 
     @Test
     public void shouldReturnCorsHeadersOnPreflightForSecondAllowedOrigin() {
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -66,7 +83,7 @@ public class CorsTest {
 
     @Test
     public void shouldRejectPreflightFromDisallowedOrigin() {
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -79,7 +96,7 @@ public class CorsTest {
 
     @Test
     public void shouldRejectPreflightWithNoOrigin() {
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo"));
@@ -90,7 +107,7 @@ public class CorsTest {
 
     @Test
     public void shouldAddCorsHeadersToNormalGetResponse() {
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.get(
             StubRequest.request("/echo")
@@ -104,7 +121,7 @@ public class CorsTest {
 
     @Test
     public void shouldAddCorsHeadersToNormalPostResponse() {
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.post(
             StubRequest.request("/echo")
@@ -119,7 +136,7 @@ public class CorsTest {
 
     @Test
     public void shouldNotAddCorsHeadersForDisallowedOriginOnNormalRequest() {
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.get(
             StubRequest.request("/echo")
@@ -131,7 +148,7 @@ public class CorsTest {
 
     @Test
     public void shouldNotAddCorsHeadersWhenNoOriginOnNormalRequest() {
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.get(
             StubRequest.request("/echo"));
@@ -147,7 +164,7 @@ public class CorsTest {
             .allowOrigin("*")
             .allowMethod("GET")
             .build();
-        this.client = createApplicationClient(wildcardConfig);
+        this.client = createClient(mode, wildcardConfig);
 
         TestHttpResponse preflight = client.options(
             StubRequest.request("/echo")
@@ -172,7 +189,7 @@ public class CorsTest {
             .allowOrigin("http://simple.example.com")
             .allowMethod("GET")
             .build();
-        client = createApplicationClient(simpleConfig);
+        client = createClient(mode, simpleConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -186,7 +203,7 @@ public class CorsTest {
 
     @Test
     public void shouldNotInterfereWithNormalRequestsWhenNoCorsConfigured() {
-        this.client = createApplicationClient();
+        this.client = createClient(mode);
 
         TestHttpResponse response = client.get(StubRequest.request("/echo"));
 
@@ -196,7 +213,7 @@ public class CorsTest {
 
     @Test
     public void shouldAddCorsHeadersToFilteredRoutes() {
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.post(
             StubRequest.request("/root/filter/test")
@@ -210,7 +227,7 @@ public class CorsTest {
 
     @Test
     public void shouldHandlePreflightOnFilteredRoutes() {
-        client = createApplicationClient(defaultCorsConfig);
+        client = createClient(mode, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/root/filter/test")
@@ -224,7 +241,9 @@ public class CorsTest {
 
     @After
     public void tearDown() {
-        client.stop();
+        if (client != null) {
+            client.stop();
+        }
     }
 
 }
