@@ -16,6 +16,7 @@ public class TestApplicationRoutes {
         routesRegister.jsonFilter("/jwt/filter/*", state, new JwtFilter(jwtProvider));
         routesRegister.jsonFilter("/root/somethingElse/*", state, new TestFilter("otherFilter"));
         routesRegister.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/echo", Method.POST, state, new PostEchoHandler());
         routesRegister.jsonRoute("/root/filter/test", Method.GET, state, new GetTestFilterHandler());
         routesRegister.jsonRoute("/root/filter/test", Method.PUT, state, new TestFilterHandler());
         routesRegister.jsonRoute("/root/filter/test", Method.DELETE, state, new TestFilterHandler());
