@@ -6,13 +6,24 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import static io.kiw.web.application.routes.TestApplicationClientCreator.createApplicationClient;
+import java.util.Collection;
+
+import static io.kiw.web.application.routes.TestApplicationClientCreator.*;
 import static io.kiw.web.test.TestHelper.json;
 import static org.junit.Assert.assertEquals;
 
+@RunWith(Parameterized.class)
 public class JsonHttpInfrastructureTest {
 
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> modes() {
+        return TestApplicationClientCreator.modes();
+    }
+
+    private final String mode;
     private TestApplicationClient testApplicationClient;
     private static final String DEFAULT_POST_RESPONSE = json()
             .put("intExample", 0)
@@ -23,16 +34,24 @@ public class JsonHttpInfrastructureTest {
             .putNull("requestCookieExample")
             .toString();
 
+    public JsonHttpInfrastructureTest(String mode) {
+        this.mode = mode;
+    }
+
     @Before
     public void setUp() throws Exception {
-
-        testApplicationClient = createApplicationClient();
+        if (REAL_MODE.equals(mode)) {
+            assumeRealModeEnabled();
+        }
+        testApplicationClient = createClient(mode);
     }
 
     @After
     public void tearDown() throws Exception {
-        testApplicationClient.assertNoMoreExceptions();
-        testApplicationClient.stop();
+        if (testApplicationClient != null) {
+            testApplicationClient.assertNoMoreExceptions();
+            testApplicationClient.stop();
+        }
     }
 
     @Test

@@ -5,26 +5,48 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Collection;
+
+import static io.kiw.web.application.routes.TestApplicationClientCreator.*;
 import static io.kiw.web.test.TestHelper.json;
 
+@RunWith(Parameterized.class)
 public class CustomStatusCodeTest {
 
-    private StubTestApplicationClient stubApplicationClient;
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> modes() {
+        return TestApplicationClientCreator.modes();
+    }
+
+    private final String mode;
+    private TestApplicationClient client;
+
+    public CustomStatusCodeTest(String mode) {
+        this.mode = mode;
+    }
 
     @Before
     public void setUp() {
-        stubApplicationClient = new StubTestApplicationClient(routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()));
+        if (REAL_MODE.equals(mode)) {
+            assumeRealModeEnabled();
+        }
+        client = createClient(mode);
     }
 
     @After
     public void tearDown() {
-        stubApplicationClient.assertNoMoreExceptions();
+        if (client != null) {
+            client.assertNoMoreExceptions();
+            client.stop();
+        }
     }
 
     @Test
     public void shouldAllowHandlerToSetCreatedStatusCode() {
-        TestHttpResponse response = stubApplicationClient.post(
+        TestHttpResponse response = client.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "CREATED").put("value", "created").toString()));
 
@@ -35,7 +57,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetNoContentStatusCode() {
-        TestHttpResponse response = stubApplicationClient.post(
+        TestHttpResponse response = client.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "NO_CONTENT").put("value", "done").toString()));
 
@@ -46,7 +68,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldDefaultToOkWhenStatusCodeNotSet() {
-        TestHttpResponse response = stubApplicationClient.post(
+        TestHttpResponse response = client.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "OK").put("value", "ok").toString()));
 

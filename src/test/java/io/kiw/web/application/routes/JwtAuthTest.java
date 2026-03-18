@@ -8,28 +8,47 @@ import io.kiw.web.test.jwt.StubJwtProvider;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
+import java.util.Collection;
 import java.util.Map;
 
-import static io.kiw.web.application.routes.TestApplicationClientCreator.createApplicationClient;
+import static io.kiw.web.application.routes.TestApplicationClientCreator.*;
 import static io.kiw.web.test.TestHelper.json;
 import static org.junit.Assert.assertEquals;
 
+@RunWith(Parameterized.class)
 public class JwtAuthTest {
 
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> modes() {
+        return TestApplicationClientCreator.modes();
+    }
+
+    private final String mode;
     private TestApplicationClient client;
     private StubJwtProvider jwtProvider;
 
+    public JwtAuthTest(String mode) {
+        this.mode = mode;
+    }
+
     @Before
     public void setUp() {
+        if (REAL_MODE.equals(mode)) {
+            assumeRealModeEnabled();
+        }
         jwtProvider = new StubJwtProvider(TestApplicationRoutes.JWT_SECRET);
-        client = createApplicationClient();
+        client = createClient(mode);
     }
 
     @After
     public void tearDown() {
-        client.assertNoMoreExceptions();
-        client.stop();
+        if (client != null) {
+            client.assertNoMoreExceptions();
+            client.stop();
+        }
     }
 
     @Test
