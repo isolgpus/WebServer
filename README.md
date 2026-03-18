@@ -29,7 +29,7 @@ Create a handler by extending `VertxJsonRoute`:
 public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWorldResponse, HelloWorldState> {
 
     @Override
-    public RequestPipeline<HelloWorldResponse> handle(HttpResponseStream<HelloWorldRequest, HelloWorldState> e) {
+    public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, HelloWorldState> e) {
         return e.complete(ctx -> HttpResult.success(new HelloWorldResponse()));
     }
 }
@@ -51,7 +51,7 @@ public class Main {
 
 ### Handler Pipeline
 
-Handlers are typed transformation chains built by calling methods on `HttpResponseStream`. Each step receives a context object (`ctx`) that provides access to the current value (`ctx.in()`), the HTTP context (`ctx.http()`), and — for non-blocking steps — the application state (`ctx.app()`).
+Handlers are typed transformation chains built by calling methods on `HttpStream`. Each step receives a context object (`ctx`) that provides access to the current value (`ctx.in()`), the HTTP context (`ctx.http()`), and — for non-blocking steps — the application state (`ctx.app()`).
 
 #### Pipeline Methods
 
@@ -84,7 +84,7 @@ public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserRespon
     }
 
     @Override
-    public RequestPipeline<AddUserResponse> handle(HttpResponseStream<AddUserRequest, AppState> stream) {
+    public RequestPipeline<AddUserResponse> handle(HttpStream<AddUserRequest, AppState> stream) {
         return stream
             .validate(v -> {
                 v.jsonField("name", r -> r.name).required().minLength(2);
@@ -119,7 +119,7 @@ Use `ctx.http()` to access query parameters, headers, and cookies:
 
 ```java
 @Override
-public RequestPipeline<EchoResponse> handle(HttpResponseStream<EchoRequest, MyState> e) {
+public RequestPipeline<EchoResponse> handle(HttpStream<EchoRequest, MyState> e) {
     return e.complete(ctx -> {
         // Read from request
         String query = ctx.http().getQueryParam("search");
@@ -198,7 +198,7 @@ Filters are middleware that run before matching routes. Register them with wildc
 public class AuthFilter implements VertxJsonFilter<MyState> {
 
     @Override
-    public RequestPipeline handle(HttpResponseStream<Void, MyState> e) {
+    public RequestPipeline<Void> handle(HttpStream<Void, MyState> e) {
         return e.complete(ctx -> {
             ctx.http().addResponseCookie(new CookieImpl("visited", "true"));
             return HttpResult.success();
@@ -220,7 +220,7 @@ Upload routes receive a `Map<String, Buffer>` of uploaded files:
 public class UploadHandler extends VertxFileUploadRoute<UploadResponse, MyState> {
 
     @Override
-    public RequestPipeline<UploadResponse> handle(HttpResponseStream<Map<String, Buffer>, MyState> e) {
+    public RequestPipeline<UploadResponse> handle(HttpStream<Map<String, Buffer>, MyState> e) {
         return e.complete(ctx -> {
             int totalBytes = ctx.in().values().stream().mapToInt(b -> b.getBytes().length).sum();
             return HttpResult.success(new UploadResponse(totalBytes));
@@ -237,7 +237,7 @@ Download routes return a `DownloadFileResponse`:
 public class DownloadHandler implements VertxFileDownloadRoute<String, MyState> {
 
     @Override
-    public RequestPipeline<DownloadFileResponse> handle(HttpResponseStream<String, MyState> e) {
+    public RequestPipeline<DownloadFileResponse> handle(HttpStream<String, MyState> e) {
         return e.complete(ctx ->
             Result.success(new DownloadFileResponse(Buffer.buffer("file contents"), "report.csv")));
     }
@@ -283,11 +283,11 @@ public class TestApplicationClient {
         return state;
     }
 
-    public StubHttpResponse post(StubRequest stubRequest) {
+    public TestHttpResponse post(StubRequest stubRequest) {
         return router.handle(stubRequest, Method.POST);
     }
 
-    public StubHttpResponse get(StubRequest stubRequest) {
+    public TestHttpResponse get(StubRequest stubRequest) {
         return router.handle(stubRequest, Method.GET);
     }
 
@@ -336,10 +336,10 @@ Import it with `import static io.kiw.web.test.TestHelper.json;`.
 
 ### Asserting Responses
 
-`StubHttpResponse` supports equality checks on body, status code, headers, and cookies:
+`TestHttpResponse` supports equality checks on body, status code, headers, and cookies:
 
 ```java
-StubHttpResponse expected = StubHttpResponse.response(expectedJson)
+TestHttpResponse expected = TestHttpResponse.response(expectedJson)
     .withStatusCode(400)
     .withHeader("X-Custom", "value")
     .withCookie(new CookieImpl("session", "abc"));
@@ -371,7 +371,7 @@ public class MyHandlerTest {
             .put("stringExample", "hiya")
             .toString();
 
-        StubHttpResponse response = client.post(
+        TestHttpResponse response = client.post(
             StubRequest.request("/echo").body(requestBody));
 
         String expectedResponse = json()
@@ -383,26 +383,27 @@ public class MyHandlerTest {
             .toString();
 
         Assert.assertEquals(
-            StubHttpResponse.response(expectedResponse),
+            TestHttpResponse.response(expectedResponse),
             response);
     }
 
     @Test
     public void shouldReturnErrorForMissingBody() {
-        StubHttpResponse response = client.post(StubRequest.request("/echo"));
+        TestHttpResponse response = client.post(StubRequest.request("/echo"));
 
         String expectedResponse = json()
             .put("message", "Invalid json request")
+            .set("errors", json())
             .toString();
 
         Assert.assertEquals(
-            StubHttpResponse.response(expectedResponse).withStatusCode(400),
+            TestHttpResponse.response(expectedResponse).withStatusCode(400),
             response);
     }
 
     @Test
     public void shouldHandleQueryParamsAndHeaders() {
-        StubHttpResponse response = client.post(
+        TestHttpResponse response = client.post(
             StubRequest.request("/echo")
                 .body("{}")
                 .queryParam("queryExample", "hi")
@@ -417,18 +418,18 @@ public class MyHandlerTest {
             .toString();
 
         Assert.assertEquals(
-            StubHttpResponse.response(expectedResponse),
+            TestHttpResponse.response(expectedResponse),
             response);
     }
 
     @Test
     public void shouldCatchHandlerExceptions() {
-        StubHttpResponse response = client.post(
+        TestHttpResponse response = client.post(
             StubRequest.request("/throw")
                 .body(json().put("where", "complete").toString()));
 
         Assert.assertEquals(
-            StubHttpResponse.response(
+            TestHttpResponse.response(
                 json().put("message", "Something went wrong").toString())
                 .withStatusCode(500),
             response);
