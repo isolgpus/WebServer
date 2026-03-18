@@ -62,7 +62,7 @@ public class CustomStatusCodeTest {
                 .body(json().put("statusCode", "NO_CONTENT").put("value", "done").toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("value", "done").toString()).withStatusCode(204),
+            TestHttpResponse.response("").withStatusCode(204),
             response);
     }
 

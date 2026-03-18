@@ -64,14 +64,22 @@ public class StubVertxContext implements VertxContext {
 
     @Override
     public void end(String responseBody) {
-        this.responseBody = responseBody;
+        if (statusCode == 204) {
+            this.responseBody = "";
+        } else {
+            this.responseBody = responseBody;
+        }
         this.finished = true;
     }
 
     @Override
     public void end(Buffer bodyResponse) {
 
-        this.responseBody = new String(bodyResponse.getBytes(), StandardCharsets.UTF_8);
+        if (statusCode == 204) {
+            this.responseBody = "";
+        } else {
+            this.responseBody = new String(bodyResponse.getBytes(), StandardCharsets.UTF_8);
+        }
         this.finished = true;
     }
 
