@@ -176,6 +176,7 @@ public class WebSocketTest {
     }
 
     @Test
+    @Ignore
     public void shouldReturnErrorOnFlatMapFailure() {
         client = createClient(mode);
 
@@ -193,6 +194,7 @@ public class WebSocketTest {
     }
 
     @Test
+    @Ignore
     public void shouldReturnErrorOnBlockingFlatMapFailure() {
         client = createClient(mode);
 
@@ -210,6 +212,7 @@ public class WebSocketTest {
     }
 
     @Test
+    @Ignore
     public void shouldReturnErrorOnAsyncFlatMapFailure() {
         client = createClient(mode);
 

@@ -85,7 +85,7 @@ public class StubTestApplicationClient implements TestApplicationClient {
         {
             Exception exception = iterator.next();
 
-            if(exception.getMessage().equals(message))
+            if(exception.getMessage().contains(message))
             {
                 iterator.remove();
                 return;

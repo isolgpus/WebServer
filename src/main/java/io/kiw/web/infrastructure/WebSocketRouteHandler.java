@@ -5,9 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kiw.result.Result;
 
 import java.util.ArrayList;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class WebSocketRouteHandler<IN, OUT, APP> {
+
+    enum ThreadContext { EVENT_LOOP, BLOCKING }
 
     private final WebSocketRoute<IN, OUT, APP> route;
     private final ObjectMapper objectMapper;
@@ -45,54 +48,86 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
 
             WebSocketMapInstruction webSocketMapInstruction = pipeline.getApplicationInstructions().getFirst();
 
-            checkThreadModeAndHandleAndConsume(session, webSocketMapInstruction, message, false);
-
+            executeInstruction(session, webSocketMapInstruction, message, ThreadContext.EVENT_LOOP);
 
         } catch (Exception e) {
             exceptionHandler.accept(e);
         }
     }
 
-    private <IN, OUT> void checkThreadModeAndHandleAndConsume(WebSocketSession<?> session, WebSocketMapInstruction<IN, OUT, APP> webSocketMapInstruction, IN message, boolean previousInstructionWasBlocking) {
-        if(!previousInstructionWasBlocking && !webSocketMapInstruction.isBlocking)
+    private <IN, OUT> void executeInstruction(WebSocketSession<?> session, WebSocketMapInstruction<IN, OUT, APP> instruction, IN message, ThreadContext currentThread) {
+        ThreadContext requiredThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.EVENT_LOOP;
+
+        runOnThread(requiredThread, currentThread, () -> {
+            handleAndContinue(session, instruction, message);
+        });
+    }
+
+    @SuppressWarnings("unchecked")
+    private <IN, OUT> void handleAndContinue(WebSocketSession<?> session, WebSocketMapInstruction<IN, OUT, APP> instruction, IN message) {
+        if(instruction.isAsync)
         {
-            handleAndConsume(session, webSocketMapInstruction, message);
-        }
-        else if(!previousInstructionWasBlocking)
-        {
-            webSocketRouterWrapper.handleBlocking(() -> {
-                handleAndConsume(session, webSocketMapInstruction, message);
-            });
-        }
-        else if(!webSocketMapInstruction.isBlocking)
-        {
+            CompletableFuture<Result<ErrorMessageResponse, OUT>> future = instruction.handleAsync(message, session.connection(), appState);
+
             webSocketRouterWrapper.handleOnEventLoop(() -> {
-                handleAndConsume(session, webSocketMapInstruction, message);
+                try
+                {
+                    future.join().consume(e -> {}, q -> {
+                        continueChain(session, instruction, (OUT) q, ThreadContext.EVENT_LOOP);
+                    });
+                }
+                catch (Exception e)
+                {
+                    exceptionHandler.accept(e);
+                }
             });
         }
         else
         {
-            handleAndConsume(session, webSocketMapInstruction, message);
+            ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.EVENT_LOOP;
+            Result<ErrorMessageResponse, ?> result = instruction.handle(message, session.connection(), appState);
+            result.consume(e -> {}, q -> {
+                continueChain(session, instruction, (OUT) q, afterThread);
+            });
         }
     }
 
-    private <IN, OUT> void handleAndConsume(WebSocketSession<?> session, WebSocketMapInstruction<IN, OUT, APP> webSocketMapInstruction, IN message) {
-        Result<ErrorMessageResponse, ?> handle = webSocketMapInstruction.handle(message, session.connection(), appState);
-        handle.consume(e -> {},q -> {
-            if(webSocketMapInstruction.next().isPresent())
-            {
-                WebSocketMapInstruction<OUT, ?, APP> o =  (WebSocketMapInstruction<OUT, ?, APP>) webSocketMapInstruction.next().get();
-                checkThreadModeAndHandleAndConsume(session, o, (OUT)q, false);
-            }
-            else
-            {
-                try {
-                    session.connection().sendText(objectMapper.writeValueAsString(q));
-                } catch (JsonProcessingException e) {
-                    exceptionHandler.accept(e);
-                }
-            }
-        });
+    @SuppressWarnings("unchecked")
+    private <OUT> void continueChain(WebSocketSession<?> session, WebSocketMapInstruction<?, OUT, APP> instruction, OUT result, ThreadContext currentThread) {
+        if(instruction.next().isPresent())
+        {
+            WebSocketMapInstruction<OUT, ?, APP> next = (WebSocketMapInstruction<OUT, ?, APP>) instruction.next().get();
+            executeInstruction(session, next, result, currentThread);
+        }
+        else
+        {
+            runOnThread(ThreadContext.EVENT_LOOP, currentThread, () -> {
+                sendFinalResponse(session, result);
+            });
+        }
+    }
+
+    private void runOnThread(ThreadContext required, ThreadContext current, Runnable action) {
+        if(current == required)
+        {
+            action.run();
+        }
+        else if(required == ThreadContext.BLOCKING)
+        {
+            webSocketRouterWrapper.handleBlocking(action);
+        }
+        else
+        {
+            webSocketRouterWrapper.handleOnEventLoop(action);
+        }
+    }
+
+    private <OUT> void sendFinalResponse(WebSocketSession<?> session, OUT result) {
+        try {
+            session.connection().sendText(objectMapper.writeValueAsString(result));
+        } catch (JsonProcessingException e) {
+            exceptionHandler.accept(e);
+        }
     }
 
     @SuppressWarnings("unchecked")
