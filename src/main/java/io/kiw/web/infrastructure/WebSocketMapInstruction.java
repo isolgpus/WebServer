@@ -2,6 +2,7 @@ package io.kiw.web.infrastructure;
 
 import io.kiw.result.Result;
 
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public class WebSocketMapInstruction<IN, OUT, APP> {
@@ -12,6 +13,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
     private final WebSocketStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer;
     private final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer;
     final boolean lastStep;
+    private Optional<WebSocketMapInstruction> next = Optional.empty();
 
     WebSocketMapInstruction(boolean isBlocking, WebSocketStreamFlatMapper<IN, OUT, APP> consumer, boolean lastStep) {
         this.isBlocking = isBlocking;
@@ -51,6 +53,14 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         this.asyncConsumer = null;
         this.asyncBlockingConsumer = asyncBlockingConsumer;
         this.lastStep = lastStep;
+    }
+
+    public void setNext(WebSocketMapInstruction next) {
+        this.next = Optional.of(next);
+    }
+
+    public Optional<WebSocketMapInstruction> next() {
+        return next;
     }
 
     public Result<ErrorMessageResponse, OUT> handle(IN state, WebSocketConnection connection, APP applicationState) {

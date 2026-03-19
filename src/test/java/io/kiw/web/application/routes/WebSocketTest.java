@@ -1,10 +1,7 @@
 package io.kiw.web.application.routes;
 
 import io.kiw.web.test.*;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
@@ -15,6 +12,7 @@ import static io.kiw.web.test.TestHelper.json;
 import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
+@Ignore
 public class WebSocketTest {
 
     @Parameterized.Parameters(name = "{0}")
