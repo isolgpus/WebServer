@@ -11,6 +11,7 @@ import org.junit.runners.Parameterized;
 import java.util.Collection;
 
 import static io.kiw.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.web.test.TestHelper.json;
 import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
@@ -131,6 +132,192 @@ public class WebSocketTest {
         });
     }
     
+    @Test
+    public void shouldMapThroughBlockingCall() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/blocking"));
+        ws.send("{\"value\":22}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"result\":44}", received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldMapThroughAsyncMap() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/asyncMap"));
+        ws.send("{\"value\":5}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"result\":50}", received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldMapThroughAsyncBlockingMap() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/asyncBlockingMap"));
+        ws.send("{\"value\":3}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"result\":60}", received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldReturnErrorOnFlatMapFailure() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/flatMapFail"));
+        ws.send("{\"message\":\"hello\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json().put("message", "flatMap failed").set("errors", json()).toString(),
+                received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldReturnErrorOnBlockingFlatMapFailure() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/blockingFlatMapFail"));
+        ws.send("{\"message\":\"hello\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json().put("message", "blocking flatMap failed").set("errors", json()).toString(),
+                received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldReturnErrorOnAsyncFlatMapFailure() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/asyncFlatMapFail"));
+        ws.send("{\"message\":\"hello\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json().put("message", "async flatMap failed").set("errors", json()).toString(),
+                received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldHandleExceptionInMapHandler() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/throw"));
+        ws.send("{\"where\":\"map\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
+
+            client.assertException("app error in map");
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldHandleExceptionInBlockingHandler() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/throw"));
+        ws.send("{\"where\":\"blocking\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
+
+            client.assertException("app error in blocking");
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldHandleExceptionInAsyncMapHandler() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/throw"));
+        ws.send("{\"where\":\"asyncMap\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
+
+            client.assertException("app error in asyncMap");
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldHandleExceptionInAsyncBlockingMapHandler() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/throw"));
+        ws.send("{\"where\":\"asyncBlockingMap\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
+
+            client.assertException("app error in asyncBlockingMap");
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldHandleExceptionInCompleteHandler() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/throw"));
+        ws.send("{\"where\":\"complete\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
+
+            client.assertException("app error in complete");
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldPassThroughAllStagesWhenNoException() {
+        client = createClient(mode);
+
+        ws = client.webSocket(StubRequest.request("/ws/throw"));
+        ws.send("{\"where\":\"none\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"ok\"}", received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
     @After
     public void tearDown() {
         if (ws != null) {

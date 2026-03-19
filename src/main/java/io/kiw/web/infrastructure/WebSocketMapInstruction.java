@@ -57,7 +57,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         if (consumer != null) {
             return consumer.handle(new WebSocketContext<>(state, connection, applicationState));
         } else if (blockingConsumer != null) {
-            return blockingConsumer.handle(new WebSocketBlockingContext<>(state, connection));
+            return blockingConsumer.handle(new WebSocketBlockingContext<>(state));
         }
 
         throw new UnsupportedOperationException("Unknown consumer");
@@ -67,7 +67,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         if (asyncConsumer != null) {
             return asyncConsumer.handle(new WebSocketContext<>(state, connection, applicationState));
         } else if (asyncBlockingConsumer != null) {
-            return asyncBlockingConsumer.handle(new WebSocketBlockingContext<>(state, connection));
+            return asyncBlockingConsumer.handle(new WebSocketBlockingContext<>(state));
         }
 
         throw new UnsupportedOperationException("Unknown async consumer");

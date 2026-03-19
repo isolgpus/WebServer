@@ -49,7 +49,7 @@ public abstract class RouterWrapper {
         processResult(result, applicationInstruction, vertxContext, ender);
     }
 
-    public <T> void handleAsync(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
+     <T> void handleAsync(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
         HttpContext httpContext = new HttpContext(vertxContext);
         CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {

@@ -46,6 +46,13 @@ public class TestApplicationRoutes {
         routesRegister.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
         routesRegister.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         routesRegister.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
+        routesRegister.webSocketRoute("/ws/blocking", state, new BlockingMapWebSocketHandler());
+        routesRegister.webSocketRoute("/ws/asyncMap", state, new AsyncMapWebSocketHandler());
+        routesRegister.webSocketRoute("/ws/asyncBlockingMap", state, new AsyncBlockingMapWebSocketHandler());
+        routesRegister.webSocketRoute("/ws/flatMapFail", state, new FlatMapFailWebSocketHandler());
+        routesRegister.webSocketRoute("/ws/blockingFlatMapFail", state, new BlockingFlatMapFailWebSocketHandler());
+        routesRegister.webSocketRoute("/ws/asyncFlatMapFail", state, new AsyncFlatMapFailWebSocketHandler());
+        routesRegister.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         routesRegister.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         routesRegister.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(jwtProvider));
         routesRegister.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());

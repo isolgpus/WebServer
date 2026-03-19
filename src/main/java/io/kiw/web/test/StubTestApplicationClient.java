@@ -23,7 +23,7 @@ public class StubTestApplicationClient implements TestApplicationClient {
         if(corsConfig != null) {
             router.configureCors(corsConfig);
         }
-        RoutesRegister routesRegister = new RoutesRegister(router);
+        RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketRouterWrapperImpl(vertx));
         registerRoutes.accept(routesRegister);
     }
 

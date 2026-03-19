@@ -24,14 +24,15 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.TRANSFER_ENCODING;
 public class RoutesRegister {
 
     private final RouterWrapper router;
+    private final WebSocketRouterWrapper webSocketRouterWrapper;
     private final ObjectMapper objectMapper = new ObjectMapper()
         .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     private final OpenApiCollector openApiCollector = new OpenApiCollector();
 
-    public RoutesRegister(RouterWrapper router) {
-
+    public RoutesRegister(RouterWrapper router, WebSocketRouterWrapper webSocketRouterWrapper) {
         this.router = router;
+        this.webSocketRouterWrapper = webSocketRouterWrapper;
     }
 
     public OpenApiCollector getOpenApiCollector() {
@@ -136,7 +137,7 @@ public class RoutesRegister {
             null
         ));
 
-        WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler());
+        WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler(), webSocketRouterWrapper);
         router.webSocketRoute(path, handler);
     }
 
