@@ -101,44 +101,6 @@ public class WebSocketTest {
     }
 
     @Test
-    public void shouldSupportPathParams() {
-        client = createClient(mode);
-
-        ws = client.webSocket(StubRequest.request("/ws/chat/general"));
-        ws.onResponses(received -> {
-            Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
-        });
-        ws.send("{\"message\":\"hi\"}");
-
-        ws.onResponses(received -> {
-            Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"general: hi\"}", received.get(0));
-
-            client.assertNoMoreExceptions();
-        });
-    }
-
-    @Test
-    public void shouldSupportQueryParams() {
-        client = createClient(mode);
-
-        ws = client.webSocket(StubRequest.request("/ws/chat/lobby").queryParam("user", "alice"));
-        ws.onResponses(received -> {
-            Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
-        });
-        ws.send("{\"message\":\"hi\"}");
-
-        ws.onResponses(received -> {
-            Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"lobby/alice: hi\"}", received.get(0));
-
-            client.assertNoMoreExceptions();
-        });
-    }
-
-    @Test
     public void shouldThrowWhenNoWebSocketRouteMatches() {
         client = createClient(mode);
 

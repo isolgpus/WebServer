@@ -128,7 +128,7 @@ public class StubRouter extends RouterWrapper {
         for (WebSocketRouteEntry entry : webSocketRoutes) {
             Map<String, String> pathParams = matchWebSocketPath(entry.path, stubRequest.path);
             if (pathParams != null) {
-                return new StubTestWebSocketClient(entry.handler, pathParams, stubRequest.queryParams);
+                return new StubTestWebSocketClient(entry.handler);
             }
         }
         throw new IllegalArgumentException("No WebSocket route registered for path: " + stubRequest.path);

@@ -13,6 +13,10 @@ public class WebSocketSession<OUT> {
         this.objectMapper = objectMapper;
     }
 
+    WebSocketConnection connection() {
+        return connection;
+    }
+
     public void send(OUT message) {
         try {
             connection.sendText(objectMapper.writeValueAsString(message));
@@ -25,11 +29,4 @@ public class WebSocketSession<OUT> {
         connection.close();
     }
 
-    public String pathParam(String key) {
-        return connection.pathParam(key);
-    }
-
-    public String queryParam(String key) {
-        return connection.queryParam(key);
-    }
 }

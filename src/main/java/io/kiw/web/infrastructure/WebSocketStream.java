@@ -54,8 +54,10 @@ public class WebSocketStream<IN, APP> {
         return new WebSocketPipeline<>(instructionChain, applicationState);
     }
 
-    public <OUT> WebSocketPipeline<OUT> complete() {
-        return complete(a -> WebSocketResult.success());
+    public WebSocketPipeline<IN> complete() {
+        instructionChain.add(new WebSocketMapInstruction<>(false,
+            (WebSocketStreamFlatMapper<IN, IN, APP>) ctx -> WebSocketResult.success(ctx.in()), true));
+        return new WebSocketPipeline<>(instructionChain, applicationState);
     }
 
     public <OUT> WebSocketPipeline<OUT> blockingComplete(WebSocketStreamBlockingFlatMapper<IN, OUT> mapper) {

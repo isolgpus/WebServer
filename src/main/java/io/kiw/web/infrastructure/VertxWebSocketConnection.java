@@ -1,16 +1,13 @@
 package io.kiw.web.infrastructure;
 
 import io.vertx.core.http.ServerWebSocket;
-import io.vertx.ext.web.RoutingContext;
 
 public class VertxWebSocketConnection implements WebSocketConnection {
 
     private final ServerWebSocket webSocket;
-    private final RoutingContext ctx;
 
-    public VertxWebSocketConnection(ServerWebSocket webSocket, RoutingContext ctx) {
+    public VertxWebSocketConnection(ServerWebSocket webSocket) {
         this.webSocket = webSocket;
-        this.ctx = ctx;
     }
 
     @Override
@@ -23,13 +20,4 @@ public class VertxWebSocketConnection implements WebSocketConnection {
         webSocket.close();
     }
 
-    @Override
-    public String pathParam(String key) {
-        return ctx.pathParam(key);
-    }
-
-    @Override
-    public String queryParam(String key) {
-        return ctx.request().getParam(key);
-    }
 }

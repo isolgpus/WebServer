@@ -1,7 +1,9 @@
 package io.kiw.web.test.handler;
 
+import io.kiw.web.infrastructure.WebSocketPipeline;
 import io.kiw.web.infrastructure.WebSocketRoute;
 import io.kiw.web.infrastructure.WebSocketSession;
+import io.kiw.web.infrastructure.WebSocketStream;
 import io.kiw.web.test.MyApplicationState;
 
 public class StatefulWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, WebSocketEchoResponse, MyApplicationState> {
@@ -12,11 +14,12 @@ public class StatefulWebSocketHandler extends WebSocketRoute<WebSocketEchoReques
     }
 
     @Override
-    public void onMessage(WebSocketEchoRequest message, WebSocketSession<WebSocketEchoResponse> session, MyApplicationState appState) {
-        String pathRoom = session.pathParam("room");
-        String queryUser = session.queryParam("user");
-        String prefix = (pathRoom != null ? pathRoom : "") + (queryUser != null ? "/" + queryUser : "");
-        session.send(new WebSocketEchoResponse(prefix + ": " + message.message));
+    public WebSocketPipeline<WebSocketEchoResponse> onMessage(WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
+        return stream
+            .map(ctx -> {
+                return new WebSocketEchoResponse(ctx.in().message);
+            })
+            .complete();
     }
 
     @Override

@@ -5,7 +5,6 @@ import io.kiw.web.infrastructure.WebSocketSession;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Consumer;
 
 public class StubTestWebSocketClient implements TestWebSocketClient {
@@ -15,9 +14,9 @@ public class StubTestWebSocketClient implements TestWebSocketClient {
     private final WebSocketSession<?> session;
     private final StubWebSocketConnection connection;
 
-    StubTestWebSocketClient(WebSocketRouteHandler<?, ?, ?> handler, Map<String, String> pathParams, Map<String, String> queryParams) {
+    StubTestWebSocketClient(WebSocketRouteHandler<?, ?, ?> handler) {
         this.handler = handler;
-        this.connection = new StubWebSocketConnection(receivedMessages, pathParams, queryParams);
+        this.connection = new StubWebSocketConnection(receivedMessages);
         this.session = handler.createSession(connection);
         handler.onOpen(session);
     }
