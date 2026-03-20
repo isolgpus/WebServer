@@ -1,5 +1,7 @@
 package io.kiw.web.test;
 
+import io.kiw.web.TestWebServer;
+import io.kiw.web.WebServer;
 import io.kiw.web.infrastructure.Method;
 import io.kiw.web.infrastructure.RoutesRegister;
 import io.kiw.web.infrastructure.cors.CorsConfig;
@@ -13,18 +15,23 @@ import java.util.stream.Collectors;
 public class StubTestApplicationClient implements TestApplicationClient {
 
     private List<Exception> seenExceptions = new ArrayList<>();
-    private final StubRouter router = new StubRouter(seenExceptions::add);
+    private final StubRouter router;
 
     public StubTestApplicationClient(final Consumer<RoutesRegister> registerRoutes) {
         this(registerRoutes, null);
     }
 
     public StubTestApplicationClient(final Consumer<RoutesRegister> registerRoutes, CorsConfig corsConfig) {
+        this.router = new StubRouter(seenExceptions::add);
         if(corsConfig != null) {
             router.configureCors(corsConfig);
         }
         RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketStubRouterWrapper());
         registerRoutes.accept(routesRegister);
+    }
+
+    public StubTestApplicationClient(String host, int port, WebServer<MyApplicationState> webServer) {
+        this.router = ((TestWebServer<MyApplicationState>) webServer).getRouter();
     }
 
     @Override
