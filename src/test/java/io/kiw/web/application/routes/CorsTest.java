@@ -14,9 +14,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Collection;
-import java.util.function.Consumer;
-
-import io.kiw.web.infrastructure.RoutesRegister;
 
 import static io.kiw.web.application.routes.TestApplicationClientCreator.*;
 import static org.junit.Assert.assertEquals;
@@ -57,26 +54,13 @@ public class CorsTest {
             .build();
     }
 
-    private Consumer<RoutesRegister> echoRoutes() {
-        return r -> {
+    @Test
+    public void shouldReturnCorsHeadersOnPreflightRequest() {
+        client = createClient(mode, r -> {
             MyApplicationState state = new MyApplicationState();
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
-        };
-    }
-
-    private Consumer<RoutesRegister> filteredRoutes() {
-        return r -> {
-            MyApplicationState state = new MyApplicationState();
-            r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
-            r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
-            r.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
-        };
-    }
-
-    @Test
-    public void shouldReturnCorsHeadersOnPreflightRequest() {
-        client = createClient(mode, echoRoutes(), defaultCorsConfig);
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -93,7 +77,11 @@ public class CorsTest {
 
     @Test
     public void shouldReturnCorsHeadersOnPreflightForSecondAllowedOrigin() {
-        client = createClient(mode, echoRoutes(), defaultCorsConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -106,7 +94,11 @@ public class CorsTest {
 
     @Test
     public void shouldRejectPreflightFromDisallowedOrigin() {
-        client = createClient(mode, echoRoutes(), defaultCorsConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -119,7 +111,11 @@ public class CorsTest {
 
     @Test
     public void shouldRejectPreflightWithNoOrigin() {
-        client = createClient(mode, echoRoutes(), defaultCorsConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo"));
@@ -130,7 +126,11 @@ public class CorsTest {
 
     @Test
     public void shouldAddCorsHeadersToNormalGetResponse() {
-        client = createClient(mode, echoRoutes(), defaultCorsConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.get(
             StubRequest.request("/echo")
@@ -144,7 +144,11 @@ public class CorsTest {
 
     @Test
     public void shouldAddCorsHeadersToNormalPostResponse() {
-        client = createClient(mode, echoRoutes(), defaultCorsConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.post(
             StubRequest.request("/echo")
@@ -158,7 +162,11 @@ public class CorsTest {
 
     @Test
     public void shouldNotAddCorsHeadersForDisallowedOriginOnNormalRequest() {
-        client = createClient(mode, echoRoutes(), defaultCorsConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.get(
             StubRequest.request("/echo")
@@ -170,7 +178,11 @@ public class CorsTest {
 
     @Test
     public void shouldNotAddCorsHeadersWhenNoOriginOnNormalRequest() {
-        client = createClient(mode, echoRoutes(), defaultCorsConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.get(
             StubRequest.request("/echo"));
@@ -185,7 +197,11 @@ public class CorsTest {
             .allowOrigin("*")
             .allowMethod("GET")
             .build();
-        client = createClient(mode, echoRoutes(), wildcardConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        }, wildcardConfig);
 
         TestHttpResponse preflight = client.options(
             StubRequest.request("/echo")
@@ -209,7 +225,11 @@ public class CorsTest {
             .allowOrigin("http://simple.example.com")
             .allowMethod("GET")
             .build();
-        client = createClient(mode, echoRoutes(), simpleConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        }, simpleConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -223,7 +243,11 @@ public class CorsTest {
 
     @Test
     public void shouldNotInterfereWithNormalRequestsWhenNoCorsConfigured() {
-        client = createClient(mode, echoRoutes());
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        });
 
         TestHttpResponse response = client.get(StubRequest.request("/echo"));
 
@@ -233,7 +257,12 @@ public class CorsTest {
 
     @Test
     public void shouldAddCorsHeadersToFilteredRoutes() {
-        client = createClient(mode, filteredRoutes(), defaultCorsConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
+            r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+            r.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.post(
             StubRequest.request("/root/filter/test")
@@ -246,7 +275,12 @@ public class CorsTest {
 
     @Test
     public void shouldHandlePreflightOnFilteredRoutes() {
-        client = createClient(mode, filteredRoutes(), defaultCorsConfig);
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
+            r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+            r.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
+        }, defaultCorsConfig);
 
         TestHttpResponse response = client.options(
             StubRequest.request("/root/filter/test")
