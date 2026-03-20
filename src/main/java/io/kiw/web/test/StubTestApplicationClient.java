@@ -7,7 +7,7 @@ import io.kiw.web.infrastructure.cors.CorsConfig;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class StubTestApplicationClient implements TestApplicationClient {
@@ -15,16 +15,16 @@ public class StubTestApplicationClient implements TestApplicationClient {
     private List<Exception> seenExceptions = new ArrayList<>();
     private final StubRouter router = new StubRouter(seenExceptions::add);
 
-    public <S> StubTestApplicationClient(final BiConsumer<RoutesRegister, S> registerRoutes, S state) {
-        this(registerRoutes, state, null);
+    public StubTestApplicationClient(final Consumer<RoutesRegister> registerRoutes) {
+        this(registerRoutes, null);
     }
 
-    public <S> StubTestApplicationClient(final BiConsumer<RoutesRegister, S> registerRoutes, S state, CorsConfig corsConfig) {
+    public StubTestApplicationClient(final Consumer<RoutesRegister> registerRoutes, CorsConfig corsConfig) {
         if(corsConfig != null) {
             router.configureCors(corsConfig);
         }
         RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketStubRouterWrapper());
-        registerRoutes.accept(routesRegister, state);
+        registerRoutes.accept(routesRegister);
     }
 
     @Override
