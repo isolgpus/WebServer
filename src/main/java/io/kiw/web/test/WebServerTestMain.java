@@ -1,12 +1,13 @@
 package io.kiw.web.test;
 
+import io.kiw.web.VertxWebServer;
 import io.kiw.web.WebServer;
 import io.kiw.web.WebServiceConfigBuilder;
 
 public class WebServerTestMain {
     public static void main(String[] args) {
 
-        WebServer<MyApplicationState> webServer = WebServer.start(
+        WebServer<MyApplicationState> webServer = VertxWebServer.start(
             routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), new WebServiceConfigBuilder()
                 .setPort(8080)
                 .setDefaultBlockingTimeoutMillis(5000)

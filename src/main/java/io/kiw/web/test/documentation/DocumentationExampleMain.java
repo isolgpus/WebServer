@@ -1,12 +1,12 @@
 package io.kiw.web.test.documentation;
 
-import io.kiw.web.WebServer;
+import io.kiw.web.VertxWebServer;
 import io.kiw.web.infrastructure.Method;
 
 public class DocumentationExampleMain {
     public static void main(String[] args) {
 
-        WebServer.start(
+        VertxWebServer.start(
             routesRegister -> {
                 AppState appState = new AppState();
 
