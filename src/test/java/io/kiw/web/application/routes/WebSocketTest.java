@@ -38,8 +38,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldEchoWebSocketMessage() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         });
 
@@ -56,8 +55,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleMultipleMessages() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         });
 
@@ -76,8 +74,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldSendMessageOnConnect() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
         });
 
@@ -93,8 +90,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldCloseWebSocket() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
         });
 
@@ -113,8 +109,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldThrowWhenNoWebSocketRouteMatches() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         });
 
@@ -131,8 +126,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleInvalidJsonGracefully() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         });
 
@@ -150,8 +144,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughBlockingCall() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/blocking", state, new BlockingMapWebSocketHandler());
         });
 
@@ -168,8 +161,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughAsyncMap() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/asyncMap", state, new AsyncMapWebSocketHandler());
         });
 
@@ -186,8 +178,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughAsyncBlockingMap() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/asyncBlockingMap", state, new AsyncBlockingMapWebSocketHandler());
         });
 
@@ -205,8 +196,7 @@ public class WebSocketTest {
     @Test
     @Ignore
     public void shouldReturnErrorOnFlatMapFailure() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/flatMapFail", state, new FlatMapFailWebSocketHandler());
         });
 
@@ -226,8 +216,7 @@ public class WebSocketTest {
     @Test
     @Ignore
     public void shouldReturnErrorOnBlockingFlatMapFailure() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/blockingFlatMapFail", state, new BlockingFlatMapFailWebSocketHandler());
         });
 
@@ -247,8 +236,7 @@ public class WebSocketTest {
     @Test
     @Ignore
     public void shouldReturnErrorOnAsyncFlatMapFailure() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/asyncFlatMapFail", state, new AsyncFlatMapFailWebSocketHandler());
         });
 
@@ -267,8 +255,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInMapHandler() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
 
@@ -285,8 +272,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInBlockingHandler() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
 
@@ -303,8 +289,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInAsyncMapHandler() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
 
@@ -321,8 +306,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInAsyncBlockingMapHandler() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
 
@@ -339,8 +323,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInCompleteHandler() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
 
@@ -357,8 +340,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldPassThroughAllStagesWhenNoException() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
 

@@ -10,7 +10,7 @@ import org.junit.Assume;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.function.Consumer;
+import java.util.function.BiConsumer;
 
 public class TestApplicationClientCreator {
 
@@ -27,11 +27,12 @@ public class TestApplicationClientCreator {
             "REAL_WEB_SERVER".equals(System.getenv("TEST_MODE")));
     }
 
-    public static TestApplicationClient createClient(String mode, Consumer<RoutesRegister> registerRoutes) {
+    public static TestApplicationClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes) {
         return createClient(mode, registerRoutes, null);
     }
 
-    public static TestApplicationClient createClient(String mode, Consumer<RoutesRegister> registerRoutes, CorsConfig corsConfig) {
+    public static TestApplicationClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, CorsConfig corsConfig) {
+        MyApplicationState state = new MyApplicationState();
         if (REAL_MODE.equals(mode)) {
             WebServiceConfigBuilder builder = new WebServiceConfigBuilder().setPort(8080);
             if (corsConfig != null) {
@@ -39,11 +40,11 @@ public class TestApplicationClientCreator {
             }
             WebServerConfig config = builder.build();
             WebServer<MyApplicationState> webServer = WebServer.start(routesRegister -> {
-                registerRoutes.accept(routesRegister);
-                return new MyApplicationState();
+                registerRoutes.accept(routesRegister, state);
+                return state;
             }, config);
             return new VertxHttpTestApplicationClient("127.0.0.1", 8080, webServer);
         }
-        return new StubTestApplicationClient(registerRoutes, corsConfig);
+        return new StubTestApplicationClient(registerRoutes, state, corsConfig);
     }
 }
