@@ -47,8 +47,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetCreatedStatusCode() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         });
 
@@ -63,8 +62,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetNoContentStatusCode() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         });
 
@@ -79,8 +77,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldDefaultToOkWhenStatusCodeNotSet() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         });
 

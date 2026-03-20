@@ -54,8 +54,7 @@ public class JwtAuthTest {
 
     @Test
     public void shouldAllowRequestWithValidJwt() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(new StubJwtProvider(JWT_SECRET)));
         });
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
@@ -71,8 +70,7 @@ public class JwtAuthTest {
 
     @Test
     public void shouldExposeAllClaimsFromToken() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(new StubJwtProvider(JWT_SECRET)));
         });
         String token = jwtProvider.generateToken(Map.of("sub", "user456", "role", "admin"));
@@ -88,8 +86,7 @@ public class JwtAuthTest {
 
     @Test
     public void shouldRejectRequestWithNoAuthorizationHeader() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(new StubJwtProvider(JWT_SECRET)));
         });
 
@@ -106,8 +103,7 @@ public class JwtAuthTest {
 
     @Test
     public void shouldRejectRequestWithMalformedBearerToken() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(new StubJwtProvider(JWT_SECRET)));
         });
 
@@ -125,8 +121,7 @@ public class JwtAuthTest {
 
     @Test
     public void shouldRejectRequestWithTokenSignedByDifferentSecret() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(new StubJwtProvider(JWT_SECRET)));
         });
         StubJwtProvider otherProvider = new StubJwtProvider("a-completely-different-secret");
@@ -146,8 +141,7 @@ public class JwtAuthTest {
 
     @Test
     public void shouldRejectExpiredToken() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(new StubJwtProvider(JWT_SECRET)));
         });
         long oneHourAgo = System.currentTimeMillis() / 1000 - 3600;
@@ -167,8 +161,7 @@ public class JwtAuthTest {
 
     @Test
     public void shouldRejectTokenWithWrongHeaderFormat() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(new StubJwtProvider(JWT_SECRET)));
         });
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
@@ -187,8 +180,7 @@ public class JwtAuthTest {
 
     @Test
     public void filterShouldAllowRequestWithValidJwt() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonFilter("/jwt/filter/*", state, new JwtFilter(new StubJwtProvider(JWT_SECRET)));
             r.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
         });
@@ -205,8 +197,7 @@ public class JwtAuthTest {
 
     @Test
     public void filterShouldExposeAllClaimsFromToken() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonFilter("/jwt/filter/*", state, new JwtFilter(new StubJwtProvider(JWT_SECRET)));
             r.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
         });
@@ -223,8 +214,7 @@ public class JwtAuthTest {
 
     @Test
     public void filterShouldRejectRequestWithNoAuthorizationHeader() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonFilter("/jwt/filter/*", state, new JwtFilter(new StubJwtProvider(JWT_SECRET)));
             r.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
         });
@@ -242,8 +232,7 @@ public class JwtAuthTest {
 
     @Test
     public void filterShouldRejectRequestWithMalformedBearerToken() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonFilter("/jwt/filter/*", state, new JwtFilter(new StubJwtProvider(JWT_SECRET)));
             r.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
         });
@@ -262,8 +251,7 @@ public class JwtAuthTest {
 
     @Test
     public void filterShouldRejectRequestWithTokenSignedByDifferentSecret() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonFilter("/jwt/filter/*", state, new JwtFilter(new StubJwtProvider(JWT_SECRET)));
             r.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
         });
@@ -284,8 +272,7 @@ public class JwtAuthTest {
 
     @Test
     public void filterShouldRejectExpiredToken() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonFilter("/jwt/filter/*", state, new JwtFilter(new StubJwtProvider(JWT_SECRET)));
             r.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
         });
@@ -306,8 +293,7 @@ public class JwtAuthTest {
 
     @Test
     public void filterShouldRejectTokenWithWrongHeaderFormat() {
-        client = createClient(mode, r -> {
-            MyApplicationState state = new MyApplicationState();
+        client = createClient(mode, (r, state) -> {
             r.jsonFilter("/jwt/filter/*", state, new JwtFilter(new StubJwtProvider(JWT_SECRET)));
             r.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
         });
