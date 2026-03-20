@@ -45,6 +45,6 @@ public class TestApplicationClientCreator {
             }, config);
             return new VertxHttpTestApplicationClient("127.0.0.1", 8080, webServer);
         }
-        return new StubTestApplicationClient(registerRoutes, state, corsConfig);
+        return new StubTestApplicationClient(r -> registerRoutes.accept(r, state), corsConfig);
     }
 }
