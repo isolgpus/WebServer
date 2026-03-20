@@ -3,7 +3,6 @@ package io.kiw.web.application.routes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kiw.web.infrastructure.Method;
-import io.kiw.web.infrastructure.RoutesRegister;
 import io.kiw.web.test.*;
 import io.kiw.web.test.handler.GetEchoHandler;
 import io.kiw.web.test.handler.PostEchoHandler;
@@ -15,7 +14,6 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Collection;
-import java.util.function.Consumer;
 
 import static io.kiw.web.application.routes.TestApplicationClientCreator.*;
 import static org.junit.Assert.*;
@@ -51,10 +49,6 @@ public class OpenApiSpecTest {
         }
     }
 
-    private void serveSpec(RoutesRegister r) {
-        r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
-    }
-
     private JsonNode getSpec() throws Exception {
         TestHttpResponse response = testApplicationClient.get(StubRequest.request("/openapi.json"));
         assertEquals(200, response.statusCode);
@@ -66,7 +60,7 @@ public class OpenApiSpecTest {
         testApplicationClient = createClient(mode, r -> {
             MyApplicationState state = new MyApplicationState();
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -83,7 +77,7 @@ public class OpenApiSpecTest {
             MyApplicationState state = new MyApplicationState();
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -104,7 +98,7 @@ public class OpenApiSpecTest {
                         .paramDescription("pathExample", "An example path param")
                     .build()
             );
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -138,7 +132,7 @@ public class OpenApiSpecTest {
                         .responseDescription("The echoed response")
                     .build()
             );
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -167,7 +161,7 @@ public class OpenApiSpecTest {
                         .summary("Echo the input")
                     .build()
             );
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -190,7 +184,7 @@ public class OpenApiSpecTest {
         testApplicationClient = createClient(mode, r -> {
             MyApplicationState state = new MyApplicationState();
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -212,7 +206,7 @@ public class OpenApiSpecTest {
                         .responseDescription("The echoed response")
                     .build()
             );
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -234,7 +228,7 @@ public class OpenApiSpecTest {
                         .paramDescription("pathExample", "An example path param")
                     .build()
             );
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -261,7 +255,7 @@ public class OpenApiSpecTest {
                         .hidden()
                     .build()
             );
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -277,7 +271,7 @@ public class OpenApiSpecTest {
         testApplicationClient = createClient(mode, r -> {
             MyApplicationState state = new MyApplicationState();
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -297,7 +291,7 @@ public class OpenApiSpecTest {
                         .summary("Echo the input")
                     .build()
             );
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
@@ -321,7 +315,7 @@ public class OpenApiSpecTest {
         testApplicationClient = createClient(mode, r -> {
             MyApplicationState state = new MyApplicationState();
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         TestHttpResponse response = testApplicationClient.get(StubRequest.request("/openapi.json"));
@@ -345,7 +339,7 @@ public class OpenApiSpecTest {
                     .done()
                     .build()
             );
-            serveSpec(r);
+            r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
 
         JsonNode spec = getSpec();
