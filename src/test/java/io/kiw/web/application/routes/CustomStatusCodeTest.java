@@ -1,6 +1,8 @@
 package io.kiw.web.application.routes;
 
+import io.kiw.web.infrastructure.Method;
 import io.kiw.web.test.*;
+import io.kiw.web.test.handler.StatusCodeTestHandler;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,7 +35,6 @@ public class CustomStatusCodeTest {
         if (REAL_MODE.equals(mode)) {
             assumeRealModeEnabled();
         }
-        client = createClient(mode);
     }
 
     @After
@@ -46,6 +47,11 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetCreatedStatusCode() {
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
+        });
+
         TestHttpResponse response = client.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "CREATED").put("value", "created").toString()));
@@ -57,6 +63,11 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetNoContentStatusCode() {
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
+        });
+
         TestHttpResponse response = client.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "NO_CONTENT").put("value", "done").toString()));
@@ -68,6 +79,11 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldDefaultToOkWhenStatusCodeNotSet() {
+        client = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
+        });
+
         TestHttpResponse response = client.post(
             StubRequest.request("/statusCode")
                 .body(json().put("statusCode", "OK").put("value", "ok").toString()));

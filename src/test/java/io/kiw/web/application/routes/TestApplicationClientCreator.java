@@ -3,12 +3,14 @@ package io.kiw.web.application.routes;
 import io.kiw.web.WebServer;
 import io.kiw.web.WebServerConfig;
 import io.kiw.web.WebServiceConfigBuilder;
+import io.kiw.web.infrastructure.RoutesRegister;
 import io.kiw.web.infrastructure.cors.CorsConfig;
 import io.kiw.web.test.*;
 import org.junit.Assume;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Consumer;
 
 public class TestApplicationClientCreator {
 
@@ -25,11 +27,11 @@ public class TestApplicationClientCreator {
             "REAL_WEB_SERVER".equals(System.getenv("TEST_MODE")));
     }
 
-    public static TestApplicationClient createClient(String mode) {
-        return createClient(mode, null);
+    public static TestApplicationClient createClient(String mode, Consumer<RoutesRegister> registerRoutes) {
+        return createClient(mode, registerRoutes, null);
     }
 
-    public static TestApplicationClient createClient(String mode, CorsConfig corsConfig) {
+    public static TestApplicationClient createClient(String mode, Consumer<RoutesRegister> registerRoutes, CorsConfig corsConfig) {
         if (REAL_MODE.equals(mode)) {
             WebServiceConfigBuilder builder = new WebServiceConfigBuilder().setPort(8080);
             if (corsConfig != null) {
@@ -37,14 +39,11 @@ public class TestApplicationClientCreator {
             }
             WebServerConfig config = builder.build();
             WebServer<MyApplicationState> webServer = WebServer.start(routesRegister -> {
-                MyApplicationState state = new MyApplicationState();
-                TestApplicationRoutes.registerRoutes(routesRegister, state);
-                return state;
+                registerRoutes.accept(routesRegister);
+                return new MyApplicationState();
             }, config);
             return new VertxHttpTestApplicationClient("127.0.0.1", 8080, webServer);
         }
-        return new StubTestApplicationClient(
-            routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()),
-            corsConfig);
+        return new StubTestApplicationClient(registerRoutes, corsConfig);
     }
 }
