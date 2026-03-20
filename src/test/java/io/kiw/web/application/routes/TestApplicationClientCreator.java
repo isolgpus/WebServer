@@ -1,5 +1,6 @@
 package io.kiw.web.application.routes;
 
+import io.kiw.web.TestWebServer;
 import io.kiw.web.VertxWebServer;
 import io.kiw.web.WebServer;
 import io.kiw.web.WebServerConfig;
@@ -46,6 +47,14 @@ public class TestApplicationClientCreator {
             }, config);
             return new VertxHttpTestApplicationClient("127.0.0.1", 8080, webServer);
         }
-        return new StubTestApplicationClient(r -> registerRoutes.accept(r, state), corsConfig);
+        WebServiceConfigBuilder builder = new WebServiceConfigBuilder();
+        if (corsConfig != null) {
+            builder.setCorsConfig(corsConfig);
+        }
+        WebServer<MyApplicationState> webServer = TestWebServer.start(routesRegister -> {
+            registerRoutes.accept(routesRegister, state);
+            return state;
+        }, builder.build());
+        return new StubTestApplicationClient("127.0.0.1", 8080, webServer);
     }
 }

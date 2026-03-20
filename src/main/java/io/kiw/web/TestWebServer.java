@@ -31,6 +31,10 @@ public class TestWebServer<APP> implements WebServer<APP> {
         return new TestWebServer<>(router, applicationState);
     }
 
+    public StubRouter getRouter() {
+        return router;
+    }
+
     @Override
     public <IN> void apply(IN immutableState, BiConsumer<IN, APP> applicationStateConsumer) {
         applicationStateConsumer.accept(immutableState, applicationState);
