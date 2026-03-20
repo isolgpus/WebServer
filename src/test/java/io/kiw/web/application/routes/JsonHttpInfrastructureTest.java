@@ -1,6 +1,8 @@
 package io.kiw.web.application.routes;
 
+import io.kiw.web.infrastructure.Method;
 import io.kiw.web.test.*;
+import io.kiw.web.test.handler.*;
 import io.vertx.core.http.impl.CookieImpl;
 import org.junit.After;
 import org.junit.Assert;
@@ -43,7 +45,6 @@ public class JsonHttpInfrastructureTest {
         if (REAL_MODE.equals(mode)) {
             assumeRealModeEnabled();
         }
-        testApplicationClient = createClient(mode);
     }
 
     @After
@@ -56,11 +57,15 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandlePopulatingJsonValues() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+        });
+
         final String requestBody = json()
                 .put("intExample", 17)
                 .put("stringExample", "hiya")
                 .toString();
-
 
         TestHttpResponse response = testApplicationClient.post(StubRequest.request("/echo").body(requestBody));
 
@@ -80,6 +85,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadQueryParamsInPost() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.put(
                 StubRequest.request("/echo")
                         .body("{}")
@@ -101,6 +111,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnPost() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
                 StubRequest.request("/echo")
                         .body("{}")
@@ -123,6 +138,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnPut() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.put(
             StubRequest.request("/echo")
                 .body("{}")
@@ -145,6 +165,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnDelete() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.DELETE, state, new PostEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.delete(
             StubRequest.request("/echo")
                 .body("{}")
@@ -167,6 +192,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnPatch() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.PATCH, state, new PostEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.patch(
             StubRequest.request("/echo")
                 .body("{}")
@@ -189,6 +219,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnGet() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.get(
             StubRequest.request("/echo")
                 .queryParam("queryExample", null)
@@ -210,6 +245,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadQueryParamsInGet() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.get(
                 StubRequest.request("/echo")
                         .queryParam("queryExample", "hi"));
@@ -231,6 +271,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldIgnoreWhenClientSendsUnknownValues() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+        });
 
         final String requestBody = json()
                 .put("intExample", 17)
@@ -238,7 +282,6 @@ public class JsonHttpInfrastructureTest {
                 .putNull("pathExample")
                 .put("something", "else")
                 .toString();
-
 
         TestHttpResponse response = testApplicationClient.post(
                 StubRequest.request("/echo")
@@ -254,11 +297,15 @@ public class JsonHttpInfrastructureTest {
                 .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expectedResponse), response);
-
     }
 
     @Test
     public void shouldRespondWithErrorNicelyWhenRequestBodyIsNotPresentOnPost() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(StubRequest.request("/echo"));
 
         final String expectedResponse = json()
@@ -271,8 +318,12 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldCallGetRoute() {
-        TestHttpResponse response = testApplicationClient.get(StubRequest.request("/echo"));
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        });
 
+        TestHttpResponse response = testApplicationClient.get(StubRequest.request("/echo"));
 
         final String expectedResponseBody = json()
                 .put("intExample", 188)
@@ -288,6 +339,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldPopulateResponseHeaders() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+        });
+
         final String request = json()
                 .put("responseHeaderExample", "responseTest")
                 .toString();
@@ -302,6 +358,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestCookies() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
                 StubRequest.request("/echo")
                         .body("{}")
@@ -320,6 +381,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldPopulateResponseCookie() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
                 StubRequest.request("/echo")
                         .body(json().put("responseCookieExample", "responseCookieTest").toString()));
@@ -330,6 +396,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldMapThroughABlockingCall() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/blocking", Method.POST, state, new BlockingTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/blocking")
                 .body(json().put("numberToMultiply", 22).toString()));
@@ -339,6 +410,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldMapThroughABlockingCompleteCall() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/blockingComplete", Method.POST, state, new BlockingCompleteTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
                 StubRequest.request("/blockingComplete")
                         .body(json().put("numberToMultiply", 22).toString()));
@@ -348,6 +424,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnWithErrorOnBadRequest() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/failing", Method.POST, state, new FailingTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/failing")
                 .body(json().put("numberToMultiply", 22).toString()));
@@ -361,6 +442,13 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldAccessRequestBodyInHandlerWhenRoutedThroughFilter() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
+            r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+            r.jsonRoute("/root/filter/echo", Method.POST, state, new PostEchoHandler());
+        });
+
         String requestBody = json()
             .put("intExample", 42)
             .put("stringExample", "through filter")
@@ -387,10 +475,16 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldApplyFilterBeforeHandle() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
+            r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+            r.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/root/filter/test")
                 .body(json().toString()));
-
 
         Assert.assertEquals(
             TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
@@ -398,11 +492,17 @@ public class JsonHttpInfrastructureTest {
             .withCookie(new CookieImpl("pathFilter", "hitfilter")),
             response
         );
-
     }
 
     @Test
     public void shouldApplyFilterBeforeHandleOnGet() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
+            r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+            r.jsonRoute("/root/filter/test", Method.GET, state, new GetTestFilterHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.get(
             StubRequest.request("/root/filter/test"));
 
@@ -416,6 +516,13 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldApplyFilterBeforeHandleOnPut() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
+            r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+            r.jsonRoute("/root/filter/test", Method.PUT, state, new TestFilterHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.put(
             StubRequest.request("/root/filter/test")
                 .body(json().toString()));
@@ -430,6 +537,13 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldApplyFilterBeforeHandleOnDelete() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
+            r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+            r.jsonRoute("/root/filter/test", Method.DELETE, state, new TestFilterHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.delete(
             StubRequest.request("/root/filter/test")
                 .body(json().toString()));
@@ -444,6 +558,13 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldApplyFilterBeforeHandleOnPatch() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
+            r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
+            r.jsonRoute("/root/filter/test", Method.PATCH, state, new TestFilterHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.patch(
             StubRequest.request("/root/filter/test")
                 .body(json().toString()));
@@ -458,6 +579,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleMalformedJsonRequest() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw")
                 .body("<not json at all>"));
@@ -473,10 +599,14 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleItWhenThrowingAnExceptionWithinTheHandler() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw")
                 .body(json().put("where", "complete").toString()));
-
 
         Assert.assertEquals(
             TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
@@ -488,6 +618,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleItWhenThrowingAnExceptionInMapHandler() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw")
                 .body(json().put("where", "map").toString()));
@@ -502,6 +637,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleItWhenThrowingAnExceptionInBlockingHandler() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw")
                 .body(json().put("where", "blocking").toString()));
@@ -516,6 +656,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldUploadAFile() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler());
+        });
 
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/upload")
@@ -532,6 +676,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldDownloadFile() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
+        });
+
         TestHttpResponse response = testApplicationClient.get(StubRequest.request("/download"));
 
         Assert.assertEquals(
@@ -545,6 +694,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldSupportAsyncMap() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/asyncMap", Method.POST, state, new AsyncMapTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
                 StubRequest.request("/asyncMap").body(json().put("value", 5).toString()));
 
@@ -555,6 +709,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldSupportAsyncBlockingMap() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/asyncBlockingMap", Method.POST, state, new AsyncBlockingMapTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
                 StubRequest.request("/asyncBlockingMap").body(json().put("value", 3).toString()));
 
@@ -565,6 +724,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldSupportPathParam() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/echo/:pathExample", Method.GET, state, new GetEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.get(
                 StubRequest.request("/echo/myvariable"));
 
@@ -585,6 +749,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldPassValidationAndReturnResponse() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
+        });
+
         String body = json()
             .put("name", "Alice")
             .put("email", "alice@example.com")
@@ -611,6 +780,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForInvalidBodyField() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
+        });
+
         String body = json()
             .putNull("name")
             .put("email", "alice@example.com")
@@ -634,6 +808,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForInvalidEmail() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
+        });
+
         String body = json()
             .put("name", "Alice")
             .put("email", "not-an-email")
@@ -657,6 +836,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForNestedField() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
+        });
+
         String body = json()
             .put("name", "Alice")
             .put("email", "alice@example.com")
@@ -680,6 +864,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForMissingQueryParam() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
+        });
+
         String body = json()
             .put("name", "Alice")
             .put("email", "alice@example.com")
@@ -701,6 +890,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnApplicationState() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/state", Method.POST, state, new StateTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(StubRequest.request("/state").body("{}"));
 
         Assert.assertEquals(TestHttpResponse.response(json().put("longValue", 55).toString()), response);
@@ -708,6 +902,12 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldShortCircuitWhenFilterReturnsError() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonFilter("/protected/*", state, new ErrorFilter());
+            r.jsonRoute("/protected/resource", Method.GET, state, new GetEchoHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.get(StubRequest.request("/protected/resource"));
 
         Assert.assertEquals(
@@ -721,6 +921,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleBlockingFlatMapFailure() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/blockingFailing", Method.POST, state, new BlockingFlatMapFailHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/blockingFailing").body(json().put("numberToMultiply", 5).toString()));
 
@@ -735,6 +940,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleAsyncFlatMapFailure() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/asyncFailing", Method.POST, state, new AsyncFlatMapFailHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/asyncFailing").body(json().put("value", 5).toString()));
 
@@ -749,6 +959,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleExceptionInAsyncMapHandler() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw").body(json().put("where", "asyncMap").toString()));
 
@@ -762,6 +977,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleExceptionInAsyncBlockingMapHandler() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
+        });
+
         TestHttpResponse response = testApplicationClient.post(
             StubRequest.request("/throw").body(json().put("where", "asyncBlockingMap").toString()));
 
@@ -775,6 +995,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForInvalidPathParam() {
+        testApplicationClient = createClient(mode, r -> {
+            MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
+        });
+
         String body = json()
             .put("name", "Alice")
             .put("email", "alice@example.com")
