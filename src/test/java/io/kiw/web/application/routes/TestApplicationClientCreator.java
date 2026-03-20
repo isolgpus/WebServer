@@ -1,5 +1,6 @@
 package io.kiw.web.application.routes;
 
+import io.kiw.web.VertxWebServer;
 import io.kiw.web.WebServer;
 import io.kiw.web.WebServerConfig;
 import io.kiw.web.WebServiceConfigBuilder;
@@ -39,7 +40,7 @@ public class TestApplicationClientCreator {
                 builder.setCorsConfig(corsConfig);
             }
             WebServerConfig config = builder.build();
-            WebServer<MyApplicationState> webServer = WebServer.start(routesRegister -> {
+            WebServer<MyApplicationState> webServer = VertxWebServer.start(routesRegister -> {
                 registerRoutes.accept(routesRegister, state);
                 return state;
             }, config);
