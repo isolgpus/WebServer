@@ -31,7 +31,9 @@ public class StubTestApplicationClient implements TestApplicationClient {
     }
 
     public StubTestApplicationClient(String host, int port, WebServer<MyApplicationState> webServer) {
-        this.router = ((TestWebServer<MyApplicationState>) webServer).getRouter();
+        TestWebServer<MyApplicationState> testWebServer = (TestWebServer<MyApplicationState>) webServer;
+        testWebServer.setExceptionHandler(seenExceptions::add);
+        this.router = testWebServer.getRouter();
     }
 
     @Override
