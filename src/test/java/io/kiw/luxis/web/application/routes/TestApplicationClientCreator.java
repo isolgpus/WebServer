@@ -27,8 +27,8 @@ public class TestApplicationClientCreator {
 
     public static void assumeRealModeEnabled() {
         Assume.assumeTrue(
-            "Skipping real server test: set TEST_MODE=REAL_WEB_SERVER to enable",
-            "REAL_WEB_SERVER".equals(System.getenv("TEST_MODE")));
+            "Skipping real server test: set TEST_MODE=VERTX to enable",
+            "VERTX".equals(System.getenv("TEST_MODE")));
     }
 
     public static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes) {
