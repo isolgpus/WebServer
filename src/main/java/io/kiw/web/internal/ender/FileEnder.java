@@ -1,16 +1,14 @@
 package io.kiw.web.internal.ender;
 
 import io.kiw.web.http.DownloadFileResponse;
-import io.kiw.web.http.VertxContext;
-
-import java.nio.Buffer;
+import io.kiw.web.http.RequestContext;
 
 public final class FileEnder implements Ender {
 
     @Override
-    public <T> void end(VertxContext vertxContext, T value) {
+    public <T> void end(RequestContext requestContext, T value) {
         DownloadFileResponse value1 = (DownloadFileResponse) value;
-        vertxContext.addResponseHeader("Content-Disposition", value1.fileName);
-        vertxContext.end(value1.fileContents);
+        requestContext.addResponseHeader("Content-Disposition", value1.fileName);
+        requestContext.end(value1.fileContents);
     }
 }

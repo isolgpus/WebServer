@@ -1,39 +1,28 @@
 package io.kiw.web.test;
 
-import io.kiw.web.pipeline.*;
-import io.kiw.web.handler.*;
-import io.kiw.web.http.*;
-import io.kiw.web.validation.*;
-import io.kiw.web.websocket.*;
-import io.kiw.web.internal.*;
-import io.kiw.web.jwt.*;
-import io.kiw.web.cors.*;
-import io.kiw.web.openapi.*;
-
-import io.kiw.web.http.VertxContext;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.Cookie;
+import io.kiw.web.http.HttpBuffer;
+import io.kiw.web.http.HttpCookie;
+import io.kiw.web.http.RequestContext;
 
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class StubVertxContext implements VertxContext {
+public class StubRequestContext implements RequestContext {
     private String requestBody;
     private final Map<String, String> queryParams;
     private final Map<String, String> requestHeaders;
-    private final Map<String, Cookie> requestCookies;
-    private final Map<String, Buffer> fileUploads;
+    private final Map<String, HttpCookie> requestCookies;
+    private final Map<String, HttpBuffer> fileUploads;
     private Map<String, String> pathParams = new LinkedHashMap<>();
     private final Map<String, String> responseHeaders = new LinkedHashMap<>();
-    private final Map<String, Cookie> responseCookies = new LinkedHashMap<>();
+    private final Map<String, HttpCookie> responseCookies = new LinkedHashMap<>();
     private String responseBody;
     private int statusCode = 200;
     private Map<String, Object> state = new LinkedHashMap<>();
     private boolean finished = false;
 
-    public StubVertxContext(String requestBody, Map<String, String> queryParams, Map<String, String> requestHeaders, Map<String, Cookie> requestCookies, Map<String, Buffer> fileUploads) {
-
+    public StubRequestContext(String requestBody, Map<String, String> queryParams, Map<String, String> requestHeaders, Map<String, HttpCookie> requestCookies, Map<String, HttpBuffer> fileUploads) {
         this.requestBody = requestBody;
         this.queryParams = queryParams;
         this.requestHeaders = requestHeaders;
@@ -42,7 +31,7 @@ public class StubVertxContext implements VertxContext {
     }
 
     @Override
-    public Cookie getRequestCookie(String key) {
+    public HttpCookie getRequestCookie(String key) {
         return this.requestCookies.get(key);
     }
 
@@ -57,8 +46,8 @@ public class StubVertxContext implements VertxContext {
     }
 
     @Override
-    public void addResponseCookie(Cookie value) {
-        this.responseCookies.put(value.getName(), value);
+    public void addResponseCookie(HttpCookie value) {
+        this.responseCookies.put(value.name(), value);
     }
 
     @Override
@@ -82,12 +71,11 @@ public class StubVertxContext implements VertxContext {
     }
 
     @Override
-    public void end(Buffer bodyResponse) {
-
+    public void end(HttpBuffer bodyResponse) {
         if (statusCode == 204) {
             this.responseBody = "";
         } else {
-            this.responseBody = new String(bodyResponse.getBytes(), StandardCharsets.UTF_8);
+            this.responseBody = bodyResponse.toString(StandardCharsets.UTF_8);
         }
         this.finished = true;
     }
@@ -99,7 +87,6 @@ public class StubVertxContext implements VertxContext {
 
     @Override
     public void next() {
-
     }
 
     @Override
@@ -123,7 +110,7 @@ public class StubVertxContext implements VertxContext {
     }
 
     @Override
-    public Map<String, Buffer> resolveUploadedFiles() {
+    public Map<String, HttpBuffer> resolveUploadedFiles() {
         return fileUploads;
     }
 
@@ -136,8 +123,7 @@ public class StubVertxContext implements VertxContext {
         for (Map.Entry<String, String> header : this.responseHeaders.entrySet()) {
             testHttpResponse.withHeader(header.getKey(), header.getValue());
         }
-
-        for (Map.Entry<String, Cookie> cookie : this.responseCookies.entrySet()) {
+        for (Map.Entry<String, HttpCookie> cookie : this.responseCookies.entrySet()) {
             testHttpResponse.withCookie(cookie.getValue());
         }
         return testHttpResponse;

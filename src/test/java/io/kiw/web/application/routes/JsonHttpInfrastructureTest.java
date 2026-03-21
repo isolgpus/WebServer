@@ -3,7 +3,7 @@ package io.kiw.web.application.routes;
 import io.kiw.web.http.Method;
 import io.kiw.web.test.*;
 import io.kiw.web.test.handler.*;
-import io.vertx.core.http.impl.CookieImpl;
+import io.kiw.web.http.HttpCookie;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -377,7 +377,7 @@ public class JsonHttpInfrastructureTest {
                         .body(json().put("responseCookieExample", "responseCookieTest").toString()));
 
         Assert.assertEquals(TestHttpResponse.response(DEFAULT_POST_RESPONSE)
-                .withCookie(new CookieImpl("responseCookieExample", "responseCookieTest")), response);
+                .withCookie(new HttpCookie("responseCookieExample", "responseCookieTest")), response);
     }
 
     @Test
@@ -450,8 +450,8 @@ public class JsonHttpInfrastructureTest {
 
         Assert.assertEquals(
             TestHttpResponse.response(expectedResponse)
-                .withCookie(new CookieImpl("rootFilter", "hitfilter"))
-                .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+                .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+                .withCookie(new HttpCookie("pathFilter", "hitfilter")),
             response);
     }
 
@@ -469,8 +469,8 @@ public class JsonHttpInfrastructureTest {
 
         Assert.assertEquals(
             TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
-            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
             response
         );
     }
@@ -488,8 +488,8 @@ public class JsonHttpInfrastructureTest {
 
         Assert.assertEquals(
             TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
-            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
             response
         );
     }
@@ -508,8 +508,8 @@ public class JsonHttpInfrastructureTest {
 
         Assert.assertEquals(
             TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
-            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
             response
         );
     }
@@ -528,8 +528,8 @@ public class JsonHttpInfrastructureTest {
 
         Assert.assertEquals(
             TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
-            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
             response
         );
     }
@@ -548,8 +548,8 @@ public class JsonHttpInfrastructureTest {
 
         Assert.assertEquals(
             TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new CookieImpl("rootFilter", "hitfilter"))
-            .withCookie(new CookieImpl("pathFilter", "hitfilter")),
+            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
             response
         );
     }

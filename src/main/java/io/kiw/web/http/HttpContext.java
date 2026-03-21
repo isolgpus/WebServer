@@ -1,16 +1,13 @@
 package io.kiw.web.http;
 
 import io.kiw.web.jwt.JwtClaims;
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.Cookie;
 
 import java.util.Map;
 
 public class HttpContext {
-    public final VertxContext ctx;
+    public final RequestContext ctx;
 
-    public HttpContext(VertxContext ctx) {
-
+    public HttpContext(RequestContext ctx) {
         this.ctx = ctx;
     }
 
@@ -22,7 +19,7 @@ public class HttpContext {
         return ctx.getRequestHeader(key);
     }
 
-    public Cookie getRequestCookie(String key) {
+    public HttpCookie getRequestCookie(String key) {
         return ctx.getRequestCookie(key);
     }
 
@@ -30,11 +27,11 @@ public class HttpContext {
         ctx.addResponseHeader(key, value);
     }
 
-    public void addResponseCookie(Cookie value) {
+    public void addResponseCookie(HttpCookie value) {
         ctx.addResponseCookie(value);
     }
 
-    public Map<String, Buffer> resolveUploadedFiles() {
+    public Map<String, HttpBuffer> resolveUploadedFiles() {
         return this.ctx.resolveUploadedFiles();
     }
 

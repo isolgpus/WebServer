@@ -1,21 +1,15 @@
 package io.kiw.web.http;
 
-import io.kiw.web.jwt.*;
-import io.kiw.web.validation.*;
-
-import io.vertx.core.buffer.Buffer;
-import io.vertx.core.http.Cookie;
-
 import java.util.Map;
 
-public interface VertxContext {
-    Cookie getRequestCookie(String key);
+public interface RequestContext {
+    HttpCookie getRequestCookie(String key);
 
     String getQueryParam(String key);
 
     void addResponseHeader(String key, String value);
 
-    void addResponseCookie(Cookie value);
+    void addResponseCookie(HttpCookie value);
 
     String getRequestBody();
 
@@ -23,7 +17,7 @@ public interface VertxContext {
 
     void end(String bodyResponse);
 
-    void end(Buffer bodyResponse);
+    void end(HttpBuffer bodyResponse);
 
     String getRequestHeader(String key);
 
@@ -35,7 +29,7 @@ public interface VertxContext {
 
     boolean hasEnded();
 
-    Map<String, Buffer> resolveUploadedFiles();
+    Map<String, HttpBuffer> resolveUploadedFiles();
 
     String getPathParam(String key);
 

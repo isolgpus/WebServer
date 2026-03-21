@@ -125,8 +125,8 @@ public class VertxHttpTestApplicationClient implements TestApplicationClient, Au
                     req.putHeader(header.getKey(), header.getValue());
                 }
 
-                for (Map.Entry<String, io.vertx.core.http.Cookie> cookie : stubRequest.cookies.entrySet()) {
-                    req.putHeader("Cookie", cookie.getValue().getName() + "=" + cookie.getValue().getValue());
+                for (Map.Entry<String, HttpCookie> cookie : stubRequest.cookies.entrySet()) {
+                    req.putHeader("Cookie", cookie.getValue().name() + "=" + cookie.getValue().value());
                 }
 
                 if (!stubRequest.fileUploads.isEmpty()) {
@@ -134,11 +134,11 @@ public class VertxHttpTestApplicationClient implements TestApplicationClient, Au
                     req.putHeader("Content-Type", "multipart/form-data; boundary=" + boundary);
 
                     Buffer multipartBody = Buffer.buffer();
-                    for (Map.Entry<String, Buffer> upload : stubRequest.fileUploads.entrySet()) {
+                    for (Map.Entry<String, HttpBuffer> upload : stubRequest.fileUploads.entrySet()) {
                         multipartBody.appendString("--" + boundary + "\r\n");
                         multipartBody.appendString("Content-Disposition: form-data; name=\"" + upload.getKey() + "\"; filename=\"" + upload.getKey() + "\"\r\n");
                         multipartBody.appendString("Content-Type: application/octet-stream\r\n\r\n");
-                        multipartBody.appendBuffer(upload.getValue());
+                        multipartBody.appendBuffer(Buffer.buffer(upload.getValue().bytes()));
                         multipartBody.appendString("\r\n");
                     }
                     multipartBody.appendString("--" + boundary + "--\r\n");

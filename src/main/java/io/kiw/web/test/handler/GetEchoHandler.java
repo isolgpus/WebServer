@@ -7,7 +7,7 @@ import io.kiw.web.validation.*;
 import io.kiw.web.websocket.*;
 import io.kiw.web.internal.*;
 import io.kiw.web.test.MyApplicationState;
-import io.vertx.core.http.Cookie;
+import io.kiw.web.http.HttpCookie;
 
 public class GetEchoHandler extends VertxJsonRoute<EmptyRequest, EchoResponse, MyApplicationState> {
 
@@ -16,14 +16,14 @@ public class GetEchoHandler extends VertxJsonRoute<EmptyRequest, EchoResponse, M
         return
             httpStream
                 .complete(ctx -> {
-                    Cookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
+                    HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
 
                     return HttpResult.success(new EchoResponse(188,
                         "You invoked a GET",
                         ctx.http().getPathParam("pathExample"),
                         ctx.http().getQueryParam("queryExample"),
                         ctx.http().getRequestHeader("requestHeaderExample"),
-                        requestCookieExample != null ? requestCookieExample.getValue() : null));
+                        requestCookieExample != null ? requestCookieExample.value() : null));
                 });
     }
 }

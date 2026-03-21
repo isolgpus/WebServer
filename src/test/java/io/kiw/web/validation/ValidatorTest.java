@@ -4,7 +4,7 @@ import io.kiw.web.http.*;
 import io.kiw.web.validation.*;
 
 import io.kiw.result.Result;
-import io.kiw.web.test.StubVertxContext;
+import io.kiw.web.test.StubRequestContext;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -54,7 +54,7 @@ public class ValidatorTest {
     }
 
     private Validator<Body> validatorWithHttp(Body body, Map<String, String> queryParams, Map<String, String> pathParams) {
-        StubVertxContext ctx = new StubVertxContext("{}", queryParams, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
+        StubRequestContext ctx = new StubRequestContext("{}", queryParams, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
         ctx.setPathParams(pathParams);
         return new Validator<>(body, new HttpContext(ctx), "");
     }

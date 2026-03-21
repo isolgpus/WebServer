@@ -65,7 +65,7 @@ public class StubRouter extends RouterWrapper {
             }
         }
 
-        StubVertxContext context = new StubVertxContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies, stubRequest.fileUploads);
+        StubRequestContext context = new StubRequestContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies, stubRequest.fileUploads);
         PathMatcher.MatchResult matchResult = this.routes.get(stubRequest.path, method);
         context.setPathParams(matchResult.getPathParams());
 

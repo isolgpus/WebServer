@@ -1,10 +1,8 @@
 package io.kiw.web.internal;
 
-import io.kiw.web.pipeline.*;
-import io.kiw.web.handler.*;
-import io.kiw.web.http.*;
-import io.kiw.web.validation.*;
-import io.kiw.web.websocket.*;
+import io.kiw.web.http.HttpBuffer;
+import io.kiw.web.http.HttpCookie;
+import io.kiw.web.http.RequestContext;
 
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.Cookie;
@@ -16,37 +14,38 @@ import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
-public class VertxContextImpl implements VertxContext {
+public class RequestContextImpl implements RequestContext {
     private final RoutingContext ctx;
 
-    public VertxContextImpl(RoutingContext ctx) {
+    public RequestContextImpl(RoutingContext ctx) {
         this.ctx = ctx;
     }
 
     @Override
-    public Cookie getRequestCookie(final String key)
-    {
-        return this.ctx.request().getCookie(key);
+    public HttpCookie getRequestCookie(final String key) {
+        Cookie cookie = this.ctx.request().getCookie(key);
+        if (cookie == null) {
+            return null;
+        }
+        return new HttpCookie(cookie.getName(), cookie.getValue());
     }
 
     @Override
-    public String getQueryParam(final String key)
-    {
+    public String getQueryParam(final String key) {
         return this.ctx.request().getParam(key);
     }
 
     @Override
     public void addResponseHeader(String key, String value) {
-        if(!hasEnded())
-        {
+        if (!hasEnded()) {
             this.ctx.response().putHeader(key, value);
         }
     }
 
     @Override
-    public void addResponseCookie(Cookie value) {
-        if(!hasEnded()) {
-            this.ctx.response().addCookie(value);
+    public void addResponseCookie(HttpCookie value) {
+        if (!hasEnded()) {
+            this.ctx.response().addCookie(Cookie.cookie(value.name(), value.value()));
         }
     }
 
@@ -57,23 +56,22 @@ public class VertxContextImpl implements VertxContext {
 
     @Override
     public void setStatusCode(int statusCode) {
-        if(!hasEnded())
-        {
+        if (!hasEnded()) {
             this.ctx.response().setStatusCode(statusCode);
         }
     }
 
     @Override
     public void end(String bodyResponse) {
-        if(!hasEnded()) {
+        if (!hasEnded()) {
             this.ctx.end(bodyResponse);
         }
     }
 
     @Override
-    public void end(Buffer bodyResponse) {
-        if(!hasEnded()) {
-            this.ctx.end(bodyResponse);
+    public void end(HttpBuffer bodyResponse) {
+        if (!hasEnded()) {
+            this.ctx.end(Buffer.buffer(bodyResponse.bytes()));
         }
     }
 
@@ -99,9 +97,8 @@ public class VertxContextImpl implements VertxContext {
 
     @Override
     public boolean hasEnded() {
-        return (boolean)this.ctx.data().getOrDefault("CONTEXT_DEAD", false);
+        return (boolean) this.ctx.data().getOrDefault("CONTEXT_DEAD", false);
     }
-
 
     @Override
     public String getPathParam(String key) {
@@ -114,13 +111,17 @@ public class VertxContextImpl implements VertxContext {
     }
 
     @Override
-    public Map<String, Buffer> resolveUploadedFiles() {
+    public Map<String, HttpBuffer> resolveUploadedFiles() {
         return this.ctx.fileUploads().stream()
-            .collect(Collectors.toMap(FileUpload::fileName, a -> ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName()), new BinaryOperator<Buffer>() {
-                @Override
-                public Buffer apply(Buffer buffer, Buffer buffer2) {
-                    return buffer;
-                }
-            }, LinkedHashMap::new));
+            .collect(Collectors.toMap(
+                FileUpload::fileName,
+                a -> new HttpBuffer(ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName()).getBytes()),
+                new BinaryOperator<HttpBuffer>() {
+                    @Override
+                    public HttpBuffer apply(HttpBuffer a, HttpBuffer b) {
+                        return a;
+                    }
+                },
+                LinkedHashMap::new));
     }
 }

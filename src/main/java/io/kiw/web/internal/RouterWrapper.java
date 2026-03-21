@@ -42,7 +42,7 @@ public abstract class RouterWrapper {
 
     protected abstract void webSocketRoute(String path, WebSocketRouteHandler<?, ?, ?> handler);
 
-    public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
+    public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, RequestContext vertxContext, Object applicationState, Ender ender) {
         HttpContext httpContext = new HttpContext(vertxContext);
         Result<HttpErrorResponse, T> result;
         try {
@@ -55,7 +55,7 @@ public abstract class RouterWrapper {
         processResult(result, applicationInstruction, vertxContext, ender);
     }
 
-     <T> void handleAsync(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
+     <T> void handleAsync(MapInstruction<Object, T, Object> applicationInstruction, RequestContext vertxContext, Object applicationState, Ender ender) {
         HttpContext httpContext = new HttpContext(vertxContext);
         CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
@@ -79,7 +79,7 @@ public abstract class RouterWrapper {
         );
     }
 
-    public <T> void handleAsyncBlocking(MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Object applicationState, Ender ender) {
+    public <T> void handleAsyncBlocking(MapInstruction<Object, T, Object> applicationInstruction, RequestContext vertxContext, Object applicationState, Ender ender) {
         HttpContext httpContext = new HttpContext(vertxContext);
         try {
             Result<HttpErrorResponse, T> result = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState).join();
@@ -89,7 +89,7 @@ public abstract class RouterWrapper {
         }
     }
 
-    private <T> void processResult(Result<HttpErrorResponse, T> result, MapInstruction<Object, T, Object> applicationInstruction, VertxContext vertxContext, Ender ender) {
+    private <T> void processResult(Result<HttpErrorResponse, T> result, MapInstruction<Object, T, Object> applicationInstruction, RequestContext vertxContext, Ender ender) {
         result.consume(httpErrorResponse -> {
                 try {
                     vertxContext.setStatusCode(httpErrorResponse.statusCode);
@@ -117,7 +117,7 @@ public abstract class RouterWrapper {
             });
     }
 
-    private void handleException(VertxContext vertxContext, Exception e) {
+    private void handleException(RequestContext vertxContext, Exception e) {
         exceptionHandler.accept(e);
         vertxContext.setStatusCode(500);
         vertxContext.end("{\"message\":\"Something went wrong\"}");

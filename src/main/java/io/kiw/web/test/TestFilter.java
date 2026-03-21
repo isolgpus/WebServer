@@ -4,7 +4,7 @@ import io.kiw.web.internal.RequestPipeline;
 import io.kiw.web.pipeline.HttpStream;
 import io.kiw.web.http.HttpResult;
 import io.kiw.web.handler.VertxJsonFilter;
-import io.vertx.core.http.impl.CookieImpl;
+import io.kiw.web.http.HttpCookie;
 
 public class TestFilter implements VertxJsonFilter<MyApplicationState>
 {
@@ -17,7 +17,7 @@ public class TestFilter implements VertxJsonFilter<MyApplicationState>
     @Override
     public RequestPipeline handle(HttpStream<Void, MyApplicationState> e) {
         return e.complete(ctx -> {
-            ctx.http().addResponseCookie(new CookieImpl(cookieKey, "hitfilter"));
+            ctx.http().addResponseCookie(new HttpCookie(cookieKey, "hitfilter"));
             return HttpResult.success();
         });
     }
