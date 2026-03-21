@@ -5,8 +5,7 @@ import io.kiw.web.pipeline.HttpStream;
 import io.kiw.web.http.HttpResult;
 import io.kiw.web.handler.VertxJsonRoute;
 import io.kiw.web.test.MyApplicationState;
-import io.vertx.core.http.Cookie;
-import io.vertx.core.http.impl.CookieImpl;
+import io.kiw.web.http.HttpCookie;
 
 public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, MyApplicationState> {
 
@@ -20,16 +19,16 @@ public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, M
 
             if(ctx.in().responseCookieExample != null)
             {
-                ctx.http().addResponseCookie(new CookieImpl("responseCookieExample", ctx.in().responseCookieExample));
+                ctx.http().addResponseCookie(new HttpCookie("responseCookieExample", ctx.in().responseCookieExample));
             }
-            Cookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
+            HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
             return HttpResult.success(new EchoResponse(
                 ctx.in().intExample,
                 ctx.in().stringExample,
                 ctx.http().getPathParam("pathExample"),
                 ctx.http().getQueryParam("queryExample"),
                 ctx.http().getRequestHeader("requestHeaderExample"),
-                requestCookieExample != null ? requestCookieExample.getValue() :  null));
+                requestCookieExample != null ? requestCookieExample.value() :  null));
         });
     }
 

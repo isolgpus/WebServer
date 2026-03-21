@@ -19,7 +19,6 @@ import io.kiw.web.openapi.RouteDescriptor;
 import io.kiw.web.openapi.TypeResolver;
 import io.kiw.web.test.handler.RouteConfig;
 import io.kiw.web.test.handler.RouteConfigBuilder;
-import io.vertx.core.buffer.Buffer;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -109,12 +108,12 @@ public class RoutesRegister {
 
     public  <OUT, APP>  void uploadFileRoute(String path, Method method, APP applicationState, VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {
 
-        HttpStream<Map<String, Buffer>, APP> httpStream = new HttpStream<>(new ArrayList<>(), true, applicationState,  new JsonEnder(objectMapper));
+        HttpStream<Map<String, HttpBuffer>, APP> httpStream = new HttpStream<>(new ArrayList<>(), true, applicationState,  new JsonEnder(objectMapper));
 
-        HttpStream<Map<String, Buffer>, APP> fileUploadStream = httpStream.flatMap(ctx -> {
+        HttpStream<Map<String, HttpBuffer>, APP> fileUploadStream = httpStream.flatMap(ctx -> {
             ctx.http().addResponseHeader("Content-Type", "application/json");
 
-            Map<String, Buffer> uploadedFile = ctx.http().resolveUploadedFiles();
+            Map<String, HttpBuffer> uploadedFile = ctx.http().resolveUploadedFiles();
             return HttpResult.success(uploadedFile);
         });
         RequestPipeline<OUT> flow = fileUploaderHandler.handle(fileUploadStream);

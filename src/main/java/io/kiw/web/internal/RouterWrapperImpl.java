@@ -84,13 +84,13 @@ public class RouterWrapperImpl extends RouterWrapper {
         for (Object what : flow.getApplicationInstructions()) {
             MapInstruction applicationInstruction = (MapInstruction) what;
             if (applicationInstruction.isAsync && applicationInstruction.isBlocking) {
-                route.blockingHandler(ctx -> handleAsyncBlocking(applicationInstruction, new VertxContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
+                route.blockingHandler(ctx -> handleAsyncBlocking(applicationInstruction, new RequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             } else if (applicationInstruction.isAsync) {
-                route.handler(ctx -> handleAsync(applicationInstruction, new VertxContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
+                route.handler(ctx -> handleAsync(applicationInstruction, new RequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             } else if (applicationInstruction.isBlocking) {
-                route.blockingHandler(ctx -> handle(applicationInstruction, new VertxContextImpl(ctx), null, flow.getEnder()));
+                route.blockingHandler(ctx -> handle(applicationInstruction, new RequestContextImpl(ctx), null, flow.getEnder()));
             } else {
-                route.handler(ctx -> handle(applicationInstruction, new VertxContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
+                route.handler(ctx -> handle(applicationInstruction, new RequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             }
         }
     }

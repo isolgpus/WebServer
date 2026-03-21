@@ -10,7 +10,7 @@ import io.kiw.web.jwt.*;
 import io.kiw.web.cors.*;
 import io.kiw.web.openapi.*;
 
-import io.vertx.core.http.Cookie;
+import io.kiw.web.http.HttpCookie;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -83,8 +83,8 @@ public class TestHttpResponse {
         return this;
     }
 
-    public TestHttpResponse withCookie(Cookie value) {
-        this.responseCookies.put(value.getName(), value.getValue());
+    public TestHttpResponse withCookie(HttpCookie value) {
+        this.responseCookies.put(value.name(), value.value());
         return this;
     }
 

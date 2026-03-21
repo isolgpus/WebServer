@@ -7,5 +7,5 @@ import io.kiw.web.validation.*;
 import io.kiw.web.websocket.*;
 
 public interface ContextHandler {
-    void handle(VertxContext context);
+    void handle(RequestContext context);
 }
