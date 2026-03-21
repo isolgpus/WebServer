@@ -2,35 +2,20 @@ package io.kiw.luxis.web.test;
 
 import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.TestLuxis;
-import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.http.Method;
-import io.kiw.luxis.web.internal.RoutesRegister;
 
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-public class StubTestApplicationClient implements TestApplicationClient {
+public class StubTestClient implements TestClient {
 
     private List<Exception> seenExceptions = new ArrayList<>();
     private final StubRouter router;
 
-    public StubTestApplicationClient(final Consumer<RoutesRegister> registerRoutes) {
-        this(registerRoutes, null);
-    }
 
-    public StubTestApplicationClient(final Consumer<RoutesRegister> registerRoutes, CorsConfig corsConfig) {
-        this.router = new StubRouter(seenExceptions::add);
-        if(corsConfig != null) {
-            router.configureCors(corsConfig);
-        }
-        RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketStubRouterWrapper());
-        registerRoutes.accept(routesRegister);
-    }
-
-    public StubTestApplicationClient(String host, int port, Luxis<MyApplicationState> luxis) {
+    public StubTestClient(String host, int port, Luxis<MyApplicationState> luxis) {
         TestLuxis<MyApplicationState> testWebServer = (TestLuxis<MyApplicationState>) luxis;
         testWebServer.setExceptionHandler(seenExceptions::add);
         this.router = testWebServer.getRouter();
@@ -83,11 +68,6 @@ public class StubTestApplicationClient implements TestApplicationClient {
         }
     }
 
-    @Override
-    public void stop() {
-
-    }
-
     public void assertException(String message) {
         Iterator<Exception> iterator = this.seenExceptions.iterator();
         while(iterator.hasNext())
@@ -103,5 +83,10 @@ public class StubTestApplicationClient implements TestApplicationClient {
 
         throw new AssertionError("Unable to find exception in seen exceptions " + seenExceptions.stream()
             .map(Throwable::getMessage).collect(Collectors.toList()));
+    }
+
+    @Override
+    public void close() throws Exception {
+
     }
 }

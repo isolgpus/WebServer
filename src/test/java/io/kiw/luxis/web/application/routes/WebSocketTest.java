@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.test.StubRequest;
-import io.kiw.luxis.web.test.TestApplicationClient;
+import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestWebSocketClient;
 import io.kiw.luxis.web.test.handler.*;
 import org.junit.*;
@@ -25,7 +25,7 @@ public class WebSocketTest {
 
     private final String mode;
     private TestWebSocketClient ws;
-    private TestApplicationClient client;
+    private TestClient client;
 
     public WebSocketTest(String mode) {
         this.mode = mode;
@@ -358,12 +358,12 @@ public class WebSocketTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (ws != null) {
             ws.close();
         }
         if (client != null) {
-            client.stop();
+            client.close();
         }
     }
 }

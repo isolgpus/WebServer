@@ -2,7 +2,7 @@ package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.StubRequest;
-import io.kiw.luxis.web.test.TestApplicationClient;
+import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.StatusCodeTestHandler;
 import org.junit.After;
@@ -26,7 +26,7 @@ public class CustomStatusCodeTest {
     }
 
     private final String mode;
-    private TestApplicationClient client;
+    private TestClient client;
 
     public CustomStatusCodeTest(String mode) {
         this.mode = mode;
@@ -40,10 +40,10 @@ public class CustomStatusCodeTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (client != null) {
             client.assertNoMoreExceptions();
-            client.stop();
+            client.close();
         }
     }
 

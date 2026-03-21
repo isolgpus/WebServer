@@ -29,7 +29,7 @@ public class JwtAuthTest {
     }
 
     private final String mode;
-    private TestApplicationClient client;
+    private TestClient client;
     private StubJwtProvider jwtProvider;
 
     public JwtAuthTest(String mode) {
@@ -45,10 +45,10 @@ public class JwtAuthTest {
     }
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (client != null) {
             client.assertNoMoreExceptions();
-            client.stop();
+            client.close();
         }
     }
 

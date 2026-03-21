@@ -1,6 +1,5 @@
 package io.kiw.luxis.web.test;
 
-import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.http.HttpBuffer;
 import io.kiw.luxis.web.http.HttpCookie;
 import io.vertx.core.Vertx;
@@ -14,19 +13,19 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
-public class VertxHttpTestApplicationClient implements TestApplicationClient, AutoCloseable {
+public class VertxTestClient implements TestClient {
 
     private final Vertx vertx;
     private final HttpClient httpClient;
     private final String host;
     private final int port;
-    private final Luxis<MyApplicationState> luxis;
+    private final Runnable onClose;
     private final long timeoutSeconds;
 
-    public VertxHttpTestApplicationClient(String host, int port, Luxis<MyApplicationState> luxis) {
+    public VertxTestClient(String host, int port, Runnable onClose) {
         this.host = host;
         this.port = port;
-        this.luxis = luxis;
+        this.onClose = onClose;
         this.timeoutSeconds = 10;
         this.vertx = Vertx.vertx();
         this.httpClient = vertx.createHttpClient();
@@ -75,11 +74,6 @@ public class VertxHttpTestApplicationClient implements TestApplicationClient, Au
     @Override
     public void assertNoMoreExceptions() {
 
-    }
-
-    @Override
-    public void stop() {
-        luxis.stop();
     }
 
     public TestWebSocketClient webSocketConnection(StubRequest stubRequest) {
@@ -224,5 +218,7 @@ public class VertxHttpTestApplicationClient implements TestApplicationClient, Au
         } catch (Exception e) {
             // best effort
         }
+
+        onClose.run();
     }
 }

@@ -4,7 +4,7 @@ import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.cors.CorsConfigBuilder;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.StubRequest;
-import io.kiw.luxis.web.test.TestApplicationClient;
+import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestFilter;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.GetEchoHandler;
@@ -32,7 +32,7 @@ public class CorsTest {
 
     private final String mode;
     private CorsConfig defaultCorsConfig;
-    private TestApplicationClient client;
+    private TestClient client;
 
     public CorsTest(String mode) {
         this.mode = mode;
@@ -283,9 +283,9 @@ public class CorsTest {
 
 
     @After
-    public void tearDown() {
+    public void tearDown() throws Exception {
         if (client != null) {
-            client.stop();
+            client.close();
         }
     }
 

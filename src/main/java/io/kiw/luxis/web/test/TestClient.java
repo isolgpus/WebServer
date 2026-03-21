@@ -1,6 +1,6 @@
 package io.kiw.luxis.web.test;
 
-public interface TestApplicationClient {
+public interface TestClient extends AutoCloseable {
     TestHttpResponse post(StubRequest stubRequest);
 
     TestHttpResponse put(StubRequest stubRequest);
@@ -18,6 +18,4 @@ public interface TestApplicationClient {
     void assertException(String expected);
 
     void assertNoMoreExceptions();
-
-    void stop();
 }
