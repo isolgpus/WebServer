@@ -99,16 +99,16 @@ public class StubRouter extends RouterWrapper {
         final String allowOrigin = corsConfig.getAllowedOrigins().contains("*") ? "*" : origin;
 
         final TestHttpResponse response = new TestHttpResponse(null).withStatusCode(204)
-            .withHeader("access-control-allow-origin", allowOrigin);
+                .withHeader("access-control-allow-origin", allowOrigin);
 
         if (!corsConfig.getAllowedMethods().isEmpty()) {
             response.withHeader("access-control-allow-methods",
-                String.join(",", corsConfig.getAllowedMethods()));
+                    String.join(",", corsConfig.getAllowedMethods()));
         }
 
         if (!corsConfig.getAllowedHeaders().isEmpty()) {
             response.withHeader("access-control-allow-headers",
-                String.join(",", corsConfig.getAllowedHeaders()));
+                    String.join(",", corsConfig.getAllowedHeaders()));
         }
 
         if (corsConfig.isAllowCredentials()) {
@@ -183,7 +183,7 @@ public class StubRouter extends RouterWrapper {
 
         if (!corsConfig.getExposedHeaders().isEmpty()) {
             response.withHeader("access-control-expose-headers",
-                String.join(",", corsConfig.getExposedHeaders()));
+                    String.join(",", corsConfig.getExposedHeaders()));
         }
     }
 }

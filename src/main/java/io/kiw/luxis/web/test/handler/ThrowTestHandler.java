@@ -12,32 +12,27 @@ public class ThrowTestHandler extends VertxJsonRoute<ThrowRequest, ThrowResponse
     @Override
     public RequestPipeline<ThrowResponse> handle(HttpStream<ThrowRequest, MyApplicationState> e) {
         return e.map(ctx -> ctx.in().where).map(ctx -> {
-            if("map".equals(ctx.in()))
-            {
+            if ("map".equals(ctx.in())) {
                 throw new RuntimeException("app error in map");
             }
             return ctx.in();
         }).blockingMap(ctx -> {
-            if("blocking".equals(ctx.in()))
-            {
+            if ("blocking".equals(ctx.in())) {
                 throw new RuntimeException("app error in blocking");
             }
             return ctx.in();
         }).asyncMap(ctx -> {
-            if("asyncMap".equals(ctx.in()))
-            {
+            if ("asyncMap".equals(ctx.in())) {
                 throw new RuntimeException("app error in asyncMap");
             }
             return CompletableFuture.completedFuture(ctx.in());
         }).asyncBlockingMap(ctx -> {
-            if("asyncBlockingMap".equals(ctx.in()))
-            {
+            if ("asyncBlockingMap".equals(ctx.in())) {
                 throw new RuntimeException("app error in asyncBlockingMap");
             }
             return CompletableFuture.completedFuture(ctx.in());
         }).complete(ctx -> {
-            if("complete".equals(ctx.in()))
-            {
+            if ("complete".equals(ctx.in())) {
                 throw new RuntimeException("app error in complete");
             }
             return HttpResult.success(new ThrowResponse());

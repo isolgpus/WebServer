@@ -81,17 +81,17 @@ public class VertxTestClient implements TestClient {
 
         final String uri = buildUri(stubRequest);
         final WebSocketConnectOptions options = new WebSocketConnectOptions()
-            .setHost(host)
-            .setPort(port)
-            .setURI(uri);
+                .setHost(host)
+                .setPort(port)
+                .setURI(uri);
 
         for (final Map.Entry<String, String> header : stubRequest.headers.entrySet()) {
             options.addHeader(header.getKey(), header.getValue());
         }
 
         httpClient.webSocket(options)
-            .onSuccess(ws -> future.complete(new VertxTestWebSocketClient(ws)))
-            .onFailure(future::completeExceptionally);
+                .onSuccess(ws -> future.complete(new VertxTestWebSocketClient(ws)))
+                .onFailure(future::completeExceptionally);
 
         try {
             return future.get(timeoutSeconds, TimeUnit.SECONDS);
@@ -130,20 +130,20 @@ public class VertxTestClient implements TestClient {
                     multipartBody.appendString("--" + boundary + "--\r\n");
 
                     req.send(multipartBody)
-                        .onSuccess(resp -> handleResponse(resp, future))
-                        .onFailure(future::completeExceptionally);
+                            .onSuccess(resp -> handleResponse(resp, future))
+                            .onFailure(future::completeExceptionally);
                 } else if (stubRequest.body != null) {
                     req.putHeader("Content-Type", "application/json");
                     req.send(Buffer.buffer(stubRequest.body))
-                        .onSuccess(resp -> handleResponse(resp, future))
-                        .onFailure(future::completeExceptionally);
+                            .onSuccess(resp -> handleResponse(resp, future))
+                            .onFailure(future::completeExceptionally);
                 } else {
                     req.send()
-                        .onSuccess(resp -> handleResponse(resp, future))
-                        .onFailure(future::completeExceptionally);
+                            .onSuccess(resp -> handleResponse(resp, future))
+                            .onFailure(future::completeExceptionally);
                 }
             })
-            .onFailure(future::completeExceptionally);
+                .onFailure(future::completeExceptionally);
 
         try {
             return future.get(timeoutSeconds, TimeUnit.SECONDS);
@@ -156,7 +156,7 @@ public class VertxTestClient implements TestClient {
         resp.body()
             .onSuccess(body -> {
                 final TestHttpResponse testResponse = new TestHttpResponse(body.toString())
-                    .withStatusCode(resp.statusCode());
+                        .withStatusCode(resp.statusCode());
 
                 for (final String headerName : resp.headers().names()) {
                     testResponse.withHeader(headerName, resp.getHeader(headerName));
@@ -173,7 +173,7 @@ public class VertxTestClient implements TestClient {
 
                 future.complete(testResponse);
             })
-            .onFailure(future::completeExceptionally);
+                .onFailure(future::completeExceptionally);
     }
 
     private String buildUri(final StubRequest stubRequest) {
@@ -186,8 +186,7 @@ public class VertxTestClient implements TestClient {
                 if (!first) {
                     uri.append("&");
                 }
-                if(entry.getValue() != null)
-                {
+                if (entry.getValue() != null) {
                     uri.append(entry.getKey()).append("=").append(entry.getValue());
                 }
                 first = false;
@@ -202,8 +201,8 @@ public class VertxTestClient implements TestClient {
         try {
             final CompletableFuture<Void> clientClose = new CompletableFuture<>();
             httpClient.close()
-                .onSuccess(v -> clientClose.complete(null))
-                .onFailure(clientClose::completeExceptionally);
+                    .onSuccess(v -> clientClose.complete(null))
+                    .onFailure(clientClose::completeExceptionally);
             clientClose.get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (final Exception e) {
             // best effort
@@ -212,8 +211,8 @@ public class VertxTestClient implements TestClient {
         try {
             final CompletableFuture<Void> vertxClose = new CompletableFuture<>();
             vertx.close()
-                .onSuccess(v -> vertxClose.complete(null))
-                .onFailure(vertxClose::completeExceptionally);
+                    .onSuccess(v -> vertxClose.complete(null))
+                    .onFailure(vertxClose::completeExceptionally);
             vertxClose.get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (final Exception e) {
             // best effort

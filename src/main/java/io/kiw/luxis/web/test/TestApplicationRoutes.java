@@ -2,7 +2,37 @@ package io.kiw.luxis.web.test;
 
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.RoutesRegister;
-import io.kiw.luxis.web.test.handler.*;
+import io.kiw.luxis.web.test.handler.AsyncBlockingMapTestHandler;
+import io.kiw.luxis.web.test.handler.AsyncBlockingMapWebSocketHandler;
+import io.kiw.luxis.web.test.handler.AsyncFlatMapFailHandler;
+import io.kiw.luxis.web.test.handler.AsyncFlatMapFailWebSocketHandler;
+import io.kiw.luxis.web.test.handler.AsyncMapTestHandler;
+import io.kiw.luxis.web.test.handler.AsyncMapWebSocketHandler;
+import io.kiw.luxis.web.test.handler.BlockingCompleteTestHandler;
+import io.kiw.luxis.web.test.handler.BlockingFlatMapFailHandler;
+import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketHandler;
+import io.kiw.luxis.web.test.handler.BlockingMapWebSocketHandler;
+import io.kiw.luxis.web.test.handler.BlockingTestHandler;
+import io.kiw.luxis.web.test.handler.EchoWebSocketHandler;
+import io.kiw.luxis.web.test.handler.ErrorFilter;
+import io.kiw.luxis.web.test.handler.FailingTestHandler;
+import io.kiw.luxis.web.test.handler.FileDownloaderHandler;
+import io.kiw.luxis.web.test.handler.FileUploaderHandler;
+import io.kiw.luxis.web.test.handler.FlatMapFailWebSocketHandler;
+import io.kiw.luxis.web.test.handler.GetEchoHandler;
+import io.kiw.luxis.web.test.handler.GetTestFilterHandler;
+import io.kiw.luxis.web.test.handler.JwtFilterProtectedHandler;
+import io.kiw.luxis.web.test.handler.JwtProtectedHandler;
+import io.kiw.luxis.web.test.handler.PostEchoHandler;
+import io.kiw.luxis.web.test.handler.RouteConfigBuilder;
+import io.kiw.luxis.web.test.handler.StateTestHandler;
+import io.kiw.luxis.web.test.handler.StatefulWebSocketHandler;
+import io.kiw.luxis.web.test.handler.StatusCodeTestHandler;
+import io.kiw.luxis.web.test.handler.TestFilterHandler;
+import io.kiw.luxis.web.test.handler.ThrowTestHandler;
+import io.kiw.luxis.web.test.handler.ThrowWebSocketHandler;
+import io.kiw.luxis.web.test.handler.TimeoutTestHandler;
+import io.kiw.luxis.web.test.handler.ValidationTestHandler;
 import io.kiw.luxis.web.test.jwt.StubJwtProvider;
 
 public class TestApplicationRoutes {

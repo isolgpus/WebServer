@@ -81,7 +81,7 @@ public class OpenApiSpecGenerator {
             }
             String methodName = route.method != null ? route.method.name() : "GET";
             grouped.computeIfAbsent(route.path, k -> new LinkedHashMap<>())
-                .put(methodName, route);
+                    .put(methodName, route);
         }
         return grouped;
     }
@@ -129,13 +129,12 @@ public class OpenApiSpecGenerator {
         ObjectNode responses = operation.putObject("responses");
         ObjectNode successResponse = responses.putObject("200");
         String responseDesc = (desc.metadata != null && desc.metadata.responseDescription != null)
-            ? desc.metadata.responseDescription : "Successful response";
+                ? desc.metadata.responseDescription : "Successful response";
         successResponse.put("description", responseDesc);
 
         if (desc.outputType != null && desc.outputType != Void.class) {
             ObjectNode respContent = successResponse.putObject("content");
-            if(desc.produces != null)
-            {
+            if (desc.produces != null) {
                 ObjectNode respMediaType = respContent.putObject(desc.produces);
                 ObjectNode schema = schemaGenerator.generateSchema(desc.outputType);
                 if (schema != null) {
@@ -153,8 +152,8 @@ public class OpenApiSpecGenerator {
     private String generateOperationId(Method method, String rawPath) {
         String methodStr = method != null ? method.name().toLowerCase() : "get";
         String pathPart = rawPath.replaceAll("[/:{}]", "_")
-            .replaceAll("_+", "_")
-            .replaceAll("^_|_$", "");
+                .replaceAll("_+", "_")
+                .replaceAll("^_|_$", "");
         return methodStr + "_" + pathPart;
     }
 

@@ -6,8 +6,7 @@ import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 
-public class TestFilter implements VertxJsonFilter<MyApplicationState>
-{
+public class TestFilter implements VertxJsonFilter<MyApplicationState> {
     private String cookieKey;
 
     public TestFilter(final String testFilter) {

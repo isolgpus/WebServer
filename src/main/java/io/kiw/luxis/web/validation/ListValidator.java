@@ -20,14 +20,16 @@ public class ListValidator<P, E> {
     }
 
     public ListValidator<P, E> minSize(int min) {
-        if (list != null && list.size() < min)
+        if (list != null && list.size() < min) {
             parent.addError(fieldName, "must have at least " + min + " items");
+        }
         return this;
     }
 
     public ListValidator<P, E> maxSize(int max) {
-        if (list != null && list.size() > max)
+        if (list != null && list.size() > max) {
             parent.addError(fieldName, "must have at most " + max + " items");
+        }
         return this;
     }
 

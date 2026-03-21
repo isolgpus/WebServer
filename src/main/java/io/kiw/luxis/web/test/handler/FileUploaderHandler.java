@@ -16,10 +16,10 @@ public class FileUploaderHandler extends VertxFileUploadRoute<FileUploadResponse
     public RequestPipeline<FileUploadResponse> handle(HttpStream<Map<String, HttpBuffer>, MyApplicationState> e) {
         return e.complete(ctx -> {
             final Map<String, Integer> results = ctx.in().entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey,
-                me -> me.getValue().bytes().length,
-                (integer, integer2) -> integer,
-                LinkedHashMap::new));
+                    Map.Entry::getKey,
+                    me -> me.getValue().bytes().length,
+                    (integer, integer2) -> integer,
+                    LinkedHashMap::new));
             return HttpResult.success(new FileUploadResponse(results));
         });
     }

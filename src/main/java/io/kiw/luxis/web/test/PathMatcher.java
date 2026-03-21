@@ -3,7 +3,14 @@ package io.kiw.luxis.web.test;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.RequestPipeline;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
 import java.util.stream.Collectors;
 
 public class PathMatcher {
@@ -15,8 +22,7 @@ public class PathMatcher {
     private Map<Method, List<RequestPipeline>> wildCardFlows = new EnumMap<>(Method.class);
     private List<RequestPipeline> allMethodWildCardFlows = new ArrayList<>();
 
-    public void putRoute(String path, Method method, RequestPipeline flow)
-    {
+    public void putRoute(String path, Method method, RequestPipeline flow) {
         Queue<String> pathSegments = splitPath(path);
         this.putRoute(pathSegments, method, flow);
     }
@@ -31,36 +37,26 @@ public class PathMatcher {
 
 
         boolean isAWildCard = pathSegment.equals("*");
-        if(isAWildCard)
-        {
+        if (isAWildCard) {
             this.addWildcardHandler(flow, method);
             return;
         }
 
         boolean isAParam = pathSegment.startsWith(":");
         PathMatcher childPathMatcher;
-        if(isAParam)
-        {
+        if (isAParam) {
             this.paramName = pathSegment.substring(1);
             this.paramChild = this.paramChild != null ? this.paramChild : new PathMatcher();
             childPathMatcher = this.paramChild;
-        }
-        else
-        {
+        } else {
             childPathMatcher = children.computeIfAbsent(pathSegment, s -> new PathMatcher());
         }
 
-        if(pathSegments.size() == 0)
-        {
+        if (pathSegments.size() == 0) {
             childPathMatcher.addHandler(flow, method);
+        } else {
+            childPathMatcher.putRoute(pathSegments, method, flow);
         }
-        else
-        {
-           childPathMatcher.putRoute(pathSegments, method, flow);
-        }
-
-
-
     }
 
     public void putAllMethodRoute(String path, RequestPipeline flow) {
@@ -72,20 +68,16 @@ public class PathMatcher {
         String pathSegment = pathSegments.poll();
 
         boolean isAWildCard = pathSegment.equals("*");
-        if(isAWildCard)
-        {
+        if (isAWildCard) {
             this.allMethodWildCardFlows.add(flow);
             return;
         }
 
         PathMatcher childPathMatcher = children.computeIfAbsent(pathSegment, s -> new PathMatcher());
 
-        if(pathSegments.size() == 0)
-        {
+        if (pathSegments.size() == 0) {
             childPathMatcher.allMethodWildCardFlows.add(flow);
-        }
-        else
-        {
+        } else {
             childPathMatcher.putAllMethodRoute(pathSegments, flow);
         }
     }
@@ -109,28 +101,20 @@ public class PathMatcher {
 
     private List<RequestPipeline> get(Queue<String> pathSegments, Method method, List<RequestPipeline> collectedFlows, Map<String, String> pathParams) {
         collectedFlows.addAll(this.allMethodWildCardFlows);
-        if(this.wildCardFlows.containsKey(method))
-        {
+        if (this.wildCardFlows.containsKey(method)) {
             collectedFlows.addAll(this.wildCardFlows.get(method));
         }
         String pathSegment = pathSegments.poll();
 
-        if(pathSegment == null)
-        {
-            if(this.flows.containsKey(method))
-            {
+        if (pathSegment == null) {
+            if (this.flows.containsKey(method)) {
                 collectedFlows.addAll(this.flows.get(method));
             }
-        }
-        else
-        {
+        } else {
             PathMatcher child = this.children.get(pathSegment);
-            if(child != null)
-            {
+            if (child != null) {
                 child.get(pathSegments, method, collectedFlows, pathParams);
-            }
-            else if(this.paramChild != null)
-            {
+            } else if (this.paramChild != null) {
                 pathParams.put(this.paramName, pathSegment);
                 this.paramChild.get(pathSegments, method, collectedFlows, pathParams);
             }

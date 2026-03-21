@@ -70,25 +70,19 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
 
     @SuppressWarnings("unchecked")
     private <IN, OUT> void handleAndContinue(final WebSocketSession<?> session, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message) {
-        if(instruction.isAsync)
-        {
+        if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future = instruction.handleAsync(message, session.connection(), appState);
 
             webSocketRouterWrapper.handleOnEventLoop(() -> {
-                try
-                {
+                try {
                     future.join().consume(e -> {}, q -> {
                         continueChain(session, instruction, (OUT) q, ThreadContext.EVENT_LOOP);
                     });
-                }
-                catch (final Exception e)
-                {
+                } catch (final Exception e) {
                     exceptionHandler.accept(e);
                 }
             });
-        }
-        else
-        {
+        } else {
             final ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.EVENT_LOOP;
             final Result<ErrorMessageResponse, ?> result = instruction.handle(message, session.connection(), appState);
             result.consume(e -> {}, q -> {
@@ -99,13 +93,10 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
 
     @SuppressWarnings("unchecked")
     private <OUT> void continueChain(final WebSocketSession<?> session, final WebSocketMapInstruction<?, OUT, APP> instruction, final OUT result, final ThreadContext currentThread) {
-        if(instruction.next().isPresent())
-        {
+        if (instruction.next().isPresent()) {
             final WebSocketMapInstruction<OUT, ?, APP> next = (WebSocketMapInstruction<OUT, ?, APP>) instruction.next().get();
             executeInstruction(session, next, result, currentThread);
-        }
-        else
-        {
+        } else {
             runOnThread(ThreadContext.EVENT_LOOP, currentThread, () -> {
                 sendFinalResponse(session, result);
             });
@@ -113,16 +104,11 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     }
 
     private void runOnThread(final ThreadContext required, final ThreadContext current, final Runnable action) {
-        if(current == required)
-        {
+        if (current == required) {
             action.run();
-        }
-        else if(required == ThreadContext.BLOCKING)
-        {
+        } else if (required == ThreadContext.BLOCKING) {
             webSocketRouterWrapper.handleBlocking(action);
-        }
-        else
-        {
+        } else {
             webSocketRouterWrapper.handleOnEventLoop(action);
         }
     }

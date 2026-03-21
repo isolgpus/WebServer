@@ -60,9 +60,8 @@ public class StubTestClient implements TestClient {
         return router.webSocket(stubRequest);
     }
 
-    public void assertNoMoreExceptions(){
-        if(!this.seenExceptions.isEmpty())
-        {
+    public void assertNoMoreExceptions() {
+        if (!this.seenExceptions.isEmpty()) {
             throw new AssertionError("Expected to find no exceptions but found " + seenExceptions.stream()
                 .map(Throwable::getMessage).collect(Collectors.toList()));
         }
@@ -70,12 +69,10 @@ public class StubTestClient implements TestClient {
 
     public void assertException(final String message) {
         final Iterator<Exception> iterator = this.seenExceptions.iterator();
-        while(iterator.hasNext())
-        {
+        while (iterator.hasNext()) {
             final Exception exception = iterator.next();
 
-            if(exception.getMessage().contains(message))
-            {
+            if (exception.getMessage().contains(message)) {
                 iterator.remove();
                 return;
             }

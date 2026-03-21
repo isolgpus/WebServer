@@ -66,8 +66,7 @@ public class TestHttpResponse {
     }
 
     public TestHttpResponse withHeader(final String key, final String value) {
-        if(!key.equals("content-length") && !key.equals("set-cookie"))
-        {
+        if (!key.equals("content-length") && !key.equals("set-cookie")) {
             this.responseHeaders.put(key, value);
         }
         return this;

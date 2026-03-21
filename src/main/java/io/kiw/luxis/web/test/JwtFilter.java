@@ -5,8 +5,7 @@ import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.jwt.JwtProvider;
 import io.kiw.luxis.web.pipeline.HttpStream;
 
-public class JwtFilter implements VertxJsonFilter<MyApplicationState>
-{
+public class JwtFilter implements VertxJsonFilter<MyApplicationState> {
 
     private final JwtProvider jwtProvider;
 

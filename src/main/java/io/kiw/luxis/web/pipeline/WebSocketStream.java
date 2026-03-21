@@ -22,8 +22,7 @@ public class WebSocketStream<IN, APP> {
 
     public <OUT> WebSocketStream<OUT, APP> flatMap(WebSocketStreamFlatMapper<IN, OUT, APP> mapper) {
         WebSocketMapInstruction<IN, OUT, APP> e = new WebSocketMapInstruction<>(false, mapper, false);
-        if(!instructionChain.isEmpty())
-        {
+        if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
 
@@ -37,8 +36,7 @@ public class WebSocketStream<IN, APP> {
 
     public <OUT> WebSocketStream<OUT, APP> blockingFlatMap(WebSocketStreamBlockingFlatMapper<IN, OUT> mapper) {
         WebSocketMapInstruction<IN, OUT, Object> e = new WebSocketMapInstruction<>(true, mapper, false);
-        if(!instructionChain.isEmpty())
-        {
+        if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
@@ -51,8 +49,7 @@ public class WebSocketStream<IN, APP> {
 
     public <OUT> WebSocketStream<OUT, APP> asyncFlatMap(WebSocketStreamAsyncFlatMapper<IN, OUT, APP> mapper) {
         WebSocketMapInstruction<IN, OUT, APP> e = new WebSocketMapInstruction<>(mapper, false);
-        if(!instructionChain.isEmpty())
-        {
+        if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
@@ -65,8 +62,7 @@ public class WebSocketStream<IN, APP> {
 
     public <OUT> WebSocketStream<OUT, APP> asyncBlockingFlatMap(WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> mapper) {
         WebSocketMapInstruction<IN, OUT, Object> e = new WebSocketMapInstruction<>(mapper, false);
-        if(!instructionChain.isEmpty())
-        {
+        if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
@@ -75,8 +71,7 @@ public class WebSocketStream<IN, APP> {
 
     public <OUT> WebSocketPipeline<OUT> complete(WebSocketStreamFlatMapper<IN, OUT, APP> mapper) {
         WebSocketMapInstruction<IN, OUT, APP> e = new WebSocketMapInstruction<>(false, mapper, true);
-        if(!instructionChain.isEmpty())
-        {
+        if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
@@ -85,9 +80,8 @@ public class WebSocketStream<IN, APP> {
 
     public WebSocketPipeline<IN> complete() {
         WebSocketMapInstruction<IN, IN, APP> e = new WebSocketMapInstruction<>(false,
-            (WebSocketStreamFlatMapper<IN, IN, APP>) ctx -> WebSocketResult.success(ctx.in()), true);
-        if(!instructionChain.isEmpty())
-        {
+                (WebSocketStreamFlatMapper<IN, IN, APP>) ctx -> WebSocketResult.success(ctx.in()), true);
+        if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
@@ -96,8 +90,7 @@ public class WebSocketStream<IN, APP> {
 
     public <OUT> WebSocketPipeline<OUT> blockingComplete(WebSocketStreamBlockingFlatMapper<IN, OUT> mapper) {
         WebSocketMapInstruction<IN, OUT, Object> e = new WebSocketMapInstruction<>(true, mapper, true);
-        if(!instructionChain.isEmpty())
-        {
+        if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);

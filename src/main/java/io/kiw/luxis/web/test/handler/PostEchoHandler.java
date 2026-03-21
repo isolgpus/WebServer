@@ -12,13 +12,11 @@ public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, M
     @Override
     public RequestPipeline<EchoResponse> handle(HttpStream<EchoRequest, MyApplicationState> e) {
         return e.complete(ctx -> {
-            if(ctx.in().responseHeaderExample != null)
-            {
+            if (ctx.in().responseHeaderExample != null) {
                 ctx.http().addResponseHeader("responseHeaderExample", ctx.in().responseHeaderExample);
             }
 
-            if(ctx.in().responseCookieExample != null)
-            {
+            if (ctx.in().responseCookieExample != null) {
                 ctx.http().addResponseCookie(new HttpCookie("responseCookieExample", ctx.in().responseCookieExample));
             }
             final HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");

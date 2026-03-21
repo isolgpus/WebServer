@@ -43,12 +43,12 @@ public class CorsConfigBuilder {
 
     public CorsConfig build() {
         return new CorsConfig(
-            new LinkedHashSet<>(allowedOrigins),
-            new LinkedHashSet<>(allowedMethods),
-            new LinkedHashSet<>(allowedHeaders),
-            new LinkedHashSet<>(exposedHeaders),
-            allowCredentials,
-            maxAgeSeconds
+                new LinkedHashSet<>(allowedOrigins),
+                new LinkedHashSet<>(allowedMethods),
+                new LinkedHashSet<>(allowedHeaders),
+                new LinkedHashSet<>(exposedHeaders),
+                allowCredentials,
+                maxAgeSeconds
         );
     }
 }

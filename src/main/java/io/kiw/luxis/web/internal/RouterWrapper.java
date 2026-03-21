@@ -6,7 +6,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.cors.CorsConfig;
-import io.kiw.luxis.web.http.*;
+import io.kiw.luxis.web.http.RequestContext;
+import io.kiw.luxis.web.http.Method;
+import io.kiw.luxis.web.http.HttpContext;
+import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.HttpSuccessResponse;
 import io.kiw.luxis.web.internal.ender.Ender;
 import io.kiw.luxis.web.test.handler.RouteConfig;
 
@@ -26,8 +30,8 @@ public abstract class RouterWrapper {
     }
 
     private final ObjectMapper objectMapper = new ObjectMapper()
-        .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
+            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
     protected abstract void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig);
 
@@ -50,7 +54,7 @@ public abstract class RouterWrapper {
         processResult(result, applicationInstruction, vertxContext, ender);
     }
 
-     <T> void handleAsync(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
+    <T> void handleAsync(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
         final HttpContext httpContext = new HttpContext(vertxContext);
         CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
@@ -64,13 +68,13 @@ public abstract class RouterWrapper {
         // We must dispatch back to the Vert.x event loop before touching the pipeline
         // (ctx.next(), ctx.end(), etc. are not thread-safe outside the event loop).
         future.whenComplete((result, throwable) ->
-            vertxContext.runOnContext(() -> {
-                if (throwable != null) {
-                    handleException(vertxContext, throwable instanceof Exception ? (Exception) throwable : new RuntimeException(throwable));
-                    return;
-                }
-                processResult(result, applicationInstruction, vertxContext, ender);
-            })
+                vertxContext.runOnContext(() -> {
+                    if (throwable != null) {
+                        handleException(vertxContext, throwable instanceof Exception ? (Exception) throwable : new RuntimeException(throwable));
+                        return;
+                    }
+                    processResult(result, applicationInstruction, vertxContext, ender);
+                })
         );
     }
 
@@ -86,14 +90,14 @@ public abstract class RouterWrapper {
 
     private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Ender ender) {
         result.consume(httpErrorResponse -> {
-                try {
-                    vertxContext.setStatusCode(httpErrorResponse.statusCode);
-                    vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue));
-                } catch (final JsonProcessingException e) {
-                    handleException(vertxContext, e);
-                }
-            },
-            s -> {
+            try {
+                vertxContext.setStatusCode(httpErrorResponse.statusCode);
+                vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue));
+            } catch (final JsonProcessingException e) {
+                handleException(vertxContext, e);
+            }
+        },
+                s -> {
                 if (applicationInstruction.lastStep) {
                     try {
                         Object value = s;
