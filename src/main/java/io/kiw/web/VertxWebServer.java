@@ -1,6 +1,6 @@
 package io.kiw.web;
 
-import io.kiw.web.internal.RoutesRegistrar;
+import io.kiw.web.internal.VertxRoutesRegistrar;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
@@ -25,7 +25,7 @@ public class VertxWebServer<APP> implements WebServer<APP> {
         HttpServer httpServer = vertx.createHttpServer();
         Router router = Router.router(vertx);
 
-        APP applicationState = RoutesRegistrar.register(router, vertx, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig);
+        APP applicationState = VertxRoutesRegistrar.register(router, vertx, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig);
 
         httpServer.requestHandler(router).listen(webServerConfig.port).toCompletionStage().toCompletableFuture().join();
         return new VertxWebServer<>(vertx, applicationState);

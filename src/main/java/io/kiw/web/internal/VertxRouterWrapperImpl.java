@@ -15,11 +15,11 @@ import io.vertx.ext.web.handler.CorsHandler;
 
 import java.util.function.Consumer;
 
-public class RouterWrapperImpl extends RouterWrapper {
+public class VertxRouterWrapperImpl extends RouterWrapper {
     private final Router router;
     private final int defaultTimeoutMillis;
 
-    public RouterWrapperImpl(Router router, int defaultTimeoutMillis, Consumer<Exception> exceptionHandler) {
+    public VertxRouterWrapperImpl(Router router, int defaultTimeoutMillis, Consumer<Exception> exceptionHandler) {
         super(exceptionHandler);
         this.router = router;
         this.defaultTimeoutMillis = defaultTimeoutMillis;
@@ -49,7 +49,7 @@ public class RouterWrapperImpl extends RouterWrapper {
 
     @Override
     public void route(String path, Method method, String consumes, String produces, RequestPipeline flow, RouteConfig routeConfig) {
-        Route route = router.route(method.getVertxMethod(), path).consumes(consumes).produces(produces);
+        Route route = router.route(HttpMethod.valueOf(method.name()), path).consumes(consumes).produces(produces);
         registerHandlers(route, flow, routeConfig);
     }
 
@@ -84,13 +84,13 @@ public class RouterWrapperImpl extends RouterWrapper {
         for (Object what : flow.getApplicationInstructions()) {
             MapInstruction applicationInstruction = (MapInstruction) what;
             if (applicationInstruction.isAsync && applicationInstruction.isBlocking) {
-                route.blockingHandler(ctx -> handleAsyncBlocking(applicationInstruction, new RequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
+                route.blockingHandler(ctx -> handleAsyncBlocking(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             } else if (applicationInstruction.isAsync) {
-                route.handler(ctx -> handleAsync(applicationInstruction, new RequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
+                route.handler(ctx -> handleAsync(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             } else if (applicationInstruction.isBlocking) {
-                route.blockingHandler(ctx -> handle(applicationInstruction, new RequestContextImpl(ctx), null, flow.getEnder()));
+                route.blockingHandler(ctx -> handle(applicationInstruction, new VertxRequestContextImpl(ctx), null, flow.getEnder()));
             } else {
-                route.handler(ctx -> handle(applicationInstruction, new RequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
+                route.handler(ctx -> handle(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             }
         }
     }

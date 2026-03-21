@@ -14,10 +14,10 @@ import java.util.Map;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
-public class RequestContextImpl implements RequestContext {
+public class VertxRequestContextImpl implements RequestContext {
     private final RoutingContext ctx;
 
-    public RequestContextImpl(RoutingContext ctx) {
+    public VertxRequestContextImpl(RoutingContext ctx) {
         this.ctx = ctx;
     }
 

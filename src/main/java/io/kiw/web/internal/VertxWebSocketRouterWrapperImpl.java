@@ -8,10 +8,10 @@ import io.kiw.web.websocket.*;
 
 import io.vertx.core.Vertx;
 
-public class WebSocketRouterWrapperImpl implements WebSocketRouterWrapper {
+public class VertxWebSocketRouterWrapperImpl implements WebSocketRouterWrapper {
     private final Vertx vertx;
 
-    public WebSocketRouterWrapperImpl(Vertx vertx) {
+    public VertxWebSocketRouterWrapperImpl(Vertx vertx) {
         this.vertx = vertx;
     }
 

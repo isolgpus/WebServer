@@ -16,17 +16,17 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.function.Consumer;
 
-public class RoutesRegistrar {
+public class VertxRoutesRegistrar {
 
     public static <R> R register(Router router, Vertx vertx, ApplicationRoutesRegister<R> routesRegisterConsumer, int defaultTimeoutMillis, Consumer<Exception> exceptionHandler, OptionalLong maxBodySize, Optional<CorsConfig> corsConfig) {
-        RouterWrapperImpl routerWrapper = new RouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler);
+        VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
         BodyHandler handler = BodyHandler.create();
         maxBodySize.ifPresent(handler::setBodyLimit);
         router.route().handler(handler);
 
-        RoutesRegister routesRegister = new RoutesRegister(routerWrapper, new WebSocketRouterWrapperImpl(vertx));
+        RoutesRegister routesRegister = new RoutesRegister(routerWrapper, new VertxWebSocketRouterWrapperImpl(vertx));
         return routesRegisterConsumer.registerRoutes(routesRegister);
 
     }
