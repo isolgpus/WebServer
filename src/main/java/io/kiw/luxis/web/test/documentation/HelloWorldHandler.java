@@ -5,11 +5,11 @@ import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 
-public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWorldResponse, HelloWorldState> {
+public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWorldResponse, AppState> {
 
 
     @Override
-    public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, HelloWorldState> e) {
+    public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, AppState> e) {
         return e.complete(ctx -> HttpResult.success(new HelloWorldResponse()));
     }
 }
