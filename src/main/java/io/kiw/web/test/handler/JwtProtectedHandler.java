@@ -1,7 +1,12 @@
 package io.kiw.web.test.handler;
 
-import io.kiw.web.infrastructure.*;
-import io.kiw.web.infrastructure.jwt.JwtProvider;
+import io.kiw.web.pipeline.*;
+import io.kiw.web.handler.*;
+import io.kiw.web.http.*;
+import io.kiw.web.validation.*;
+import io.kiw.web.websocket.*;
+import io.kiw.web.internal.*;
+import io.kiw.web.jwt.JwtProvider;
 import io.kiw.web.test.MyApplicationState;
 
 public class JwtProtectedHandler extends VertxJsonRoute<EmptyRequest, SubjectResponse, MyApplicationState> {

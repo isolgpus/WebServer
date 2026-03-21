@@ -1,6 +1,6 @@
 package io.kiw.web.application.routes;
 
-import io.kiw.web.infrastructure.Method;
+import io.kiw.web.http.Method;
 import io.kiw.web.test.*;
 import io.kiw.web.test.handler.*;
 import io.vertx.core.http.impl.CookieImpl;

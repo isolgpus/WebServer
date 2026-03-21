@@ -1,9 +1,9 @@
 package io.kiw.web.test;
 
-import io.kiw.web.infrastructure.RequestPipeline;
-import io.kiw.web.infrastructure.HttpStream;
-import io.kiw.web.infrastructure.HttpResult;
-import io.kiw.web.infrastructure.VertxJsonFilter;
+import io.kiw.web.internal.RequestPipeline;
+import io.kiw.web.pipeline.HttpStream;
+import io.kiw.web.http.HttpResult;
+import io.kiw.web.handler.VertxJsonFilter;
 import io.vertx.core.http.impl.CookieImpl;
 
 public class TestFilter implements VertxJsonFilter<MyApplicationState>

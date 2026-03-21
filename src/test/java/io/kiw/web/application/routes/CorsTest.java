@@ -1,8 +1,8 @@
 package io.kiw.web.application.routes;
 
-import io.kiw.web.infrastructure.Method;
-import io.kiw.web.infrastructure.cors.CorsConfig;
-import io.kiw.web.infrastructure.cors.CorsConfigBuilder;
+import io.kiw.web.http.Method;
+import io.kiw.web.cors.CorsConfig;
+import io.kiw.web.cors.CorsConfigBuilder;
 import io.kiw.web.test.*;
 import io.kiw.web.test.handler.GetEchoHandler;
 import io.kiw.web.test.handler.PostEchoHandler;

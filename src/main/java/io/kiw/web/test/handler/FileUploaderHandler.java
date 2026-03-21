@@ -2,10 +2,10 @@ package io.kiw.web.test.handler;
 
 import io.kiw.web.test.MyApplicationState;
 
-import io.kiw.web.infrastructure.RequestPipeline;
-import io.kiw.web.infrastructure.HttpStream;
-import io.kiw.web.infrastructure.HttpResult;
-import io.kiw.web.infrastructure.VertxFileUploadRoute;
+import io.kiw.web.internal.RequestPipeline;
+import io.kiw.web.pipeline.HttpStream;
+import io.kiw.web.http.HttpResult;
+import io.kiw.web.handler.VertxFileUploadRoute;
 import io.vertx.core.buffer.Buffer;
 
 import java.util.LinkedHashMap;
