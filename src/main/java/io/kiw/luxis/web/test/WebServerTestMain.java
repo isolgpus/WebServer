@@ -3,7 +3,9 @@ package io.kiw.luxis.web.test;
 import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.WebServiceConfigBuilder;
 
-public class WebServerTestMain {
+public final class WebServerTestMain {
+    private WebServerTestMain() { }
+
     public static void main(final String[] args) {
 
         final Luxis<MyApplicationState> luxis = Luxis.start(

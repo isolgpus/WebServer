@@ -3,7 +3,8 @@ package io.kiw.luxis.web.openapi;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
-public class TypeResolver {
+public final class TypeResolver {
+    private TypeResolver() { }
 
     public static Type[] resolveTypeArguments(final Class<?> concreteClass, final Class<?> targetSuperclass) {
         if (targetSuperclass.isInterface()) {

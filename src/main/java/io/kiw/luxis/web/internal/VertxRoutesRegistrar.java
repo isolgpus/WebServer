@@ -10,7 +10,8 @@ import java.util.Optional;
 import java.util.OptionalLong;
 import java.util.function.Consumer;
 
-public class VertxRoutesRegistrar {
+public final class VertxRoutesRegistrar {
+    private VertxRoutesRegistrar() { }
 
     public static <R> R register(final Router router, final Vertx vertx, final ApplicationRoutesRegister<R> routesRegisterConsumer, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final OptionalLong maxBodySize, final Optional<CorsConfig> corsConfig) {
         final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler);

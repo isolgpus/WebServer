@@ -63,10 +63,23 @@
         <module name="OneStatementPerLine"/>
         <module name="MultipleVariableDeclarations"/>
         <module name="MissingSwitchDefault"/>
+        <module name="DefaultComesLast"/>
         <module name="FallThrough"/>
         <module name="EqualsHashCode"/>
         <module name="SimplifyBooleanExpression"/>
         <module name="SimplifyBooleanReturn"/>
+        <module name="StringLiteralEquality"/>
+        <module name="ModifiedControlVariable"/>
+        <module name="InnerAssignment"/>
+        <module name="IllegalCatch">
+            <property name="illegalClassNames" value="java.lang.Throwable, java.lang.RuntimeException"/>
+        </module>
+
+        <!-- Design -->
+        <module name="FinalClass"/>
+        <module name="HideUtilityClassConstructor"/>
+        <module name="OneTopLevelClass"/>
+        <module name="InterfaceIsType"/>
 
         <!-- Miscellaneous -->
         <module name="ArrayTypeStyle"/>

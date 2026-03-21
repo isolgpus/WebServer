@@ -35,7 +35,9 @@ import io.kiw.luxis.web.test.handler.TimeoutTestHandler;
 import io.kiw.luxis.web.test.handler.ValidationTestHandler;
 import io.kiw.luxis.web.test.jwt.StubJwtProvider;
 
-public class TestApplicationRoutes {
+public final class TestApplicationRoutes {
+    private TestApplicationRoutes() { }
+
     public static final String JWT_SECRET = "test-secret-key-for-unit-tests";
 
     public static MyApplicationState registerRoutes(final RoutesRegister routesRegister, final MyApplicationState state) {

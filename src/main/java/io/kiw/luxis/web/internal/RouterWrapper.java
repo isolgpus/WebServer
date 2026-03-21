@@ -88,6 +88,7 @@ public abstract class RouterWrapper {
         }
     }
 
+    @SuppressWarnings("IllegalCatch")
     private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Ender ender) {
         result.consume(httpErrorResponse -> {
             try {

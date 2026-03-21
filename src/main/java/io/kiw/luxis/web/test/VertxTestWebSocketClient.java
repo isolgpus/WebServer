@@ -24,6 +24,7 @@ public class VertxTestWebSocketClient implements TestWebSocketClient {
     }
 
     @Override
+    @SuppressWarnings("IllegalCatch")
     public void onResponses(final Consumer<List<String>> receivedMessageConsumer) {
         final long deadline = System.currentTimeMillis() + 1000;
         Throwable latestException = null;
