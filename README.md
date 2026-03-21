@@ -1,35 +1,32 @@
 # Luxis
 
-A type-safe, functional web framework built on Vert.x. It provides two things:
+A type-safe, functional web framework built on Vert.x for Java 21.
 
-1. **A declarative HTTP pipeline** — define handlers as typed transformation chains with automatic JSON serialization, error propagation via a Result monad, and clean separation of blocking and non-blocking operations.
-2. **A test layer that removes Vert.x entirely** — the same route definitions run against an in-memory stub router, so you can unit test your handlers instantly without starting a server.
+## Why Luxis?
+
+Fast feedback with high coverage — a combination that traditional testing strategies struggle to deliver.
+
+Unit tests are fast but test components in isolation, offering low coverage of real behaviour. End-to-end tests give you near-full coverage but are slow to set up and slow to run. You're always trading speed for confidence.
+
+Luxis eliminates that trade-off in two ways:
+
+1. **In-memory test layer** — Your application logic runs without any IO, network stack, or web server. The same route definitions you register in production plug straight into an in-memory stub router, giving you near-full coverage at unit-test speed. When you're ready to test against the real stack, swap in the real implementation with zero code changes to your tests.
+
+2. **Compiler-enforced concurrency** — The functional pipeline API forces you to declare whether each step is non-blocking, blocking, or async. Run the wrong kind of work on the wrong thread and the code won't compile. Concurrency bugs that would otherwise surface as confusing, hard-to-diagnose production errors become compiler-level feedback — the fastest feedback loop there is.
+
 
 ## Usage
 
 ### Getting Started
 
-Define your request, response, and state as plain Java classes:
-
-```java
-public class HelloWorldRequest {
-}
-
-public class HelloWorldResponse {
-    public String response = "hello World";
-}
-
-public class HelloWorldState {
-}
-```
 
 Create a handler by extending `VertxJsonRoute`:
 
 ```java
-public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWorldResponse, HelloWorldState> {
+public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWorldResponse, AppState> {
 
     @Override
-    public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, HelloWorldState> e) {
+    public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, AppState> e) {
         return e.complete(ctx -> HttpResult.success(new HelloWorldResponse()));
     }
 }
@@ -38,15 +35,11 @@ public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWo
 Start the server and register your routes:
 
 ```java
-public class Main {
-    public static void main(String[] args) {
         WebServer.start(routesRegister -> {
             AppState appState = new AppState();
             routesRegister.jsonRoute("/hello/world", Method.POST, appState.helloWorldState, new HelloWorldHandler());
             return appState;
         });
-    }
-}
 ```
 
 ### Handler Pipeline
