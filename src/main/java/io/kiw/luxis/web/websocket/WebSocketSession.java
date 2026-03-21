@@ -8,7 +8,7 @@ public class WebSocketSession<OUT> {
     private final WebSocketConnection connection;
     private final ObjectMapper objectMapper;
 
-    public WebSocketSession(WebSocketConnection connection, ObjectMapper objectMapper) {
+    public WebSocketSession(final WebSocketConnection connection, final ObjectMapper objectMapper) {
         this.connection = connection;
         this.objectMapper = objectMapper;
     }
@@ -17,10 +17,10 @@ public class WebSocketSession<OUT> {
         return connection;
     }
 
-    public void send(OUT message) {
+    public void send(final OUT message) {
         try {
             connection.sendText(objectMapper.writeValueAsString(message));
-        } catch (JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }

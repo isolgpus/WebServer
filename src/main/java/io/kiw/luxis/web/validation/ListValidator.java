@@ -8,7 +8,7 @@ public class ListValidator<P, E> {
     private final List<E> list;
     private final Validator<P> parent;
 
-    ListValidator(String fieldName, List<E> list, Validator<P> parent) {
+    ListValidator(final String fieldName, final List<E> list, final Validator<P> parent) {
         this.fieldName = fieldName;
         this.list = list;
         this.parent = parent;
@@ -19,25 +19,25 @@ public class ListValidator<P, E> {
         return this;
     }
 
-    public ListValidator<P, E> minSize(int min) {
+    public ListValidator<P, E> minSize(final int min) {
         if (list != null && list.size() < min) {
             parent.addError(fieldName, "must have at least " + min + " items");
         }
         return this;
     }
 
-    public ListValidator<P, E> maxSize(int max) {
+    public ListValidator<P, E> maxSize(final int max) {
         if (list != null && list.size() > max) {
             parent.addError(fieldName, "must have at most " + max + " items");
         }
         return this;
     }
 
-    public Validator<P> each(Consumer<Validator<E>> block) {
+    public Validator<P> each(final Consumer<Validator<E>> block) {
         if (list != null) {
             for (int i = 0; i < list.size(); i++) {
-                String elementPrefix = fieldName + "[" + i + "].";
-                Validator<E> ev = new Validator<>(list.get(i), parent.http, elementPrefix);
+                final String elementPrefix = fieldName + "[" + i + "].";
+                final Validator<E> ev = new Validator<>(list.get(i), parent.http, elementPrefix);
                 block.accept(ev);
                 parent.errors.putAll(ev.errors);
             }

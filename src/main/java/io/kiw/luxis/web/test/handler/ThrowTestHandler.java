@@ -10,7 +10,7 @@ import java.util.concurrent.CompletableFuture;
 
 public class ThrowTestHandler extends VertxJsonRoute<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
-    public RequestPipeline<ThrowResponse> handle(HttpStream<ThrowRequest, MyApplicationState> e) {
+    public RequestPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
         return e.map(ctx -> ctx.in().where).map(ctx -> {
             if ("map".equals(ctx.in())) {
                 throw new RuntimeException("app error in map");

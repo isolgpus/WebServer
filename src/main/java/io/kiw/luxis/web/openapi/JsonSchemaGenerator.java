@@ -15,18 +15,18 @@ import java.util.Map;
 public class JsonSchemaGenerator {
     private final ObjectMapper objectMapper;
 
-    public JsonSchemaGenerator(ObjectMapper objectMapper) {
+    public JsonSchemaGenerator(final ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
     }
 
-    public ObjectNode generateSchema(Type type) {
+    public ObjectNode generateSchema(final Type type) {
         if (type == null || type == Void.class || type == void.class) {
             return null;
         }
         return generateSchemaForType(type);
     }
 
-    private ObjectNode generateSchemaForType(Type type) {
+    private ObjectNode generateSchemaForType(final Type type) {
         if (type instanceof Class<?> cls) {
             return generateSchemaForClass(cls);
         } else if (type instanceof ParameterizedType pt) {
@@ -35,7 +35,7 @@ public class JsonSchemaGenerator {
         return objectMapper.createObjectNode().put("type", "object");
     }
 
-    private ObjectNode generateSchemaForClass(Class<?> cls) {
+    private ObjectNode generateSchemaForClass(final Class<?> cls) {
         if (cls == int.class || cls == Integer.class) {
             return objectMapper.createObjectNode().put("type", "integer");
         }
@@ -55,12 +55,12 @@ public class JsonSchemaGenerator {
             return objectMapper.createObjectNode().put("type", "string");
         }
 
-        ObjectNode schema = objectMapper.createObjectNode();
+        final ObjectNode schema = objectMapper.createObjectNode();
         schema.put("type", "object");
-        ObjectNode properties = schema.putObject("properties");
-        ArrayNode required = objectMapper.createArrayNode();
+        final ObjectNode properties = schema.putObject("properties");
+        final ArrayNode required = objectMapper.createArrayNode();
 
-        for (Field field : cls.getFields()) {
+        for (final Field field : cls.getFields()) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
@@ -75,15 +75,15 @@ public class JsonSchemaGenerator {
         return schema;
     }
 
-    private ObjectNode generateSchemaForParameterized(ParameterizedType pt) {
-        Class<?> raw = (Class<?>) pt.getRawType();
+    private ObjectNode generateSchemaForParameterized(final ParameterizedType pt) {
+        final Class<?> raw = (Class<?>) pt.getRawType();
         if (List.class.isAssignableFrom(raw) || Collection.class.isAssignableFrom(raw)) {
-            ObjectNode schema = objectMapper.createObjectNode().put("type", "array");
+            final ObjectNode schema = objectMapper.createObjectNode().put("type", "array");
             schema.set("items", generateSchemaForType(pt.getActualTypeArguments()[0]));
             return schema;
         }
         if (Map.class.isAssignableFrom(raw)) {
-            ObjectNode schema = objectMapper.createObjectNode().put("type", "object");
+            final ObjectNode schema = objectMapper.createObjectNode().put("type", "object");
             schema.set("additionalProperties", generateSchemaForType(pt.getActualTypeArguments()[1]));
             return schema;
         }

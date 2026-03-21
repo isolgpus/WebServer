@@ -10,7 +10,7 @@ import static io.kiw.luxis.web.http.HttpResult.success;
 public class ValidationTestHandler extends VertxJsonRoute<ValidationRequest, ValidationResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<ValidationResponse> handle(HttpStream<ValidationRequest, MyApplicationState> httpStream) {
+    public RequestPipeline<ValidationResponse> handle(final HttpStream<ValidationRequest, MyApplicationState> httpStream) {
         return httpStream
             .validate(v -> {
                 v.jsonField("name", r -> r.name).required().minLength(2);

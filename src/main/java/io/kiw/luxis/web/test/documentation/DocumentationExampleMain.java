@@ -4,11 +4,11 @@ import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.http.Method;
 
 public class DocumentationExampleMain {
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
 
         Luxis.start(
                 routesRegister -> {
-                AppState appState = new AppState();
+                final AppState appState = new AppState();
 
                 routesRegister.jsonRoute("/hello/world", Method.POST, appState, new HelloWorldHandler());
                 return appState;

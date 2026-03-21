@@ -43,7 +43,7 @@ public abstract class RouterWrapper {
 
     public <T> void handle(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
         final HttpContext httpContext = new HttpContext(vertxContext);
-        Result<HttpErrorResponse, T> result;
+        final Result<HttpErrorResponse, T> result;
         try {
             result = applicationInstruction.handle(vertxContext.get("state"), httpContext, applicationState);
         } catch (final Exception e) {
@@ -56,7 +56,7 @@ public abstract class RouterWrapper {
 
     <T> void handleAsync(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
         final HttpContext httpContext = new HttpContext(vertxContext);
-        CompletableFuture<Result<HttpErrorResponse, T>> future;
+        final CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
             future = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState);
         } catch (final Exception e) {

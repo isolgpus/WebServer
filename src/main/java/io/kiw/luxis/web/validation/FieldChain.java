@@ -7,7 +7,7 @@ public class FieldChain {
     private final Object value;
     private final Validator<?> parent;
 
-    FieldChain(String fieldName, Object value, Validator<?> parent) {
+    FieldChain(final String fieldName, final Object value, final Validator<?> parent) {
         this.fieldName = fieldName;
         this.value = value;
         this.parent = parent;
@@ -20,14 +20,14 @@ public class FieldChain {
         return this;
     }
 
-    public FieldChain minLength(int min) {
+    public FieldChain minLength(final int min) {
         if (value instanceof String s && s.length() < min) {
             parent.addError(fieldName, "must be at least " + min + " characters");
         }
         return this;
     }
 
-    public FieldChain maxLength(int max) {
+    public FieldChain maxLength(final int max) {
         if (value instanceof String s && s.length() > max) {
             parent.addError(fieldName, "must be at most " + max + " characters");
         }
@@ -41,21 +41,21 @@ public class FieldChain {
         return this;
     }
 
-    public FieldChain matches(String regex) {
+    public FieldChain matches(final String regex) {
         if (value instanceof String s && !s.matches(regex)) {
             parent.addError(fieldName, "must match pattern: " + regex);
         }
         return this;
     }
 
-    public FieldChain min(double min) {
+    public FieldChain min(final double min) {
         if (value instanceof Number n && n.doubleValue() < min) {
             parent.addError(fieldName, "must be at least " + min);
         }
         return this;
     }
 
-    public FieldChain max(double max) {
+    public FieldChain max(final double max) {
         if (value instanceof Number n && n.doubleValue() > max) {
             parent.addError(fieldName, "must be at most " + max);
         }
@@ -63,7 +63,7 @@ public class FieldChain {
     }
 
     @SuppressWarnings("unchecked")
-    public <V> FieldChain validate(Predicate<V> predicate, String message) {
+    public <V> FieldChain validate(final Predicate<V> predicate, final String message) {
         if (value != null && !predicate.test((V) value)) {
             parent.addError(fieldName, message);
         }

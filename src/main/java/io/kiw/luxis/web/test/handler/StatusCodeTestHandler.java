@@ -10,7 +10,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 public class StatusCodeTestHandler extends VertxJsonRoute<StatusCodeRequest, HttpSuccessResponse<StatusCodeResponse>, MyApplicationState> {
 
     @Override
-    public RequestPipeline<HttpSuccessResponse<StatusCodeResponse>> handle(HttpStream<StatusCodeRequest, MyApplicationState> e) {
+    public RequestPipeline<HttpSuccessResponse<StatusCodeResponse>> handle(final HttpStream<StatusCodeRequest, MyApplicationState> e) {
         return e.complete(ctx ->
             HttpResult.success(new StatusCodeResponse(ctx.in().value), ctx.in().statusCode));
     }

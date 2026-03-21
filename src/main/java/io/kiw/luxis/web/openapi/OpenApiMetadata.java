@@ -12,9 +12,9 @@ public class OpenApiMetadata {
     public final String responseDescription;
     public final boolean hidden;
 
-    OpenApiMetadata(String summary, String description, List<String> tags,
-                    Map<String, String> parameterDescriptions, String responseDescription,
-                    boolean hidden) {
+    OpenApiMetadata(final String summary, final String description, final List<String> tags,
+                    final Map<String, String> parameterDescriptions, final String responseDescription,
+                    final boolean hidden) {
         this.summary = summary;
         this.description = description;
         this.tags = Collections.unmodifiableList(tags);

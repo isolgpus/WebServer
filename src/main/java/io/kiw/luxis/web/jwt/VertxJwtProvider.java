@@ -21,12 +21,12 @@ public class VertxJwtProvider implements JwtProvider {
 
     private final JWTAuth jwtAuth;
 
-    public VertxJwtProvider(Vertx vertx, String secret) {
+    public VertxJwtProvider(final Vertx vertx, final String secret) {
         this(vertx, secret, "HS256");
     }
 
-    public VertxJwtProvider(Vertx vertx, String secret, String algorithm) {
-        JWTAuthOptions config = new JWTAuthOptions()
+    public VertxJwtProvider(final Vertx vertx, final String secret, final String algorithm) {
+        final JWTAuthOptions config = new JWTAuthOptions()
                 .addPubSecKey(new PubSecKeyOptions()
                 .setAlgorithm(algorithm)
                 .setBuffer(secret));
@@ -34,20 +34,20 @@ public class VertxJwtProvider implements JwtProvider {
     }
 
     @Override
-    public String generateToken(Map<String, Object> claims) {
+    public String generateToken(final Map<String, Object> claims) {
         return jwtAuth.generateToken(new JsonObject(claims), new JWTOptions());
     }
 
     @Override
-    public Result<String, JwtClaims> validateToken(String token) {
+    public Result<String, JwtClaims> validateToken(final String token) {
         try {
-            Future<User> future = jwtAuth.authenticate(new TokenCredentials(token));
-            CompletableFuture<User> cf = future.toCompletionStage().toCompletableFuture();
-            User user = cf.get(5, TimeUnit.SECONDS);
+            final Future<User> future = jwtAuth.authenticate(new TokenCredentials(token));
+            final CompletableFuture<User> cf = future.toCompletionStage().toCompletableFuture();
+            final User user = cf.get(5, TimeUnit.SECONDS);
             return Result.success(new JwtClaims(user.principal().getMap()));
-        } catch (ExecutionException e) {
+        } catch (final ExecutionException e) {
             return Result.error("Invalid token");
-        } catch (InterruptedException | TimeoutException e) {
+        } catch (final InterruptedException | TimeoutException e) {
             Thread.currentThread().interrupt();
             return Result.error("Token validation failed");
         }

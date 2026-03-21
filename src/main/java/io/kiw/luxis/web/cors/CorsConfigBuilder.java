@@ -11,32 +11,32 @@ public class CorsConfigBuilder {
     private boolean allowCredentials = false;
     private int maxAgeSeconds = -1;
 
-    public CorsConfigBuilder allowOrigin(String origin) {
+    public CorsConfigBuilder allowOrigin(final String origin) {
         this.allowedOrigins.add(origin);
         return this;
     }
 
-    public CorsConfigBuilder allowMethod(String method) {
+    public CorsConfigBuilder allowMethod(final String method) {
         this.allowedMethods.add(method);
         return this;
     }
 
-    public CorsConfigBuilder allowHeader(String header) {
+    public CorsConfigBuilder allowHeader(final String header) {
         this.allowedHeaders.add(header);
         return this;
     }
 
-    public CorsConfigBuilder exposeHeader(String header) {
+    public CorsConfigBuilder exposeHeader(final String header) {
         this.exposedHeaders.add(header);
         return this;
     }
 
-    public CorsConfigBuilder allowCredentials(boolean allowCredentials) {
+    public CorsConfigBuilder allowCredentials(final boolean allowCredentials) {
         this.allowCredentials = allowCredentials;
         return this;
     }
 
-    public CorsConfigBuilder maxAgeSeconds(int maxAgeSeconds) {
+    public CorsConfigBuilder maxAgeSeconds(final int maxAgeSeconds) {
         this.maxAgeSeconds = maxAgeSeconds;
         return this;
     }

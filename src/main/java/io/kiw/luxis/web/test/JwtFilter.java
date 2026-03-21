@@ -9,12 +9,12 @@ public class JwtFilter implements VertxJsonFilter<MyApplicationState> {
 
     private final JwtProvider jwtProvider;
 
-    public JwtFilter(JwtProvider jwtProvider) {
+    public JwtFilter(final JwtProvider jwtProvider) {
         this.jwtProvider = jwtProvider;
     }
 
     @Override
-    public RequestPipeline<Void> handle(HttpStream<Void, MyApplicationState> e) {
+    public RequestPipeline<Void> handle(final HttpStream<Void, MyApplicationState> e) {
         return e.requireJwt(jwtProvider)
             .complete();
     }

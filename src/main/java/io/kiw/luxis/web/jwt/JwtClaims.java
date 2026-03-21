@@ -9,16 +9,16 @@ public class JwtClaims {
 
     private final Map<String, Object> claims;
 
-    public JwtClaims(Map<String, Object> claims) {
+    public JwtClaims(final Map<String, Object> claims) {
         this.claims = claims;
     }
 
-    public Object getClaim(String key) {
+    public Object getClaim(final String key) {
         return claims.get(key);
     }
 
     public String getSubject() {
-        Object sub = claims.get(SUBJECT_CLAIM);
+        final Object sub = claims.get(SUBJECT_CLAIM);
         return sub != null ? sub.toString() : null;
     }
 

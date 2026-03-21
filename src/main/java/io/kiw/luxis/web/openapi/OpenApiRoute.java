@@ -15,8 +15,8 @@ public class OpenApiRoute extends VertxJsonRoute<Void, ObjectNode, Object> {
     private final String description;
     private volatile ObjectNode cachedSpec;
 
-    public OpenApiRoute(OpenApiCollector collector, ObjectMapper objectMapper,
-                        String title, String version, String description) {
+    public OpenApiRoute(final OpenApiCollector collector, final ObjectMapper objectMapper,
+                        final String title, final String version, final String description) {
         this.collector = collector;
         this.objectMapper = objectMapper;
         this.title = title;
@@ -25,10 +25,10 @@ public class OpenApiRoute extends VertxJsonRoute<Void, ObjectNode, Object> {
     }
 
     @Override
-    public RequestPipeline<ObjectNode> handle(HttpStream<Void, Object> e) {
+    public RequestPipeline<ObjectNode> handle(final HttpStream<Void, Object> e) {
         return e.complete(ctx -> {
             if (cachedSpec == null) {
-                OpenApiSpecGenerator generator = new OpenApiSpecGenerator(collector, objectMapper);
+                final OpenApiSpecGenerator generator = new OpenApiSpecGenerator(collector, objectMapper);
                 generator.title(title).version(version).description(description);
                 cachedSpec = generator.generate();
             }

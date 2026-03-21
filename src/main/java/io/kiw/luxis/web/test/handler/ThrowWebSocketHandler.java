@@ -11,7 +11,7 @@ import java.util.concurrent.CompletableFuture;
 public class ThrowWebSocketHandler extends WebSocketRoute<WebSocketThrowRequest, WebSocketEchoResponse, MyApplicationState> {
 
     @Override
-    public WebSocketPipeline<WebSocketEchoResponse> onMessage(WebSocketStream<WebSocketThrowRequest, MyApplicationState> stream) {
+    public WebSocketPipeline<WebSocketEchoResponse> onMessage(final WebSocketStream<WebSocketThrowRequest, MyApplicationState> stream) {
         return stream
             .map(ctx -> ctx.in().where)
             .map(ctx -> {

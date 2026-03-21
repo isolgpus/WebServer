@@ -7,7 +7,7 @@ public class MyApplicationState {
         return longValue;
     }
 
-    public void setLongValue(int newLongValue) {
+    public void setLongValue(final int newLongValue) {
         this.longValue = newLongValue;
     }
 }

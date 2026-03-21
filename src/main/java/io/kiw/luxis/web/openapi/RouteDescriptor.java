@@ -14,9 +14,9 @@ public class RouteDescriptor {
     public final RouteKind kind;
     public final OpenApiMetadata metadata;
 
-    public RouteDescriptor(String path, Method method, Type inputType, Type outputType,
-                           String consumes, String produces, RouteKind kind,
-                           OpenApiMetadata metadata) {
+    public RouteDescriptor(final String path, final Method method, final Type inputType, final Type outputType,
+                           final String consumes, final String produces, final RouteKind kind,
+                           final OpenApiMetadata metadata) {
         this.path = path;
         this.method = method;
         this.inputType = inputType;

@@ -53,6 +53,12 @@
             <property name="allowSingleLineStatement" value="true"/>
         </module>
 
+        <!-- Final keyword -->
+        <module name="FinalLocalVariable">
+            <property name="validateEnhancedForLoopVariable" value="true"/>
+        </module>
+        <module name="FinalParameters"/>
+
         <!-- Coding -->
         <module name="OneStatementPerLine"/>
         <module name="MultipleVariableDeclarations"/>

@@ -13,7 +13,7 @@ import java.util.concurrent.locks.LockSupport;
 
 public class TimeoutTestHandler extends VertxJsonRoute<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
-    public RequestPipeline<ThrowResponse> handle(HttpStream<ThrowRequest, MyApplicationState> e) {
+    public RequestPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
         return e
             .blockingMap(ctx -> {
                 LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(5));

@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 
 public class FileUploaderHandler extends VertxFileUploadRoute<FileUploadResponse, MyApplicationState> {
     @Override
-    public RequestPipeline<FileUploadResponse> handle(HttpStream<Map<String, HttpBuffer>, MyApplicationState> e) {
+    public RequestPipeline<FileUploadResponse> handle(final HttpStream<Map<String, HttpBuffer>, MyApplicationState> e) {
         return e.complete(ctx -> {
             final Map<String, Integer> results = ctx.in().entrySet().stream().collect(Collectors.toMap(
                     Map.Entry::getKey,

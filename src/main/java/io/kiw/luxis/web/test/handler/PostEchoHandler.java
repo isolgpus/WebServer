@@ -10,7 +10,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<EchoResponse> handle(HttpStream<EchoRequest, MyApplicationState> e) {
+    public RequestPipeline<EchoResponse> handle(final HttpStream<EchoRequest, MyApplicationState> e) {
         return e.complete(ctx -> {
             if (ctx.in().responseHeaderExample != null) {
                 ctx.http().addResponseHeader("responseHeaderExample", ctx.in().responseHeaderExample);

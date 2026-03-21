@@ -11,8 +11,8 @@ public class CorsConfig {
     final boolean allowCredentials;
     final int maxAgeSeconds;
 
-    CorsConfig(Set<String> allowedOrigins, Set<String> allowedMethods, Set<String> allowedHeaders,
-               Set<String> exposedHeaders, boolean allowCredentials, int maxAgeSeconds) {
+    CorsConfig(final Set<String> allowedOrigins, final Set<String> allowedMethods, final Set<String> allowedHeaders,
+               final Set<String> exposedHeaders, final boolean allowCredentials, final int maxAgeSeconds) {
         this.allowedOrigins = Collections.unmodifiableSet(allowedOrigins);
         this.allowedMethods = Collections.unmodifiableSet(allowedMethods);
         this.allowedHeaders = Collections.unmodifiableSet(allowedHeaders);

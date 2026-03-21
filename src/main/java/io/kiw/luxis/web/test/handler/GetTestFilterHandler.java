@@ -10,7 +10,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 public class GetTestFilterHandler extends VertxJsonRoute<EmptyRequest, TestFilterResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<TestFilterResponse> handle(HttpStream<EmptyRequest, MyApplicationState> e) {
+    public RequestPipeline<TestFilterResponse> handle(final HttpStream<EmptyRequest, MyApplicationState> e) {
         return e.complete(ctx ->
             HttpResult.success(new TestFilterResponse("hit handler")));
     }

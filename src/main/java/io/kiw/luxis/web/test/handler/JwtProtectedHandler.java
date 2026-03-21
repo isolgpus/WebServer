@@ -17,7 +17,7 @@ public class JwtProtectedHandler extends VertxJsonRoute<EmptyRequest, SubjectRes
     }
 
     @Override
-    public RequestPipeline<SubjectResponse> handle(HttpStream<EmptyRequest, MyApplicationState> stream) {
+    public RequestPipeline<SubjectResponse> handle(final HttpStream<EmptyRequest, MyApplicationState> stream) {
         return stream
             .requireJwt(jwtProvider)
             .complete(ctx ->

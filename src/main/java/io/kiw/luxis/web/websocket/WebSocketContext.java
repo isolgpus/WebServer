@@ -5,7 +5,7 @@ public class WebSocketContext<IN, APP> {
     private final WebSocketConnection connection;
     private final APP app;
 
-    public WebSocketContext(IN in, WebSocketConnection connection, APP app) {
+    public WebSocketContext(final IN in, final WebSocketConnection connection, final APP app) {
         this.in = in;
         this.connection = connection;
         this.app = app;

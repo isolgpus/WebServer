@@ -20,56 +20,56 @@ public class Validator<T> {
     private final String prefix;
     final Map<String, List<String>> errors = new LinkedHashMap<>();
 
-    public Validator(T value, HttpContext http, String prefix) {
+    public Validator(final T value, final HttpContext http, final String prefix) {
         this.value = value;
         this.http = http;
         this.prefix = prefix;
     }
 
-    public FieldChain jsonField(String field, Function<T, ?> getter) {
+    public FieldChain jsonField(final String field, final Function<T, ?> getter) {
         Object resolved;
         try {
             resolved = getter.apply(value);
-        } catch (NullPointerException e) {
+        } catch (final NullPointerException e) {
             resolved = null;
         }
         return new FieldChain(prefix + field, resolved, this);
     }
 
-    public <N> Validator<T> jsonField(String name, Function<T, N> getter, Consumer<Validator<N>> block) {
+    public <N> Validator<T> jsonField(final String name, final Function<T, N> getter, final Consumer<Validator<N>> block) {
         N nested;
         try {
             nested = getter.apply(value);
-        } catch (NullPointerException e) {
+        } catch (final NullPointerException e) {
             nested = null;
         }
         if (nested != null) {
-            Validator<N> nestedValidator = new Validator<>(nested, http, prefix + name + ".");
+            final Validator<N> nestedValidator = new Validator<>(nested, http, prefix + name + ".");
             block.accept(nestedValidator);
             errors.putAll(nestedValidator.errors);
         }
         return this;
     }
 
-    public <E> ListValidator<T, E> listField(String name, Function<T, List<E>> getter) {
+    public <E> ListValidator<T, E> listField(final String name, final Function<T, List<E>> getter) {
         List<E> list;
         try {
             list = getter.apply(value);
-        } catch (NullPointerException e) {
+        } catch (final NullPointerException e) {
             list = null;
         }
         return new ListValidator<>(prefix + name, list, this);
     }
 
-    public FieldChain queryParam(String name) {
+    public FieldChain queryParam(final String name) {
         return new FieldChain(prefix + name, http.getQueryParam(name), this);
     }
 
-    public FieldChain pathParam(String name) {
+    public FieldChain pathParam(final String name) {
         return new FieldChain(prefix + name, http.getPathParam(name), this);
     }
 
-    void addError(String field, String message) {
+    void addError(final String field, final String message) {
         errors.computeIfAbsent(field, k -> new ArrayList<>()).add(message);
     }
 

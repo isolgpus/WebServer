@@ -9,7 +9,7 @@ public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWo
 
 
     @Override
-    public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, AppState> e) {
+    public RequestPipeline<HelloWorldResponse> handle(final HttpStream<HelloWorldRequest, AppState> e) {
         return e.complete(ctx -> HttpResult.success(new HelloWorldResponse()));
     }
 }

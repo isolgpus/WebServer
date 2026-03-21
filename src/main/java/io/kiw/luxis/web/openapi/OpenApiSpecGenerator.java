@@ -20,49 +20,49 @@ public class OpenApiSpecGenerator {
     private String version = "1.0.0";
     private String description;
 
-    public OpenApiSpecGenerator(OpenApiCollector collector, ObjectMapper objectMapper) {
+    public OpenApiSpecGenerator(final OpenApiCollector collector, final ObjectMapper objectMapper) {
         this.collector = collector;
         this.objectMapper = objectMapper;
         this.schemaGenerator = new JsonSchemaGenerator(objectMapper);
     }
 
-    public OpenApiSpecGenerator title(String title) {
+    public OpenApiSpecGenerator title(final String title) {
         this.title = title;
         return this;
     }
 
-    public OpenApiSpecGenerator version(String version) {
+    public OpenApiSpecGenerator version(final String version) {
         this.version = version;
         return this;
     }
 
-    public OpenApiSpecGenerator description(String description) {
+    public OpenApiSpecGenerator description(final String description) {
         this.description = description;
         return this;
     }
 
     public ObjectNode generate() {
-        ObjectNode root = objectMapper.createObjectNode();
+        final ObjectNode root = objectMapper.createObjectNode();
         root.put("openapi", "3.0.3");
 
-        ObjectNode info = root.putObject("info");
+        final ObjectNode info = root.putObject("info");
         info.put("title", title);
         info.put("version", version);
         if (description != null) {
             info.put("description", description);
         }
 
-        ObjectNode paths = root.putObject("paths");
-        Map<String, Map<String, RouteDescriptor>> groupedByPath = groupRoutes();
+        final ObjectNode paths = root.putObject("paths");
+        final Map<String, Map<String, RouteDescriptor>> groupedByPath = groupRoutes();
 
-        for (var pathEntry : groupedByPath.entrySet()) {
-            String openApiPath = convertPath(pathEntry.getKey());
-            ObjectNode pathItem = paths.putObject(openApiPath);
+        for (final var pathEntry : groupedByPath.entrySet()) {
+            final String openApiPath = convertPath(pathEntry.getKey());
+            final ObjectNode pathItem = paths.putObject(openApiPath);
 
-            for (var methodEntry : pathEntry.getValue().entrySet()) {
-                String httpMethod = methodEntry.getKey().toLowerCase();
-                RouteDescriptor desc = methodEntry.getValue();
-                ObjectNode operation = pathItem.putObject(httpMethod);
+            for (final var methodEntry : pathEntry.getValue().entrySet()) {
+                final String httpMethod = methodEntry.getKey().toLowerCase();
+                final RouteDescriptor desc = methodEntry.getValue();
+                final ObjectNode operation = pathItem.putObject(httpMethod);
                 buildOperation(operation, desc, pathEntry.getKey());
             }
         }
@@ -71,22 +71,22 @@ public class OpenApiSpecGenerator {
     }
 
     private Map<String, Map<String, RouteDescriptor>> groupRoutes() {
-        Map<String, Map<String, RouteDescriptor>> grouped = new LinkedHashMap<>();
-        for (RouteDescriptor route : collector.getRoutes()) {
+        final Map<String, Map<String, RouteDescriptor>> grouped = new LinkedHashMap<>();
+        for (final RouteDescriptor route : collector.getRoutes()) {
             if (route.metadata != null && route.metadata.hidden) {
                 continue;
             }
             if (route.kind == RouteDescriptor.RouteKind.FILTER) {
                 continue;
             }
-            String methodName = route.method != null ? route.method.name() : "GET";
+            final String methodName = route.method != null ? route.method.name() : "GET";
             grouped.computeIfAbsent(route.path, k -> new LinkedHashMap<>())
                     .put(methodName, route);
         }
         return grouped;
     }
 
-    private void buildOperation(ObjectNode operation, RouteDescriptor desc, String rawPath) {
+    private void buildOperation(final ObjectNode operation, final RouteDescriptor desc, final String rawPath) {
         if (desc.metadata != null) {
             if (desc.metadata.summary != null) {
                 operation.put("summary", desc.metadata.summary);
@@ -95,48 +95,48 @@ public class OpenApiSpecGenerator {
                 operation.put("description", desc.metadata.description);
             }
             if (!desc.metadata.tags.isEmpty()) {
-                ArrayNode tags = operation.putArray("tags");
+                final ArrayNode tags = operation.putArray("tags");
                 desc.metadata.tags.forEach(tags::add);
             }
         }
 
         operation.put("operationId", generateOperationId(desc.method, rawPath));
 
-        ArrayNode parameters = buildPathParameters(rawPath, desc.metadata);
+        final ArrayNode parameters = buildPathParameters(rawPath, desc.metadata);
         if (parameters.size() > 0) {
             operation.set("parameters", parameters);
         }
 
         if (desc.method != null && desc.method.canHaveABody() && desc.inputType != null) {
-            ObjectNode requestBody = operation.putObject("requestBody");
+            final ObjectNode requestBody = operation.putObject("requestBody");
             requestBody.put("required", true);
-            ObjectNode content = requestBody.putObject("content");
-            ObjectNode mediaType = content.putObject(desc.consumes);
-            ObjectNode schema = schemaGenerator.generateSchema(desc.inputType);
+            final ObjectNode content = requestBody.putObject("content");
+            final ObjectNode mediaType = content.putObject(desc.consumes);
+            final ObjectNode schema = schemaGenerator.generateSchema(desc.inputType);
             if (schema != null) {
                 mediaType.set("schema", schema);
             }
         } else if (desc.kind == RouteDescriptor.RouteKind.UPLOAD) {
-            ObjectNode requestBody = operation.putObject("requestBody");
+            final ObjectNode requestBody = operation.putObject("requestBody");
             requestBody.put("required", true);
-            ObjectNode content = requestBody.putObject("content");
-            ObjectNode mediaType = content.putObject("multipart/form-data");
-            ObjectNode schema = objectMapper.createObjectNode().put("type", "object");
+            final ObjectNode content = requestBody.putObject("content");
+            final ObjectNode mediaType = content.putObject("multipart/form-data");
+            final ObjectNode schema = objectMapper.createObjectNode().put("type", "object");
             schema.putObject("additionalProperties").put("type", "string").put("format", "binary");
             mediaType.set("schema", schema);
         }
 
-        ObjectNode responses = operation.putObject("responses");
-        ObjectNode successResponse = responses.putObject("200");
-        String responseDesc = (desc.metadata != null && desc.metadata.responseDescription != null)
+        final ObjectNode responses = operation.putObject("responses");
+        final ObjectNode successResponse = responses.putObject("200");
+        final String responseDesc = (desc.metadata != null && desc.metadata.responseDescription != null)
                 ? desc.metadata.responseDescription : "Successful response";
         successResponse.put("description", responseDesc);
 
         if (desc.outputType != null && desc.outputType != Void.class) {
-            ObjectNode respContent = successResponse.putObject("content");
+            final ObjectNode respContent = successResponse.putObject("content");
             if (desc.produces != null) {
-                ObjectNode respMediaType = respContent.putObject(desc.produces);
-                ObjectNode schema = schemaGenerator.generateSchema(desc.outputType);
+                final ObjectNode respMediaType = respContent.putObject(desc.produces);
+                final ObjectNode schema = schemaGenerator.generateSchema(desc.outputType);
                 if (schema != null) {
                     respMediaType.set("schema", schema);
                 }
@@ -145,24 +145,24 @@ public class OpenApiSpecGenerator {
         }
     }
 
-    private String convertPath(String path) {
+    private String convertPath(final String path) {
         return PATH_PARAM_PATTERN.matcher(path).replaceAll("{$1}");
     }
 
-    private String generateOperationId(Method method, String rawPath) {
-        String methodStr = method != null ? method.name().toLowerCase() : "get";
-        String pathPart = rawPath.replaceAll("[/:{}]", "_")
+    private String generateOperationId(final Method method, final String rawPath) {
+        final String methodStr = method != null ? method.name().toLowerCase() : "get";
+        final String pathPart = rawPath.replaceAll("[/:{}]", "_")
                 .replaceAll("_+", "_")
                 .replaceAll("^_|_$", "");
         return methodStr + "_" + pathPart;
     }
 
-    private ArrayNode buildPathParameters(String path, OpenApiMetadata metadata) {
-        ArrayNode params = objectMapper.createArrayNode();
-        Matcher m = PATH_PARAM_PATTERN.matcher(path);
+    private ArrayNode buildPathParameters(final String path, final OpenApiMetadata metadata) {
+        final ArrayNode params = objectMapper.createArrayNode();
+        final Matcher m = PATH_PARAM_PATTERN.matcher(path);
         while (m.find()) {
-            String paramName = m.group(1);
-            ObjectNode param = objectMapper.createObjectNode();
+            final String paramName = m.group(1);
+            final ObjectNode param = objectMapper.createObjectNode();
             param.put("name", paramName);
             param.put("in", "path");
             param.put("required", true);

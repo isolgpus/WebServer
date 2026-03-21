@@ -17,31 +17,31 @@ public class OpenApiMetadataBuilder {
     private String responseDescription;
     private boolean hidden = false;
 
-    public OpenApiMetadataBuilder(RouteConfigBuilder parent) {
+    public OpenApiMetadataBuilder(final RouteConfigBuilder parent) {
         this.parent = parent;
     }
 
-    public OpenApiMetadataBuilder summary(String summary) {
+    public OpenApiMetadataBuilder summary(final String summary) {
         this.summary = summary;
         return this;
     }
 
-    public OpenApiMetadataBuilder description(String description) {
+    public OpenApiMetadataBuilder description(final String description) {
         this.description = description;
         return this;
     }
 
-    public OpenApiMetadataBuilder tag(String tag) {
+    public OpenApiMetadataBuilder tag(final String tag) {
         this.tags.add(tag);
         return this;
     }
 
-    public OpenApiMetadataBuilder paramDescription(String param, String description) {
+    public OpenApiMetadataBuilder paramDescription(final String param, final String description) {
         this.parameterDescriptions.put(param, description);
         return this;
     }
 
-    public OpenApiMetadataBuilder responseDescription(String description) {
+    public OpenApiMetadataBuilder responseDescription(final String description) {
         this.responseDescription = description;
         return this;
     }

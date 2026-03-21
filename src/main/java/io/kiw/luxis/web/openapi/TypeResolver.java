@@ -5,14 +5,14 @@ import java.lang.reflect.Type;
 
 public class TypeResolver {
 
-    public static Type[] resolveTypeArguments(Class<?> concreteClass, Class<?> targetSuperclass) {
+    public static Type[] resolveTypeArguments(final Class<?> concreteClass, final Class<?> targetSuperclass) {
         if (targetSuperclass.isInterface()) {
             return resolveFromInterfaces(concreteClass, targetSuperclass);
         }
         return resolveFromSuperclass(concreteClass, targetSuperclass);
     }
 
-    private static Type[] resolveFromSuperclass(Class<?> concreteClass, Class<?> targetSuperclass) {
+    private static Type[] resolveFromSuperclass(final Class<?> concreteClass, final Class<?> targetSuperclass) {
         Type type = concreteClass.getGenericSuperclass();
         while (type != null) {
             if (type instanceof ParameterizedType pt) {
@@ -29,13 +29,13 @@ public class TypeResolver {
         return null;
     }
 
-    private static Type[] resolveFromInterfaces(Class<?> concreteClass, Class<?> targetInterface) {
-        for (Type iface : concreteClass.getGenericInterfaces()) {
+    private static Type[] resolveFromInterfaces(final Class<?> concreteClass, final Class<?> targetInterface) {
+        for (final Type iface : concreteClass.getGenericInterfaces()) {
             if (iface instanceof ParameterizedType pt && pt.getRawType() == targetInterface) {
                 return pt.getActualTypeArguments();
             }
         }
-        Class<?> superclass = concreteClass.getSuperclass();
+        final Class<?> superclass = concreteClass.getSuperclass();
         if (superclass != null && superclass != Object.class) {
             return resolveFromInterfaces(superclass, targetInterface);
         }

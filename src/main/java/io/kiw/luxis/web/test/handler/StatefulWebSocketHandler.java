@@ -9,12 +9,12 @@ import io.kiw.luxis.web.websocket.WebSocketSession;
 public class StatefulWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, WebSocketEchoResponse, MyApplicationState> {
 
     @Override
-    public void onOpen(WebSocketSession<WebSocketEchoResponse> session, MyApplicationState appState) {
+    public void onOpen(final WebSocketSession<WebSocketEchoResponse> session, final MyApplicationState appState) {
         session.send(new WebSocketEchoResponse("connected"));
     }
 
     @Override
-    public WebSocketPipeline<WebSocketEchoResponse> onMessage(WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline<WebSocketEchoResponse> onMessage(final WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
         return stream
             .map(ctx -> {
                 return new WebSocketEchoResponse(ctx.in().message);
@@ -23,6 +23,6 @@ public class StatefulWebSocketHandler extends WebSocketRoute<WebSocketEchoReques
     }
 
     @Override
-    public void onClose(WebSocketSession<WebSocketEchoResponse> session, MyApplicationState appState) {
+    public void onClose(final WebSocketSession<WebSocketEchoResponse> session, final MyApplicationState appState) {
     }
 }
