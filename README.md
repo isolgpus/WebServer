@@ -1,4 +1,4 @@
-# WebServer
+# Luxis
 
 A type-safe, functional web framework built on Vert.x. It provides two things:
 
@@ -332,7 +332,7 @@ String json = json()
 // {"intExample":17,"stringExample":"hiya","optionalField":null}
 ```
 
-Import it with `import static io.kiw.web.test.TestHelper.json;`.
+Import it with `import static io.kiw.luxis.web.test.TestHelper.json;`.
 
 ### Asserting Responses
 

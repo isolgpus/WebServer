@@ -1,0 +1,32 @@
+package io.kiw.luxis.web.websocket;
+
+import io.kiw.luxis.web.http.*;
+import io.kiw.luxis.web.pipeline.*;
+import io.kiw.luxis.web.internal.*;
+
+import io.kiw.luxis.result.Result;
+
+public abstract class WebSocketResult<S> {
+
+    public static <S> Result<ErrorMessageResponse, S> from(Result<String, S> result) {
+        return result.fold(
+            e -> Result.error(new ErrorMessageResponse(e)),
+            Result::success);
+    }
+
+    public static <S> Result<ErrorMessageResponse, S> error(ErrorMessageResponse messageResponse) {
+        return Result.error(messageResponse);
+    }
+
+    public static <S> Result<ErrorMessageResponse, S> error(String message) {
+        return Result.error(new ErrorMessageResponse(message));
+    }
+
+    public static <S> Result<ErrorMessageResponse, S> success(S response) {
+        return Result.success(response);
+    }
+
+    public static <S> Result<ErrorMessageResponse, S> success() {
+        return Result.success(null);
+    }
+}

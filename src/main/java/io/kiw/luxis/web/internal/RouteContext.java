@@ -1,0 +1,31 @@
+package io.kiw.luxis.web.internal;
+
+import io.kiw.luxis.web.pipeline.*;
+import io.kiw.luxis.web.handler.*;
+import io.kiw.luxis.web.http.*;
+import io.kiw.luxis.web.validation.*;
+import io.kiw.luxis.web.websocket.*;
+
+public class RouteContext<IN, APP> {
+    private final IN in;
+    private final HttpContext http;
+    private final APP app;
+
+    public RouteContext(IN in, HttpContext http, APP app) {
+        this.in = in;
+        this.http = http;
+        this.app = app;
+    }
+
+    public IN in() {
+        return in;
+    }
+
+    public HttpContext http() {
+        return http;
+    }
+
+    public APP app() {
+        return app;
+    }
+}

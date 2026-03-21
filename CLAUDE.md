@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Type-safe, functional web framework built on Vert.x (Java 21). Provides declarative HTTP pipelines with automatic JSON serialization, a Result monad for error handling, and an in-memory test layer that removes Vert.x entirely from unit tests.
+Luxis — a type-safe, functional web framework built on Vert.x (Java 21). Provides declarative HTTP pipelines with automatic JSON serialization, a Result monad for error handling, and an in-memory test layer that removes Vert.x entirely from unit tests.
 
 ## Build & Test Commands
 
@@ -17,10 +17,10 @@ CI runs `mvn test` on PRs to `master` using JDK 21 (Temurin).
 
 ## Project Structure
 
-- `src/main/java/io/kiw/result/` - Generic Result monad
-- `src/main/java/io/kiw/web/` - Server entry point, config, route registration
-- `src/main/java/io/kiw/web/infrastructure/` - Core framework: pipelines, handlers, filters, JWT, mappers
-- `src/main/java/io/kiw/web/test/` - In-memory test utilities (StubRouter, TestApplicationClient)
+- `src/main/java/io/kiw/luxis/result/` - Generic Result monad
+- `src/main/java/io/kiw/luxis/web/` - Server entry point, config, route registration
+- `src/main/java/io/kiw/luxis/web/internal/` - Core framework: pipelines, handlers, filters, JWT, mappers
+- `src/main/java/io/kiw/luxis/web/test/` - In-memory test utilities (StubRouter, TestApplicationClient)
 - `src/test/java/` - Unit tests
 
 ## Code Style
