@@ -91,30 +91,30 @@ public abstract class RouterWrapper {
     @SuppressWarnings("IllegalCatch")
     private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Ender ender) {
         result.consume(httpErrorResponse -> {
-            try {
-                vertxContext.setStatusCode(httpErrorResponse.statusCode);
-                vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue));
-            } catch (final JsonProcessingException e) {
-                handleException(vertxContext, e);
-            }
-        },
-                s -> {
-                if (applicationInstruction.lastStep) {
                     try {
-                        Object value = s;
-                        if (s instanceof HttpSuccessResponse<?> successResponse) {
-                            vertxContext.setStatusCode(successResponse.statusCode);
-                            value = successResponse.value;
-                        }
-                        ender.end(vertxContext, value);
-                    } catch (final RuntimeException e) {
+                        vertxContext.setStatusCode(httpErrorResponse.statusCode);
+                        vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue));
+                    } catch (final JsonProcessingException e) {
                         handleException(vertxContext, e);
                     }
-                } else {
-                    vertxContext.put("state", s);
-                    vertxContext.next();
-                }
-            });
+                },
+                s -> {
+                    if (applicationInstruction.lastStep) {
+                        try {
+                            Object value = s;
+                            if (s instanceof HttpSuccessResponse<?> successResponse) {
+                                vertxContext.setStatusCode(successResponse.statusCode);
+                                value = successResponse.value;
+                            }
+                            ender.end(vertxContext, value);
+                        } catch (final RuntimeException e) {
+                            handleException(vertxContext, e);
+                        }
+                    } else {
+                        vertxContext.put("state", s);
+                        vertxContext.next();
+                    }
+                });
     }
 
     private void handleException(final RequestContext vertxContext, final Exception e) {
