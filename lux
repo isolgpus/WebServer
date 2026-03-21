@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+    echo "Usage: lux <command>"
+    echo ""
+    echo "Commands:"
+    echo "  commit    Pull with rebase, compile, test, and push"
+    exit 1
+}
+
+cmd_commit() {
+    echo "Pulling with rebase..."
+    git pull --rebase
+
+    echo "Compiling..."
+    mvn clean compile
+
+    echo "Running tests..."
+    mvn test
+
+    echo "Pushing..."
+    git push
+
+    echo "Done."
+}
+
+if [[ $# -lt 1 ]]; then
+    usage
+fi
+
+case "$1" in
+    commit) cmd_commit ;;
+    *) echo "Unknown command: $1"; usage ;;
+esac
