@@ -19,9 +19,6 @@ cmd_commit() {
     echo "Running tests..."
     mvn test
 
-    echo "Pushing..."
-    git push
-
     echo "Done."
 }
 
