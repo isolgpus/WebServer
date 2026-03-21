@@ -11,7 +11,7 @@ import io.vertx.ext.web.Router;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public interface Luxis<APP> {
+public interface Luxis<APP> extends AutoCloseable{
 
 
     public static <APP> Luxis<APP> start(ApplicationRoutesRegister<APP> routesRegisterConsumer) {
@@ -50,5 +50,4 @@ public interface Luxis<APP> {
     }
 
     <IN> void apply(IN immutableState, BiConsumer<IN, APP> applicationStateConsumer);
-    void stop();
 }

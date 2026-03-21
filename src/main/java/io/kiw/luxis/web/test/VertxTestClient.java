@@ -19,10 +19,10 @@ public class VertxTestClient implements TestClient {
     private final HttpClient httpClient;
     private final String host;
     private final int port;
-    private final Runnable onClose;
+    private final AutoCloseable onClose;
     private final long timeoutSeconds;
 
-    public VertxTestClient(String host, int port, Runnable onClose) {
+    public VertxTestClient(String host, int port, AutoCloseable onClose) {
         this.host = host;
         this.port = port;
         this.onClose = onClose;
@@ -198,7 +198,7 @@ public class VertxTestClient implements TestClient {
     }
 
     @Override
-    public void close() {
+    public void close() throws Exception {
         try {
             CompletableFuture<Void> clientClose = new CompletableFuture<>();
             httpClient.close()
@@ -219,6 +219,6 @@ public class VertxTestClient implements TestClient {
             // best effort
         }
 
-        onClose.run();
+        onClose.close();
     }
 }

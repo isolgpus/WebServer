@@ -51,7 +51,7 @@ public class TestApplicationClientCreator {
         if (REAL_MODE.equals(mode)) {
 
             Luxis<MyApplicationState> luxis = Luxis.start(routes, config);
-            return new VertxTestClient("127.0.0.1", 8080, luxis::stop);
+            return new VertxTestClient("127.0.0.1", 8080, luxis);
         }
         else
         {

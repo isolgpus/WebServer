@@ -34,6 +34,6 @@ public class TestLuxis<APP> implements Luxis<APP> {
     }
 
     @Override
-    public void stop() {
+    public void close() {
     }
 }

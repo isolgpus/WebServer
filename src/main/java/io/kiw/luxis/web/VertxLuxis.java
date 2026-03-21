@@ -20,7 +20,7 @@ public class VertxLuxis<APP> implements Luxis<APP> {
     }
 
     @Override
-    public void stop() {
+    public void close() {
         vertx.close().toCompletionStage().toCompletableFuture().join();
     }
 }
