@@ -4,7 +4,7 @@ A type-safe, functional web framework built on Vert.x for Java 21.
 
 ## Why Luxis?
 
-Fast feedback with high coverage — a combination that traditional testing strategies struggle to deliver.
+Build your application with fast feedback with high coverage — a combination that traditional testing strategies struggle to deliver.
 
 Unit tests are fast but test components in isolation, offering low coverage of real behaviour. End-to-end tests give you near-full coverage but are slow to set up and slow to run. You're always trading speed for confidence.
 
@@ -12,7 +12,7 @@ Luxis eliminates that trade-off in two ways:
 
 1. **In-memory test layer** — Your application logic runs without any IO, network stack, or web server. The same route definitions you register in production plug straight into an in-memory stub router, giving you near-full coverage at unit-test speed. When you're ready to test against the real stack, swap in the real implementation with zero code changes to your tests.
 
-2. **Compiler-enforced concurrency** — The functional pipeline API forces you to declare whether each step is non-blocking, blocking, or async. Run the wrong kind of work on the wrong thread and the code won't compile. Concurrency bugs that would otherwise surface as confusing, hard-to-diagnose production errors become compiler-level feedback — the fastest feedback loop there is.
+2. **Compiler-enforced concurrency safety** — The functional pipeline API forces you to declare whether each step is non-blocking, blocking, or async. Run the wrong kind of work on the wrong thread and the code won't compile. Concurrency bugs that would otherwise surface as confusing, hard-to-diagnose production errors become compiler-level feedback — the fastest feedback loop there is.
 
 
 ## Usage
@@ -48,20 +48,20 @@ Handlers are typed transformation chains built by calling methods on `HttpStream
 
 #### Pipeline Methods
 
-| Method | Thread | Context | Returns | Use when you need to… |
-|---|---|---|---|---|
-| `map` | Event loop | `in()`, `http()`, `app()` | Value | Transform a value without error handling |
-| `flatMap` | Event loop | `in()`, `http()`, `app()` | `Result` | Transform a value and potentially short-circuit with an error |
-| `blockingMap` | Worker | `in()`, `http()` | Value | Perform blocking I/O (DB reads, file I/O) |
-| `blockingFlatMap` | Worker | `in()`, `http()` | `Result` | Perform blocking I/O that can fail |
-| `asyncMap` | Event loop | `in()`, `http()`, `app()` | `CompletableFuture<Value>` | Call an async API (Kafka, HTTP client) |
-| `asyncFlatMap` | Event loop | `in()`, `http()`, `app()` | `CompletableFuture<Result>` | Call an async API that can fail |
-| `asyncBlockingMap` | Worker | `in()`, `http()` | `CompletableFuture<Value>` | Blocking setup followed by an async result |
-| `asyncBlockingFlatMap` | Worker | `in()`, `http()` | `CompletableFuture<Result>` | Blocking setup followed by an async result that can fail |
-| `validate` | Event loop | `in()`, `http()` | `Result` | Declaratively validate fields (see [Validation](#validation)) |
-| `requireJwt` | Event loop | `in()`, `http()` | `Result` | Require and validate a JWT Bearer token |
-| `complete` | Event loop | `in()`, `http()`, `app()` | `Result` | **Terminal** — produce the final response |
-| `blockingComplete` | Worker | `in()`, `http()` | `Result` | **Terminal** — produce the final response from a blocking operation |
+| Method | Use when you need to… | Thread | Context |
+|---|---|---|---|
+| `map` | Transform a value without error handling | Event loop | `in()`, `http()`, `app()` |
+| `flatMap` | Transform a value and potentially short-circuit with an error | Event loop | `in()`, `http()`, `app()` |
+| `blockingMap` | Perform synchronous blocking I/O (DB reads, file I/O) | Worker | `in()`, `http()` |
+| `blockingFlatMap` | Perform synchronous blocking I/O that can fail | Worker | `in()`, `http()` |
+| `asyncMap` | Call an async API (Kafka, HTTP client) | Event loop | `in()`, `http()`, `app()` |
+| `asyncFlatMap` | Call an async API that can fail | Event loop | `in()`, `http()`, `app()` |
+| `asyncBlockingMap` | Blocking setup followed by an async result | Worker | `in()`, `http()` |
+| `asyncBlockingFlatMap` | Blocking setup followed by an async result that can fail | Worker | `in()`, `http()` |
+| `validate` | Declaratively validate fields (see [Validation](#validation)) | Event loop | `in()`, `http()` |
+| `requireJwt` | Require and validate a JWT Bearer token | Event loop | `in()`, `http()` |
+| `complete` | **Terminal** — produce the final response | Event loop | `in()`, `http()`, `app()` |
+| `blockingComplete` | **Terminal** — produce the final response from a blocking operation | Worker | `in()`, `http()` |
 
 #### Example
 
