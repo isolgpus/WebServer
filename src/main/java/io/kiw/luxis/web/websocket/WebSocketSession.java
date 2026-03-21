@@ -1,9 +1,5 @@
 package io.kiw.luxis.web.websocket;
 
-import io.kiw.luxis.web.http.*;
-import io.kiw.luxis.web.pipeline.*;
-import io.kiw.luxis.web.internal.*;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 

@@ -1,9 +1,5 @@
 package io.kiw.luxis.web.openapi;
 
-import io.kiw.luxis.web.http.*;
-import io.kiw.luxis.web.handler.*;
-import io.kiw.luxis.web.pipeline.*;
-
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 

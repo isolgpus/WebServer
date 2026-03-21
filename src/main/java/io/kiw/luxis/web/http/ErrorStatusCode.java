@@ -1,8 +1,5 @@
 package io.kiw.luxis.web.http;
 
-import io.kiw.luxis.web.jwt.*;
-import io.kiw.luxis.web.validation.*;
-
 public enum ErrorStatusCode {
     BAD_REQUEST(400),
     UNAUTHORIZED(401),

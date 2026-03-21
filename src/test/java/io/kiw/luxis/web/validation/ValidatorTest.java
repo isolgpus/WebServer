@@ -1,9 +1,8 @@
 package io.kiw.luxis.web.validation;
 
-import io.kiw.luxis.web.http.*;
-import io.kiw.luxis.web.validation.*;
-
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.http.HttpContext;
+import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.test.StubRequestContext;
 import org.junit.Test;
 

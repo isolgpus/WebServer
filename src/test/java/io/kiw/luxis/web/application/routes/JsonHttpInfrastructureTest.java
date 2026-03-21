@@ -1,9 +1,9 @@
 package io.kiw.luxis.web.application.routes;
 
+import io.kiw.luxis.web.http.HttpCookie;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.*;
 import io.kiw.luxis.web.test.handler.*;
-import io.kiw.luxis.web.http.HttpCookie;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -15,7 +15,6 @@ import java.util.Collection;
 
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
 import static io.kiw.luxis.web.test.TestHelper.json;
-import static org.junit.Assert.assertEquals;
 
 @RunWith(Parameterized.class)
 public class JsonHttpInfrastructureTest {

@@ -1,8 +1,7 @@
 package io.kiw.luxis.web.validation;
 
-import io.kiw.luxis.web.http.*;
-
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.http.*;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

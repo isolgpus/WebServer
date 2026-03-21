@@ -1,7 +1,9 @@
 package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.http.Method;
-import io.kiw.luxis.web.test.*;
+import io.kiw.luxis.web.test.StubRequest;
+import io.kiw.luxis.web.test.TestApplicationClient;
+import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.StatusCodeTestHandler;
 import org.junit.After;
 import org.junit.Assert;

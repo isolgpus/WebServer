@@ -1,7 +1,5 @@
 package io.kiw.luxis.web.cors;
 
-import io.kiw.luxis.web.http.*;
-
 import java.util.Collections;
 import java.util.Set;
 

@@ -1,7 +1,5 @@
 package io.kiw.luxis.web.validation;
 
-import io.kiw.luxis.web.http.*;
-
 import java.util.function.Predicate;
 
 public class FieldChain {

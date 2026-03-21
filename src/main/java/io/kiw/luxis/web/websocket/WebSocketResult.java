@@ -1,10 +1,7 @@
 package io.kiw.luxis.web.websocket;
 
-import io.kiw.luxis.web.http.*;
-import io.kiw.luxis.web.pipeline.*;
-import io.kiw.luxis.web.internal.*;
-
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.http.ErrorMessageResponse;
 
 public abstract class WebSocketResult<S> {
 

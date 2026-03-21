@@ -1,16 +1,14 @@
 package io.kiw.luxis.web.jwt;
 
-import io.kiw.luxis.web.http.*;
-
 import io.kiw.luxis.result.Result;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
+import io.vertx.ext.auth.JWTOptions;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.User;
 import io.vertx.ext.auth.authentication.TokenCredentials;
 import io.vertx.ext.auth.jwt.JWTAuth;
-import io.vertx.ext.auth.JWTOptions;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 
 import java.util.Map;

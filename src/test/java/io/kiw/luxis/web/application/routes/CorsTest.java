@@ -1,9 +1,12 @@
 package io.kiw.luxis.web.application.routes;
 
-import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.cors.CorsConfigBuilder;
-import io.kiw.luxis.web.test.*;
+import io.kiw.luxis.web.http.Method;
+import io.kiw.luxis.web.test.StubRequest;
+import io.kiw.luxis.web.test.TestApplicationClient;
+import io.kiw.luxis.web.test.TestFilter;
+import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.GetEchoHandler;
 import io.kiw.luxis.web.test.handler.PostEchoHandler;
 import io.kiw.luxis.web.test.handler.TestFilterHandler;

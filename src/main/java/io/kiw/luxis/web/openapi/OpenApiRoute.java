@@ -2,10 +2,10 @@ package io.kiw.luxis.web.openapi;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import io.kiw.luxis.web.pipeline.HttpStream;
+import io.kiw.luxis.web.handler.VertxJsonRoute;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.RequestPipeline;
-import io.kiw.luxis.web.handler.VertxJsonRoute;
+import io.kiw.luxis.web.pipeline.HttpStream;
 
 public class OpenApiRoute extends VertxJsonRoute<Void, ObjectNode, Object> {
     private final OpenApiCollector collector;

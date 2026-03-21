@@ -1,12 +1,9 @@
 package io.kiw.luxis.web.handler;
 
-import io.kiw.luxis.web.http.*;
-import io.kiw.luxis.web.pipeline.*;
-import io.kiw.luxis.web.websocket.*;
-import io.kiw.luxis.web.internal.*;
-import io.kiw.luxis.web.internal.ender.*;
-
 import com.fasterxml.jackson.core.type.TypeReference;
+import io.kiw.luxis.web.internal.WebSocketPipeline;
+import io.kiw.luxis.web.pipeline.WebSocketStream;
+import io.kiw.luxis.web.websocket.WebSocketSession;
 
 public abstract class WebSocketRoute<IN, OUT, APP> extends TypeReference<IN> {
 

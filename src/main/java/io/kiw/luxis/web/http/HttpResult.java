@@ -1,8 +1,5 @@
 package io.kiw.luxis.web.http;
 
-import io.kiw.luxis.web.jwt.*;
-import io.kiw.luxis.web.validation.*;
-
 import io.kiw.luxis.result.Result;
 
 public abstract class HttpResult<S> {
