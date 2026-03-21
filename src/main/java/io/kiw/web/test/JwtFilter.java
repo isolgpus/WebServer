@@ -1,9 +1,9 @@
 package io.kiw.web.test;
 
-import io.kiw.web.infrastructure.HttpStream;
-import io.kiw.web.infrastructure.RequestPipeline;
-import io.kiw.web.infrastructure.VertxJsonFilter;
-import io.kiw.web.infrastructure.jwt.JwtProvider;
+import io.kiw.web.pipeline.HttpStream;
+import io.kiw.web.internal.RequestPipeline;
+import io.kiw.web.handler.VertxJsonFilter;
+import io.kiw.web.jwt.JwtProvider;
 
 public class JwtFilter implements VertxJsonFilter<MyApplicationState>
 {

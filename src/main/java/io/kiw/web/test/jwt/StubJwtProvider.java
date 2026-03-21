@@ -3,8 +3,8 @@ package io.kiw.web.test.jwt;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kiw.result.Result;
-import io.kiw.web.infrastructure.jwt.JwtClaims;
-import io.kiw.web.infrastructure.jwt.JwtProvider;
+import io.kiw.web.jwt.JwtClaims;
+import io.kiw.web.jwt.JwtProvider;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;

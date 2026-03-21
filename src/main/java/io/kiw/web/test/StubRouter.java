@@ -1,11 +1,21 @@
 package io.kiw.web.test;
 
-import io.kiw.web.infrastructure.RequestPipeline;
-import io.kiw.web.infrastructure.MapInstruction;
-import io.kiw.web.infrastructure.Method;
-import io.kiw.web.infrastructure.RouterWrapper;
-import io.kiw.web.infrastructure.WebSocketRouteHandler;
-import io.kiw.web.infrastructure.cors.CorsConfig;
+import io.kiw.web.pipeline.*;
+import io.kiw.web.handler.*;
+import io.kiw.web.http.*;
+import io.kiw.web.validation.*;
+import io.kiw.web.websocket.*;
+import io.kiw.web.internal.*;
+import io.kiw.web.jwt.*;
+import io.kiw.web.cors.*;
+import io.kiw.web.openapi.*;
+
+import io.kiw.web.internal.RequestPipeline;
+import io.kiw.web.internal.MapInstruction;
+import io.kiw.web.http.Method;
+import io.kiw.web.internal.RouterWrapper;
+import io.kiw.web.internal.WebSocketRouteHandler;
+import io.kiw.web.cors.CorsConfig;
 import io.kiw.web.test.handler.RouteConfig;
 
 import java.util.*;

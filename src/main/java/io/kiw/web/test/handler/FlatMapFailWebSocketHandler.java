@@ -1,10 +1,10 @@
 package io.kiw.web.test.handler;
 
-import io.kiw.web.infrastructure.ErrorMessageResponse;
-import io.kiw.web.infrastructure.WebSocketPipeline;
-import io.kiw.web.infrastructure.WebSocketResult;
-import io.kiw.web.infrastructure.WebSocketRoute;
-import io.kiw.web.infrastructure.WebSocketStream;
+import io.kiw.web.http.ErrorMessageResponse;
+import io.kiw.web.internal.WebSocketPipeline;
+import io.kiw.web.websocket.WebSocketResult;
+import io.kiw.web.handler.WebSocketRoute;
+import io.kiw.web.pipeline.WebSocketStream;
 import io.kiw.web.test.MyApplicationState;
 
 public class FlatMapFailWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, WebSocketEchoResponse, MyApplicationState> {

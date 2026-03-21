@@ -2,7 +2,7 @@ package io.kiw.web.application.routes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.kiw.web.infrastructure.Method;
+import io.kiw.web.http.Method;
 import io.kiw.web.test.*;
 import io.kiw.web.test.handler.GetEchoHandler;
 import io.kiw.web.test.handler.PostEchoHandler;

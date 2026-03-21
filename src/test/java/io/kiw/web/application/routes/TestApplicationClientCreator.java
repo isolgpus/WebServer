@@ -5,8 +5,8 @@ import io.kiw.web.VertxWebServer;
 import io.kiw.web.WebServer;
 import io.kiw.web.WebServerConfig;
 import io.kiw.web.WebServiceConfigBuilder;
-import io.kiw.web.infrastructure.RoutesRegister;
-import io.kiw.web.infrastructure.cors.CorsConfig;
+import io.kiw.web.internal.RoutesRegister;
+import io.kiw.web.cors.CorsConfig;
 import io.kiw.web.test.*;
 import org.junit.Assume;
 
