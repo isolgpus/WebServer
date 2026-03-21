@@ -13,6 +13,8 @@ mvn clean compile # Build without tests
 
 CI runs `mvn test` on PRs to `master` using JDK 21 (Temurin).
 
+> **Cloud mode:** Do NOT run `mvn test` (or `mvn verify`/`mvn integration-test`) in cloud mode — Maven cannot download JARs due to restricted network access. A PreToolUse hook automatically blocks these commands when `CLAUDE_CODE_REMOTE=1`. Tests will run via GitHub Actions CI when the PR is raised.
+
 ## Project Structure
 
 - `src/main/java/io/kiw/result/` - Generic Result monad
