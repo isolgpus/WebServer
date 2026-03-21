@@ -339,3 +339,8 @@ TestHttpResponse expected = TestHttpResponse.response(expectedJson)
 
 Assert.assertEquals(expected, actual);
 ```
+
+
+## License
+
+Licensed under the [Apache License, Version 2.0](LICENSE).
