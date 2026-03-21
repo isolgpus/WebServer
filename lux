@@ -17,7 +17,7 @@ cmd_commit() {
     mvn clean compile
 
     echo "Running tests..."
-    mvn test
+    TEST_MODE=VERTX mvn test
 
     echo "Done."
 }
