@@ -1,0 +1,26 @@
+package io.kiw.luxis.web;
+
+import io.vertx.core.Vertx;
+
+import java.util.function.BiConsumer;
+
+public class VertxLuxis<APP> implements Luxis<APP> {
+    private final Vertx vertx;
+    private final APP applicationState;
+
+    public VertxLuxis(Vertx vertx, APP applicationState) {
+        this.vertx = vertx;
+        this.applicationState = applicationState;
+    }
+
+
+    @Override
+    public <IN> void apply(IN immutableState, BiConsumer<IN, APP> applicationStateConsumer) {
+        vertx.runOnContext((v) -> applicationStateConsumer.accept(immutableState, applicationState));
+    }
+
+    @Override
+    public void stop() {
+        vertx.close().toCompletionStage().toCompletableFuture().join();
+    }
+}

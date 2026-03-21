@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.test;
 
-import io.kiw.luxis.web.TestWebServer;
-import io.kiw.luxis.web.WebServer;
+import io.kiw.luxis.web.Luxis;
+import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.RoutesRegister;
@@ -30,8 +30,8 @@ public class StubTestApplicationClient implements TestApplicationClient {
         registerRoutes.accept(routesRegister);
     }
 
-    public StubTestApplicationClient(String host, int port, WebServer<MyApplicationState> webServer) {
-        TestWebServer<MyApplicationState> testWebServer = (TestWebServer<MyApplicationState>) webServer;
+    public StubTestApplicationClient(String host, int port, Luxis<MyApplicationState> luxis) {
+        TestLuxis<MyApplicationState> testWebServer = (TestLuxis<MyApplicationState>) luxis;
         testWebServer.setExceptionHandler(seenExceptions::add);
         this.router = testWebServer.getRouter();
     }

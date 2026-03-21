@@ -1,6 +1,6 @@
 package io.kiw.luxis.web.test;
 
-import io.kiw.luxis.web.WebServer;
+import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.http.HttpBuffer;
 import io.kiw.luxis.web.http.HttpCookie;
 import io.vertx.core.Vertx;
@@ -20,13 +20,13 @@ public class VertxHttpTestApplicationClient implements TestApplicationClient, Au
     private final HttpClient httpClient;
     private final String host;
     private final int port;
-    private final WebServer<MyApplicationState> webServer;
+    private final Luxis<MyApplicationState> luxis;
     private final long timeoutSeconds;
 
-    public VertxHttpTestApplicationClient(String host, int port, WebServer<MyApplicationState> webServer) {
+    public VertxHttpTestApplicationClient(String host, int port, Luxis<MyApplicationState> luxis) {
         this.host = host;
         this.port = port;
-        this.webServer = webServer;
+        this.luxis = luxis;
         this.timeoutSeconds = 10;
         this.vertx = Vertx.vertx();
         this.httpClient = vertx.createHttpClient();
@@ -79,7 +79,7 @@ public class VertxHttpTestApplicationClient implements TestApplicationClient, Au
 
     @Override
     public void stop() {
-        webServer.stop();
+        luxis.stop();
     }
 
     public TestWebSocketClient webSocketConnection(StubRequest stubRequest) {

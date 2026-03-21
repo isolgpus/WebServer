@@ -1,6 +1,8 @@
 package io.kiw.luxis.web.application.routes;
 
-import io.kiw.luxis.web.*;
+import io.kiw.luxis.web.Luxis;
+import io.kiw.luxis.web.WebServerConfig;
+import io.kiw.luxis.web.WebServiceConfigBuilder;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.internal.RoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
@@ -40,20 +42,20 @@ public class TestApplicationClientCreator {
                 builder.setCorsConfig(corsConfig);
             }
             WebServerConfig config = builder.build();
-            WebServer<MyApplicationState> webServer = VertxWebServer.start(routesRegister -> {
+            Luxis<MyApplicationState> luxis = Luxis.start(routesRegister -> {
                 registerRoutes.accept(routesRegister, state);
                 return state;
             }, config);
-            return new VertxHttpTestApplicationClient("127.0.0.1", 8080, webServer);
+            return new VertxHttpTestApplicationClient("127.0.0.1", 8080, luxis);
         }
         WebServiceConfigBuilder builder = new WebServiceConfigBuilder();
         if (corsConfig != null) {
             builder.setCorsConfig(corsConfig);
         }
-        WebServer<MyApplicationState> webServer = TestWebServer.start(routesRegister -> {
+        Luxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
             registerRoutes.accept(routesRegister, state);
             return state;
         }, builder.build());
-        return new StubTestApplicationClient("127.0.0.1", 8080, webServer);
+        return new StubTestApplicationClient("127.0.0.1", 8080, luxis);
     }
 }
