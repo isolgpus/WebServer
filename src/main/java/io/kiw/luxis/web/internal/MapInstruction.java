@@ -20,7 +20,7 @@ public class MapInstruction<IN, OUT, APP> {
     private final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer;
     public final boolean lastStep;
 
-    public MapInstruction(boolean isBlocking, HttpControlStreamFlatMapper<IN, OUT, APP> consumer, boolean lastStep) {
+    public MapInstruction(final boolean isBlocking, final HttpControlStreamFlatMapper<IN, OUT, APP> consumer, final boolean lastStep) {
         this.isBlocking = isBlocking;
         this.isAsync = false;
         this.consumer = consumer;
@@ -30,7 +30,7 @@ public class MapInstruction<IN, OUT, APP> {
         this.lastStep = lastStep;
     }
 
-    public MapInstruction(boolean isBlocking, HttpControlStreamBlockingFlatMapper<IN, OUT> consumer, boolean lastStep) {
+    public MapInstruction(final boolean isBlocking, final HttpControlStreamBlockingFlatMapper<IN, OUT> consumer, final boolean lastStep) {
         this.isBlocking = isBlocking;
         this.isAsync = false;
         this.consumer = null;
@@ -40,7 +40,7 @@ public class MapInstruction<IN, OUT, APP> {
         this.lastStep = lastStep;
     }
 
-    public MapInstruction(HttpControlStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer, boolean lastStep) {
+    public MapInstruction(final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer, final boolean lastStep) {
         this.isBlocking = false;
         this.isAsync = true;
         this.consumer = null;
@@ -50,7 +50,7 @@ public class MapInstruction<IN, OUT, APP> {
         this.lastStep = lastStep;
     }
 
-    public MapInstruction(HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer, boolean lastStep) {
+    public MapInstruction(final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer, final boolean lastStep) {
         this.isBlocking = true;
         this.isAsync = true;
         this.consumer = null;
@@ -60,7 +60,7 @@ public class MapInstruction<IN, OUT, APP> {
         this.lastStep = lastStep;
     }
 
-    public Result<HttpErrorResponse, OUT> handle(IN state, HttpContext httpContext, APP applicationState) {
+    public Result<HttpErrorResponse, OUT> handle(final IN state, final HttpContext httpContext, final APP applicationState) {
         if (consumer != null) {
             return consumer.handle(new RouteContext<>(state, httpContext, applicationState));
         } else if (blockingConsumer != null) {
@@ -70,7 +70,7 @@ public class MapInstruction<IN, OUT, APP> {
         throw new UnsupportedOperationException("Unknown consumer");
     }
 
-    public CompletableFuture<Result<HttpErrorResponse, OUT>> handleAsync(IN state, HttpContext httpContext, APP applicationState) {
+    public CompletableFuture<Result<HttpErrorResponse, OUT>> handleAsync(final IN state, final HttpContext httpContext, final APP applicationState) {
         if (asyncConsumer != null) {
             return asyncConsumer.handle(new RouteContext<>(state, httpContext, applicationState));
         } else if (asyncBlockingConsumer != null) {

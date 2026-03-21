@@ -4,7 +4,7 @@ public class HttpErrorResponse {
     public final ErrorMessageResponse errorMessageValue;
     public final int statusCode;
 
-    public HttpErrorResponse(ErrorMessageResponse errorMessageValue, ErrorStatusCode statusCode) {
+    public HttpErrorResponse(final ErrorMessageResponse errorMessageValue, final ErrorStatusCode statusCode) {
         this.errorMessageValue = errorMessageValue;
         this.statusCode = statusCode.code();
     }

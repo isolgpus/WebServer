@@ -14,35 +14,35 @@ public class StubRequest {
     public Map<String, HttpCookie> cookies = new LinkedHashMap<>();
     public Map<String, HttpBuffer> fileUploads = new LinkedHashMap<>();
 
-    public StubRequest(String path) {
+    public StubRequest(final String path) {
         this.path = path;
     }
 
-    public static StubRequest request(String path) {
+    public static StubRequest request(final String path) {
         return new StubRequest(path);
     }
 
-    public StubRequest body(String body) {
+    public StubRequest body(final String body) {
         this.body = body;
         return this;
     }
 
-    public StubRequest queryParam(String key, String value) {
+    public StubRequest queryParam(final String key, final String value) {
         this.queryParams.put(key, value);
         return this;
     }
 
-    public StubRequest headerParam(String key, String value) {
+    public StubRequest headerParam(final String key, final String value) {
         this.headers.put(key, value);
         return this;
     }
 
-    public StubRequest cookie(String key, String value) {
+    public StubRequest cookie(final String key, final String value) {
         this.cookies.put(key, new HttpCookie(key, value));
         return this;
     }
 
-    public StubRequest fileUpload(String name, String contents) {
+    public StubRequest fileUpload(final String name, final String contents) {
         this.fileUploads.put(name, HttpBuffer.fromString(contents));
         return this;
     }

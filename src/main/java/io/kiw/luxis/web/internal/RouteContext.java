@@ -7,7 +7,7 @@ public class RouteContext<IN, APP> {
     private final HttpContext http;
     private final APP app;
 
-    public RouteContext(IN in, HttpContext http, APP app) {
+    public RouteContext(final IN in, final HttpContext http, final APP app) {
         this.in = in;
         this.http = http;
         this.app = app;

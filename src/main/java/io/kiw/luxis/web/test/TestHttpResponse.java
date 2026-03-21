@@ -12,20 +12,20 @@ public class TestHttpResponse {
     private final Map<String, String> responseHeaders = new LinkedHashMap<>();
     private final Map<String, String> responseCookies = new LinkedHashMap<>();
 
-    public TestHttpResponse(String responseBody) {
+    public TestHttpResponse(final String responseBody) {
         this.responseBody = responseBody;
     }
 
-    public TestHttpResponse withStatusCode(int statusCode) {
+    public TestHttpResponse withStatusCode(final int statusCode) {
         this.statusCode = statusCode;
         return this;
     }
 
-    public static TestHttpResponse response(String expectedResponseBody) {
+    public static TestHttpResponse response(final String expectedResponseBody) {
         return response(expectedResponseBody, "application/json");
     }
 
-    public static TestHttpResponse response(String expectedResponseBody, String contentType) {
+    public static TestHttpResponse response(final String expectedResponseBody, final String contentType) {
         return new TestHttpResponse(expectedResponseBody)
             .withHeader("Content-Type", contentType);
     }
@@ -42,10 +42,10 @@ public class TestHttpResponse {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        TestHttpResponse that = (TestHttpResponse) o;
+        final TestHttpResponse that = (TestHttpResponse) o;
         return statusCode == that.statusCode &&
                 Objects.equals(responseBody, that.responseBody) &&
                 Objects.equals(responseHeaders, that.responseHeaders) &&
@@ -57,15 +57,15 @@ public class TestHttpResponse {
         return Objects.hash(responseBody, statusCode, responseHeaders, responseCookies);
     }
 
-    public String getHeader(String key) {
+    public String getHeader(final String key) {
         return responseHeaders.get(key);
     }
 
-    public String getCookie(String key) {
+    public String getCookie(final String key) {
         return responseCookies.get(key);
     }
 
-    public TestHttpResponse withHeader(String key, String value) {
+    public TestHttpResponse withHeader(final String key, final String value) {
         if(!key.equals("content-length") && !key.equals("set-cookie"))
         {
             this.responseHeaders.put(key, value);
@@ -73,12 +73,12 @@ public class TestHttpResponse {
         return this;
     }
 
-    public TestHttpResponse withCookie(HttpCookie value) {
+    public TestHttpResponse withCookie(final HttpCookie value) {
         this.responseCookies.put(value.name(), value.value());
         return this;
     }
 
-    public TestHttpResponse withCookie(String key, String value) {
+    public TestHttpResponse withCookie(final String key, final String value) {
         this.responseCookies.put(key, value);
         return this;
     }

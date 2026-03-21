@@ -3,35 +3,35 @@ package io.kiw.luxis.web.http;
 import java.util.Map;
 
 public interface RequestContext {
-    HttpCookie getRequestCookie(String key);
+    HttpCookie getRequestCookie(final String key);
 
-    String getQueryParam(String key);
+    String getQueryParam(final String key);
 
-    void addResponseHeader(String key, String value);
+    void addResponseHeader(final String key, final String value);
 
-    void addResponseCookie(HttpCookie value);
+    void addResponseCookie(final HttpCookie value);
 
     String getRequestBody();
 
-    void setStatusCode(int statusCode);
+    void setStatusCode(final int statusCode);
 
-    void end(String bodyResponse);
+    void end(final String bodyResponse);
 
-    void end(HttpBuffer bodyResponse);
+    void end(final HttpBuffer bodyResponse);
 
-    String getRequestHeader(String key);
+    String getRequestHeader(final String key);
 
     void next();
 
-    void put(String key, Object successValue);
+    void put(final String key, final Object successValue);
 
-    Object get(String key);
+    Object get(final String key);
 
     boolean hasEnded();
 
     Map<String, HttpBuffer> resolveUploadedFiles();
 
-    String getPathParam(String key);
+    String getPathParam(final String key);
 
-    void runOnContext(Runnable task);
+    void runOnContext(final Runnable task);
 }

@@ -8,14 +8,14 @@ public class VertxLuxis<APP> implements Luxis<APP> {
     private final Vertx vertx;
     private final APP applicationState;
 
-    public VertxLuxis(Vertx vertx, APP applicationState) {
+    public VertxLuxis(final Vertx vertx, final APP applicationState) {
         this.vertx = vertx;
         this.applicationState = applicationState;
     }
 
 
     @Override
-    public <IN> void apply(IN immutableState, BiConsumer<IN, APP> applicationStateConsumer) {
+    public <IN> void apply(final IN immutableState, final BiConsumer<IN, APP> applicationStateConsumer) {
         vertx.runOnContext((v) -> applicationStateConsumer.accept(immutableState, applicationState));
     }
 

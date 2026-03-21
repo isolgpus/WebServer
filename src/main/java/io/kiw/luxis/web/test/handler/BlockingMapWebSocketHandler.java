@@ -8,7 +8,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 public class BlockingMapWebSocketHandler extends WebSocketRoute<WebSocketNumberRequest, WebSocketNumberResponse, MyApplicationState> {
 
     @Override
-    public WebSocketPipeline<WebSocketNumberResponse> onMessage(WebSocketStream<WebSocketNumberRequest, MyApplicationState> stream) {
+    public WebSocketPipeline<WebSocketNumberResponse> onMessage(final WebSocketStream<WebSocketNumberRequest, MyApplicationState> stream) {
         return stream
             .map(ctx -> ctx.in().value)
             .blockingMap(ctx -> ctx.in() * 2)

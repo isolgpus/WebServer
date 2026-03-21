@@ -17,7 +17,7 @@ public abstract class RouterWrapper {
 
     private final Consumer<Exception> exceptionHandler;
 
-    public RouterWrapper(Consumer<Exception> exceptionHandler) {
+    public RouterWrapper(final Consumer<Exception> exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
     }
 
@@ -29,20 +29,20 @@ public abstract class RouterWrapper {
         .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
         .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
 
-    protected abstract void route(String path, Method method, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig);
+    protected abstract void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig);
 
-    protected abstract void route(String path, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig);
+    protected abstract void route(final String path, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig);
 
-    public abstract void configureCors(CorsConfig corsConfig);
+    public abstract void configureCors(final CorsConfig corsConfig);
 
-    protected abstract void webSocketRoute(String path, WebSocketRouteHandler<?, ?, ?> handler);
+    protected abstract void webSocketRoute(final String path, final WebSocketRouteHandler<?, ?, ?> handler);
 
-    public <T> void handle(MapInstruction<Object, T, Object> applicationInstruction, RequestContext vertxContext, Object applicationState, Ender ender) {
-        HttpContext httpContext = new HttpContext(vertxContext);
+    public <T> void handle(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
+        final HttpContext httpContext = new HttpContext(vertxContext);
         Result<HttpErrorResponse, T> result;
         try {
             result = applicationInstruction.handle(vertxContext.get("state"), httpContext, applicationState);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             handleException(vertxContext, e);
             return;
         }
@@ -50,12 +50,12 @@ public abstract class RouterWrapper {
         processResult(result, applicationInstruction, vertxContext, ender);
     }
 
-     <T> void handleAsync(MapInstruction<Object, T, Object> applicationInstruction, RequestContext vertxContext, Object applicationState, Ender ender) {
-        HttpContext httpContext = new HttpContext(vertxContext);
+     <T> void handleAsync(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
+        final HttpContext httpContext = new HttpContext(vertxContext);
         CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
             future = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             handleException(vertxContext, e);
             return;
         }
@@ -74,22 +74,22 @@ public abstract class RouterWrapper {
         );
     }
 
-    public <T> void handleAsyncBlocking(MapInstruction<Object, T, Object> applicationInstruction, RequestContext vertxContext, Object applicationState, Ender ender) {
-        HttpContext httpContext = new HttpContext(vertxContext);
+    public <T> void handleAsyncBlocking(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
+        final HttpContext httpContext = new HttpContext(vertxContext);
         try {
-            Result<HttpErrorResponse, T> result = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState).join();
+            final Result<HttpErrorResponse, T> result = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState).join();
             processResult(result, applicationInstruction, vertxContext, ender);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             handleException(vertxContext, e);
         }
     }
 
-    private <T> void processResult(Result<HttpErrorResponse, T> result, MapInstruction<Object, T, Object> applicationInstruction, RequestContext vertxContext, Ender ender) {
+    private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Ender ender) {
         result.consume(httpErrorResponse -> {
                 try {
                     vertxContext.setStatusCode(httpErrorResponse.statusCode);
                     vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue));
-                } catch (JsonProcessingException e) {
+                } catch (final JsonProcessingException e) {
                     handleException(vertxContext, e);
                 }
             },
@@ -102,7 +102,7 @@ public abstract class RouterWrapper {
                             value = successResponse.value;
                         }
                         ender.end(vertxContext, value);
-                    } catch (RuntimeException e) {
+                    } catch (final RuntimeException e) {
                         handleException(vertxContext, e);
                     }
                 } else {
@@ -112,7 +112,7 @@ public abstract class RouterWrapper {
             });
     }
 
-    private void handleException(RequestContext vertxContext, Exception e) {
+    private void handleException(final RequestContext vertxContext, final Exception e) {
         exceptionHandler.accept(e);
         vertxContext.setStatusCode(500);
         vertxContext.end("{\"message\":\"Something went wrong\"}");

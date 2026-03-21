@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
 public class VertxRequestContextImpl implements RequestContext {
     private final RoutingContext ctx;
 
-    public VertxRequestContextImpl(RoutingContext ctx) {
+    public VertxRequestContextImpl(final RoutingContext ctx) {
         this.ctx = ctx;
     }
 
     @Override
     public HttpCookie getRequestCookie(final String key) {
-        Cookie cookie = this.ctx.request().getCookie(key);
+        final Cookie cookie = this.ctx.request().getCookie(key);
         if (cookie == null) {
             return null;
         }
@@ -35,14 +35,14 @@ public class VertxRequestContextImpl implements RequestContext {
     }
 
     @Override
-    public void addResponseHeader(String key, String value) {
+    public void addResponseHeader(final String key, final String value) {
         if (!hasEnded()) {
             this.ctx.response().putHeader(key, value);
         }
     }
 
     @Override
-    public void addResponseCookie(HttpCookie value) {
+    public void addResponseCookie(final HttpCookie value) {
         if (!hasEnded()) {
             this.ctx.response().addCookie(Cookie.cookie(value.name(), value.value()));
         }
@@ -54,28 +54,28 @@ public class VertxRequestContextImpl implements RequestContext {
     }
 
     @Override
-    public void setStatusCode(int statusCode) {
+    public void setStatusCode(final int statusCode) {
         if (!hasEnded()) {
             this.ctx.response().setStatusCode(statusCode);
         }
     }
 
     @Override
-    public void end(String bodyResponse) {
+    public void end(final String bodyResponse) {
         if (!hasEnded()) {
             this.ctx.end(bodyResponse);
         }
     }
 
     @Override
-    public void end(HttpBuffer bodyResponse) {
+    public void end(final HttpBuffer bodyResponse) {
         if (!hasEnded()) {
             this.ctx.end(Buffer.buffer(bodyResponse.bytes()));
         }
     }
 
     @Override
-    public String getRequestHeader(String key) {
+    public String getRequestHeader(final String key) {
         return this.ctx.request().getHeader(key);
     }
 
@@ -85,12 +85,12 @@ public class VertxRequestContextImpl implements RequestContext {
     }
 
     @Override
-    public void put(String key, Object successValue) {
+    public void put(final String key, final Object successValue) {
         this.ctx.put(key, successValue);
     }
 
     @Override
-    public Object get(String key) {
+    public Object get(final String key) {
         return this.ctx.get(key);
     }
 
@@ -100,12 +100,12 @@ public class VertxRequestContextImpl implements RequestContext {
     }
 
     @Override
-    public String getPathParam(String key) {
+    public String getPathParam(final String key) {
         return this.ctx.pathParam(key);
     }
 
     @Override
-    public void runOnContext(Runnable task) {
+    public void runOnContext(final Runnable task) {
         this.ctx.vertx().runOnContext(v -> task.run());
     }
 
@@ -117,7 +117,7 @@ public class VertxRequestContextImpl implements RequestContext {
                 a -> new HttpBuffer(ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName()).getBytes()),
                 new BinaryOperator<HttpBuffer>() {
                     @Override
-                    public HttpBuffer apply(HttpBuffer a, HttpBuffer b) {
+                    public HttpBuffer apply(final HttpBuffer a, final HttpBuffer b) {
                         return a;
                     }
                 },

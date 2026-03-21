@@ -6,7 +6,7 @@ public class WebSocketPipeline<T> {
     private final List<WebSocketMapInstruction> instructions;
     private final Object applicationState;
 
-    public WebSocketPipeline(List<WebSocketMapInstruction> instructions, Object applicationState) {
+    public WebSocketPipeline(final List<WebSocketMapInstruction> instructions, final Object applicationState) {
         this.instructions = instructions;
         this.applicationState = applicationState;
     }

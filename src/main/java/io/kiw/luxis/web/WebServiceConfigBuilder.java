@@ -13,17 +13,17 @@ public class WebServiceConfigBuilder {
     private OptionalLong maxBodySize = OptionalLong.empty();
     private Optional<CorsConfig> corsConfig = Optional.empty();
 
-    public WebServiceConfigBuilder setPort(int port) {
+    public WebServiceConfigBuilder setPort(final int port) {
         this.port = port;
         return this;
     }
 
-    public WebServiceConfigBuilder setExceptionHandler(Consumer<Exception> exceptionHandler) {
+    public WebServiceConfigBuilder setExceptionHandler(final Consumer<Exception> exceptionHandler) {
         this.exceptionHandler = exceptionHandler;
         return this;
     }
 
-    public WebServiceConfigBuilder setCorsConfig(CorsConfig corsConfig) {
+    public WebServiceConfigBuilder setCorsConfig(final CorsConfig corsConfig) {
         this.corsConfig = Optional.of(corsConfig);
         return this;
     }
@@ -32,12 +32,12 @@ public class WebServiceConfigBuilder {
         return new WebServerConfig(port, defaultTimeoutMillis, exceptionHandler, maxBodySize, corsConfig);
     }
 
-    public WebServiceConfigBuilder setDefaultBlockingTimeoutMillis(int timeoutMillis) {
+    public WebServiceConfigBuilder setDefaultBlockingTimeoutMillis(final int timeoutMillis) {
         this.defaultTimeoutMillis = timeoutMillis;
         return this;
     }
 
-    public WebServiceConfigBuilder setMaxBodySize(long maxBodySize) {
+    public WebServiceConfigBuilder setMaxBodySize(final long maxBodySize) {
         this.maxBodySize = OptionalLong.of(maxBodySize);
         return this;
     }

@@ -19,28 +19,28 @@ public class StubRouter extends RouterWrapper {
     private CorsConfig corsConfig;
     private final List<WebSocketRouteEntry> webSocketRoutes = new ArrayList<>();
 
-    public StubRouter(Consumer<Exception> exceptionHandler) {
+    public StubRouter(final Consumer<Exception> exceptionHandler) {
         super(exceptionHandler);
     }
 
     @Override
-    public void configureCors(CorsConfig corsConfig) {
+    public void configureCors(final CorsConfig corsConfig) {
         this.corsConfig = corsConfig;
     }
 
     @Override
-    public void route(String path, Method method, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig) {
+    public void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig) {
         routes.putRoute(path, method, flow);
     }
 
     @Override
-    public void route(String path, String consumes, String provides, RequestPipeline flow, RouteConfig routeConfig) {
+    public void route(final String path, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig) {
         routes.putAllMethodRoute(path, flow);
     }
 
-    public TestHttpResponse handle(StubRequest stubRequest, Method method) {
+    public TestHttpResponse handle(final StubRequest stubRequest, final Method method) {
         if (corsConfig != null) {
-            String origin = stubRequest.headers.get("Origin");
+            final String origin = stubRequest.headers.get("Origin");
             if (method == Method.OPTIONS) {
                 if (origin != null) {
                     return handlePreflightRequest(stubRequest);
@@ -58,13 +58,13 @@ public class StubRouter extends RouterWrapper {
             }
         }
 
-        StubRequestContext context = new StubRequestContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies, stubRequest.fileUploads);
-        PathMatcher.MatchResult matchResult = this.routes.get(stubRequest.path, method);
+        final StubRequestContext context = new StubRequestContext(stubRequest.body, stubRequest.queryParams, stubRequest.headers, stubRequest.cookies, stubRequest.fileUploads);
+        final PathMatcher.MatchResult matchResult = this.routes.get(stubRequest.path, method);
         context.setPathParams(matchResult.getPathParams());
 
-        for (RequestPipeline flow : matchResult.getFlows()) {
-            for (Object what : flow.getApplicationInstructions()) {
-                MapInstruction applicationInstruction = (MapInstruction) what;
+        for (final RequestPipeline flow : matchResult.getFlows()) {
+            for (final Object what : flow.getApplicationInstructions()) {
+                final MapInstruction applicationInstruction = (MapInstruction) what;
                 if (applicationInstruction.isAsync) {
                     this.handleAsyncBlocking(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
                 } else {
@@ -79,15 +79,15 @@ public class StubRouter extends RouterWrapper {
             }
         }
 
-        TestHttpResponse response = context.getResponse();
+        final TestHttpResponse response = context.getResponse();
         if (corsConfig != null) {
             addCorsResponseHeaders(stubRequest, response);
         }
         return response;
     }
 
-    private TestHttpResponse handlePreflightRequest(StubRequest stubRequest) {
-        String origin = stubRequest.headers.get("Origin");
+    private TestHttpResponse handlePreflightRequest(final StubRequest stubRequest) {
+        final String origin = stubRequest.headers.get("Origin");
         boolean result = false;
         if (origin != null) {
             result = corsConfig.getAllowedOrigins().contains("*") || corsConfig.getAllowedOrigins().contains(origin);
@@ -96,9 +96,9 @@ public class StubRouter extends RouterWrapper {
             return new TestHttpResponse(null).withStatusCode(403);
         }
 
-        String allowOrigin = corsConfig.getAllowedOrigins().contains("*") ? "*" : origin;
+        final String allowOrigin = corsConfig.getAllowedOrigins().contains("*") ? "*" : origin;
 
-        TestHttpResponse response = new TestHttpResponse(null).withStatusCode(204)
+        final TestHttpResponse response = new TestHttpResponse(null).withStatusCode(204)
             .withHeader("access-control-allow-origin", allowOrigin);
 
         if (!corsConfig.getAllowedMethods().isEmpty()) {
@@ -123,13 +123,13 @@ public class StubRouter extends RouterWrapper {
     }
 
     @Override
-    protected void webSocketRoute(String path, WebSocketRouteHandler<?, ?, ?> handler) {
+    protected void webSocketRoute(final String path, final WebSocketRouteHandler<?, ?, ?> handler) {
         webSocketRoutes.add(new WebSocketRouteEntry(path, handler));
     }
 
-    public StubTestWebSocketClient webSocket(StubRequest stubRequest) {
-        for (WebSocketRouteEntry entry : webSocketRoutes) {
-            Map<String, String> pathParams = matchWebSocketPath(entry.path, stubRequest.path);
+    public StubTestWebSocketClient webSocket(final StubRequest stubRequest) {
+        for (final WebSocketRouteEntry entry : webSocketRoutes) {
+            final Map<String, String> pathParams = matchWebSocketPath(entry.path, stubRequest.path);
             if (pathParams != null) {
                 return new StubTestWebSocketClient(entry.handler);
             }
@@ -137,13 +137,13 @@ public class StubRouter extends RouterWrapper {
         throw new IllegalArgumentException("No WebSocket route registered for path: " + stubRequest.path);
     }
 
-    private Map<String, String> matchWebSocketPath(String pattern, String actual) {
-        String[] patternParts = pattern.split("/");
-        String[] actualParts = actual.split("/");
+    private Map<String, String> matchWebSocketPath(final String pattern, final String actual) {
+        final String[] patternParts = pattern.split("/");
+        final String[] actualParts = actual.split("/");
         if (patternParts.length != actualParts.length) {
             return null;
         }
-        Map<String, String> pathParams = new LinkedHashMap<>();
+        final Map<String, String> pathParams = new LinkedHashMap<>();
         for (int i = 0; i < patternParts.length; i++) {
             if (patternParts[i].startsWith(":")) {
                 pathParams.put(patternParts[i].substring(1), actualParts[i]);
@@ -158,14 +158,14 @@ public class StubRouter extends RouterWrapper {
         final String path;
         final WebSocketRouteHandler<?, ?, ?> handler;
 
-        WebSocketRouteEntry(String path, WebSocketRouteHandler<?, ?, ?> handler) {
+        WebSocketRouteEntry(final String path, final WebSocketRouteHandler<?, ?, ?> handler) {
             this.path = path;
             this.handler = handler;
         }
     }
 
-    private void addCorsResponseHeaders(StubRequest stubRequest, TestHttpResponse response) {
-        String origin = stubRequest.headers.get("Origin");
+    private void addCorsResponseHeaders(final StubRequest stubRequest, final TestHttpResponse response) {
+        final String origin = stubRequest.headers.get("Origin");
         boolean result = false;
         if (origin != null) {
             result = corsConfig.getAllowedOrigins().contains("*") || corsConfig.getAllowedOrigins().contains(origin);
@@ -174,7 +174,7 @@ public class StubRouter extends RouterWrapper {
             return;
         }
 
-        String allowOrigin = corsConfig.getAllowedOrigins().contains("*") ? "*" : origin;
+        final String allowOrigin = corsConfig.getAllowedOrigins().contains("*") ? "*" : origin;
         response.withHeader("access-control-allow-origin", allowOrigin);
 
         if (corsConfig.isAllowCredentials()) {

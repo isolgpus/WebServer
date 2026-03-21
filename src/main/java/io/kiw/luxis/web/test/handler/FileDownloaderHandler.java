@@ -10,7 +10,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 public class FileDownloaderHandler implements VertxFileDownloadRoute<String, MyApplicationState> {
     @Override
-    public RequestPipeline<DownloadFileResponse> handle(HttpStream<String, MyApplicationState> e) {
+    public RequestPipeline<DownloadFileResponse> handle(final HttpStream<String, MyApplicationState> e) {
         return e.complete(ctx ->
             Result.success(new DownloadFileResponse(HttpBuffer.fromString("file contents"), "data.txt")));
     }

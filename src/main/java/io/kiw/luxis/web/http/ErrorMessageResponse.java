@@ -8,12 +8,12 @@ public class ErrorMessageResponse {
     public final String message;
     public final Map<String, List<String>> errors;
 
-    public ErrorMessageResponse(String message) {
+    public ErrorMessageResponse(final String message) {
         this.message = message;
         this.errors = Collections.emptyMap();
     }
 
-    public ErrorMessageResponse(String message, Map<String, List<String>> errors) {
+    public ErrorMessageResponse(final String message, final Map<String, List<String>> errors) {
         this.message = message;
         this.errors = errors;
     }

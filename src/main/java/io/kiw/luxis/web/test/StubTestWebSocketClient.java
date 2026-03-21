@@ -14,7 +14,7 @@ public class StubTestWebSocketClient implements TestWebSocketClient {
     private final WebSocketSession<?> session;
     private final StubWebSocketConnection connection;
 
-    StubTestWebSocketClient(WebSocketRouteHandler<?, ?, ?> handler) {
+    StubTestWebSocketClient(final WebSocketRouteHandler<?, ?, ?> handler) {
         this.handler = handler;
         this.connection = new StubWebSocketConnection(receivedMessages);
         this.session = handler.createSession(connection);
@@ -22,13 +22,13 @@ public class StubTestWebSocketClient implements TestWebSocketClient {
     }
 
     @Override
-    public void send(String jsonMessage) {
+    public void send(final String jsonMessage) {
         handler.onMessage(jsonMessage, session);
     }
 
 
     @Override
-    public void onResponses(Consumer<List<String>> receivedMessageConsumer) {
+    public void onResponses(final Consumer<List<String>> receivedMessageConsumer) {
         receivedMessageConsumer.accept(receivedMessages);
         receivedMessages.clear();
     }

@@ -12,7 +12,7 @@ public class RouteConfigBuilder {
     public RouteConfigBuilder() {
     }
 
-    public RouteConfigBuilder timeout(int timeoutInMillis) {
+    public RouteConfigBuilder timeout(final int timeoutInMillis) {
         this.timeoutInMillis = OptionalInt.of(timeoutInMillis);
         return this;
     }

@@ -15,19 +15,19 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     private final Router router;
     private final int defaultTimeoutMillis;
 
-    public VertxRouterWrapperImpl(Router router, int defaultTimeoutMillis, Consumer<Exception> exceptionHandler) {
+    public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler) {
         super(exceptionHandler);
         this.router = router;
         this.defaultTimeoutMillis = defaultTimeoutMillis;
     }
 
     @Override
-    public void configureCors(CorsConfig corsConfig) {
-        CorsHandler corsHandler = CorsHandler.create();
-        for (String origin : corsConfig.getAllowedOrigins()) {
+    public void configureCors(final CorsConfig corsConfig) {
+        final CorsHandler corsHandler = CorsHandler.create();
+        for (final String origin : corsConfig.getAllowedOrigins()) {
             corsHandler.addOrigin(origin);
         }
-        for (String method : corsConfig.getAllowedMethods()) {
+        for (final String method : corsConfig.getAllowedMethods()) {
             corsHandler.allowedMethod(HttpMethod.valueOf(method));
         }
         if (!corsConfig.getAllowedHeaders().isEmpty()) {
@@ -44,24 +44,24 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     }
 
     @Override
-    public void route(String path, Method method, String consumes, String produces, RequestPipeline flow, RouteConfig routeConfig) {
-        Route route = router.route(HttpMethod.valueOf(method.name()), path).consumes(consumes).produces(produces);
+    public void route(final String path, final Method method, final String consumes, final String produces, final RequestPipeline flow, final RouteConfig routeConfig) {
+        final Route route = router.route(HttpMethod.valueOf(method.name()), path).consumes(consumes).produces(produces);
         registerHandlers(route, flow, routeConfig);
     }
 
     @Override
-    public void route(String path, String consumes, String produces, RequestPipeline flow, RouteConfig routeConfig) {
-        Route route = router.route(path).consumes(consumes).produces(produces);
+    public void route(final String path, final String consumes, final String produces, final RequestPipeline flow, final RouteConfig routeConfig) {
+        final Route route = router.route(path).consumes(consumes).produces(produces);
         registerHandlers(route, flow, routeConfig);
     }
 
     @Override
-    protected void webSocketRoute(String path, WebSocketRouteHandler<?, ?, ?> handler) {
+    protected void webSocketRoute(final String path, final WebSocketRouteHandler<?, ?, ?> handler) {
         router.route(path).handler(ctx -> {
             ctx.request().toWebSocket()
                 .onSuccess(ws -> {
-                    VertxWebSocketConnection connection = new VertxWebSocketConnection(ws);
-                    WebSocketSession<?> session = handler.createSession(connection);
+                    final VertxWebSocketConnection connection = new VertxWebSocketConnection(ws);
+                    final WebSocketSession<?> session = handler.createSession(connection);
                     handler.onOpen(session);
                     ws.textMessageHandler(msg -> handler.onMessage(msg, session));
                     ws.closeHandler(v -> handler.onClose(session));
@@ -72,13 +72,13 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
         });
     }
 
-    private void registerHandlers(Route route, RequestPipeline flow, RouteConfig routeConfig) {
-        int timeout = routeConfig.timeoutInMillis.orElse(defaultTimeoutMillis);
+    private void registerHandlers(final Route route, final RequestPipeline flow, final RouteConfig routeConfig) {
+        final int timeout = routeConfig.timeoutInMillis.orElse(defaultTimeoutMillis);
 
         route.handler(new VertxTimeoutHandler(timeout));
 
-        for (Object what : flow.getApplicationInstructions()) {
-            MapInstruction applicationInstruction = (MapInstruction) what;
+        for (final Object what : flow.getApplicationInstructions()) {
+            final MapInstruction applicationInstruction = (MapInstruction) what;
             if (applicationInstruction.isAsync && applicationInstruction.isBlocking) {
                 route.blockingHandler(ctx -> handleAsyncBlocking(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             } else if (applicationInstruction.isAsync) {

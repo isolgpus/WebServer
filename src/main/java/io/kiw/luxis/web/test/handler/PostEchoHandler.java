@@ -21,7 +21,7 @@ public class PostEchoHandler extends VertxJsonRoute<EchoRequest, EchoResponse, M
             {
                 ctx.http().addResponseCookie(new HttpCookie("responseCookieExample", ctx.in().responseCookieExample));
             }
-            HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
+            final HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
             return HttpResult.success(new EchoResponse(
                 ctx.in().intExample,
                 ctx.in().stringExample,

@@ -4,7 +4,7 @@ public class BlockingContext<IN> {
     private final IN in;
     private final HttpContext http;
 
-    public BlockingContext(IN in, HttpContext http) {
+    public BlockingContext(final IN in, final HttpContext http) {
         this.in = in;
         this.http = http;
     }

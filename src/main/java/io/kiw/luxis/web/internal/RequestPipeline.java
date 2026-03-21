@@ -9,7 +9,7 @@ public class RequestPipeline<T> {
     private final Object applicationState;
     private final Ender ender;
 
-    public RequestPipeline(List<MapInstruction> instructions, Object applicationState, Ender ender) {
+    public RequestPipeline(final List<MapInstruction> instructions, final Object applicationState, final Ender ender) {
 
         this.instructions = instructions;
         this.applicationState = applicationState;

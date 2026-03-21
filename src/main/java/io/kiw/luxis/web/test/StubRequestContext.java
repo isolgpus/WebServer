@@ -22,7 +22,7 @@ public class StubRequestContext implements RequestContext {
     private Map<String, Object> state = new LinkedHashMap<>();
     private boolean finished = false;
 
-    public StubRequestContext(String requestBody, Map<String, String> queryParams, Map<String, String> requestHeaders, Map<String, HttpCookie> requestCookies, Map<String, HttpBuffer> fileUploads) {
+    public StubRequestContext(final String requestBody, final Map<String, String> queryParams, final Map<String, String> requestHeaders, final Map<String, HttpCookie> requestCookies, final Map<String, HttpBuffer> fileUploads) {
         this.requestBody = requestBody;
         this.queryParams = queryParams;
         this.requestHeaders = requestHeaders;
@@ -31,22 +31,22 @@ public class StubRequestContext implements RequestContext {
     }
 
     @Override
-    public HttpCookie getRequestCookie(String key) {
+    public HttpCookie getRequestCookie(final String key) {
         return this.requestCookies.get(key);
     }
 
     @Override
-    public String getQueryParam(String key) {
+    public String getQueryParam(final String key) {
         return this.queryParams.get(key);
     }
 
     @Override
-    public void addResponseHeader(String key, String value) {
+    public void addResponseHeader(final String key, final String value) {
         this.responseHeaders.put(key, value);
     }
 
     @Override
-    public void addResponseCookie(HttpCookie value) {
+    public void addResponseCookie(final HttpCookie value) {
         this.responseCookies.put(value.name(), value);
     }
 
@@ -56,12 +56,12 @@ public class StubRequestContext implements RequestContext {
     }
 
     @Override
-    public void setStatusCode(int statusCode) {
+    public void setStatusCode(final int statusCode) {
         this.statusCode = statusCode;
     }
 
     @Override
-    public void end(String responseBody) {
+    public void end(final String responseBody) {
         if (statusCode == 204) {
             this.responseBody = "";
         } else {
@@ -71,7 +71,7 @@ public class StubRequestContext implements RequestContext {
     }
 
     @Override
-    public void end(HttpBuffer bodyResponse) {
+    public void end(final HttpBuffer bodyResponse) {
         if (statusCode == 204) {
             this.responseBody = "";
         } else {
@@ -81,7 +81,7 @@ public class StubRequestContext implements RequestContext {
     }
 
     @Override
-    public String getRequestHeader(String key) {
+    public String getRequestHeader(final String key) {
         return this.requestHeaders.get(key);
     }
 
@@ -90,12 +90,12 @@ public class StubRequestContext implements RequestContext {
     }
 
     @Override
-    public void put(String key, Object successValue) {
+    public void put(final String key, final Object successValue) {
         this.state.put(key, successValue);
     }
 
     @Override
-    public Object get(String key) {
+    public Object get(final String key) {
         return this.state.get(key);
     }
 
@@ -105,7 +105,7 @@ public class StubRequestContext implements RequestContext {
     }
 
     @Override
-    public String getPathParam(String key) {
+    public String getPathParam(final String key) {
         return this.pathParams.get(key);
     }
 
@@ -114,16 +114,16 @@ public class StubRequestContext implements RequestContext {
         return fileUploads;
     }
 
-    public void setPathParams(Map<String, String> pathParams) {
+    public void setPathParams(final Map<String, String> pathParams) {
         this.pathParams = pathParams;
     }
 
     public TestHttpResponse getResponse() {
-        TestHttpResponse testHttpResponse = new TestHttpResponse(responseBody).withStatusCode(statusCode);
-        for (Map.Entry<String, String> header : this.responseHeaders.entrySet()) {
+        final TestHttpResponse testHttpResponse = new TestHttpResponse(responseBody).withStatusCode(statusCode);
+        for (final Map.Entry<String, String> header : this.responseHeaders.entrySet()) {
             testHttpResponse.withHeader(header.getKey(), header.getValue());
         }
-        for (Map.Entry<String, HttpCookie> cookie : this.responseCookies.entrySet()) {
+        for (final Map.Entry<String, HttpCookie> cookie : this.responseCookies.entrySet()) {
             testHttpResponse.withCookie(cookie.getValue());
         }
         return testHttpResponse;
@@ -134,7 +134,7 @@ public class StubRequestContext implements RequestContext {
     }
 
     @Override
-    public void runOnContext(Runnable task) {
+    public void runOnContext(final Runnable task) {
         task.run();
     }
 }

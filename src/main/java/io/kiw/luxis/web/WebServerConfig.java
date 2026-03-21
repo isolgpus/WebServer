@@ -13,7 +13,7 @@ public class WebServerConfig {
     final OptionalLong maxBodySize;
     final Optional<CorsConfig> corsConfig;
 
-    WebServerConfig(int port, int defaultTimeoutMillis, Consumer<Exception> exceptionHandler, OptionalLong maxBodySize, Optional<CorsConfig> corsConfig) {
+    WebServerConfig(final int port, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final OptionalLong maxBodySize, final Optional<CorsConfig> corsConfig) {
 
         this.port = port;
         this.defaultTimeoutMillis = defaultTimeoutMillis;

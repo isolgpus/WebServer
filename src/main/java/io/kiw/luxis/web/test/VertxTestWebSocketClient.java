@@ -12,20 +12,20 @@ public class VertxTestWebSocketClient implements TestWebSocketClient {
     private final List<String> receivedMessages = new CopyOnWriteArrayList<>();
     private volatile boolean closed = false;
 
-    VertxTestWebSocketClient(WebSocket webSocket) {
+    VertxTestWebSocketClient(final WebSocket webSocket) {
         this.webSocket = webSocket;
         webSocket.textMessageHandler(receivedMessages::add);
         webSocket.closeHandler(v -> closed = true);
     }
 
     @Override
-    public void send(String jsonMessage) {
+    public void send(final String jsonMessage) {
         webSocket.writeTextMessage(jsonMessage);
     }
 
     @Override
-    public void onResponses(Consumer<List<String>> receivedMessageConsumer) {
-        long deadline = System.currentTimeMillis() + 1000;
+    public void onResponses(final Consumer<List<String>> receivedMessageConsumer) {
+        final long deadline = System.currentTimeMillis() + 1000;
         Throwable latestException = null;
 
         while (System.currentTimeMillis() < deadline) {
@@ -33,11 +33,11 @@ public class VertxTestWebSocketClient implements TestWebSocketClient {
                 receivedMessageConsumer.accept(receivedMessages);
                 receivedMessages.clear();
                 return;
-            } catch (RuntimeException | AssertionError e) {
+            } catch (final RuntimeException | AssertionError e) {
                 latestException = e;
                 try {
                     Thread.sleep(100);
-                } catch (InterruptedException ie) {
+                } catch (final InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException(ie);
                 }

@@ -24,7 +24,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     private final WebSocketRouterWrapper webSocketRouterWrapper;
     private final WebSocketPipeline<OUT> pipeline;
 
-    public WebSocketRouteHandler(WebSocketRoute<IN, OUT, APP> route, ObjectMapper objectMapper, APP appState, Consumer<Exception> exceptionHandler, WebSocketRouterWrapper webSocketRouterWrapper) {
+    public WebSocketRouteHandler(final WebSocketRoute<IN, OUT, APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final WebSocketRouterWrapper webSocketRouterWrapper) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
@@ -33,35 +33,35 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         this.pipeline = route.onMessage(new WebSocketStream<>(new ArrayList<>(), appState));
     }
 
-    public WebSocketSession<?> createSession(WebSocketConnection connection) {
+    public WebSocketSession<?> createSession(final WebSocketConnection connection) {
         return new WebSocketSession<>(connection, objectMapper);
     }
 
     @SuppressWarnings("unchecked")
-    public void onOpen(WebSocketSession<?> session) {
+    public void onOpen(final WebSocketSession<?> session) {
         try {
             route.onOpen((WebSocketSession<OUT>) session, appState);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             exceptionHandler.accept(e);
         }
     }
 
     @SuppressWarnings("unchecked")
-    public void onMessage(String rawMessage, WebSocketSession<?> session) {
+    public void onMessage(final String rawMessage, final WebSocketSession<?> session) {
         try {
-            IN message = objectMapper.readValue(rawMessage, route);
+            final IN message = objectMapper.readValue(rawMessage, route);
 
-            WebSocketMapInstruction webSocketMapInstruction = pipeline.getApplicationInstructions().getFirst();
+            final WebSocketMapInstruction webSocketMapInstruction = pipeline.getApplicationInstructions().getFirst();
 
             executeInstruction(session, webSocketMapInstruction, message, ThreadContext.EVENT_LOOP);
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             exceptionHandler.accept(e);
         }
     }
 
-    private <IN, OUT> void executeInstruction(WebSocketSession<?> session, WebSocketMapInstruction<IN, OUT, APP> instruction, IN message, ThreadContext currentThread) {
-        ThreadContext requiredThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.EVENT_LOOP;
+    private <IN, OUT> void executeInstruction(final WebSocketSession<?> session, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message, final ThreadContext currentThread) {
+        final ThreadContext requiredThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.EVENT_LOOP;
 
         runOnThread(requiredThread, currentThread, () -> {
             handleAndContinue(session, instruction, message);
@@ -69,10 +69,10 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     }
 
     @SuppressWarnings("unchecked")
-    private <IN, OUT> void handleAndContinue(WebSocketSession<?> session, WebSocketMapInstruction<IN, OUT, APP> instruction, IN message) {
+    private <IN, OUT> void handleAndContinue(final WebSocketSession<?> session, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message) {
         if(instruction.isAsync)
         {
-            CompletableFuture<Result<ErrorMessageResponse, OUT>> future = instruction.handleAsync(message, session.connection(), appState);
+            final CompletableFuture<Result<ErrorMessageResponse, OUT>> future = instruction.handleAsync(message, session.connection(), appState);
 
             webSocketRouterWrapper.handleOnEventLoop(() -> {
                 try
@@ -81,7 +81,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
                         continueChain(session, instruction, (OUT) q, ThreadContext.EVENT_LOOP);
                     });
                 }
-                catch (Exception e)
+                catch (final Exception e)
                 {
                     exceptionHandler.accept(e);
                 }
@@ -89,8 +89,8 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         }
         else
         {
-            ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.EVENT_LOOP;
-            Result<ErrorMessageResponse, ?> result = instruction.handle(message, session.connection(), appState);
+            final ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.EVENT_LOOP;
+            final Result<ErrorMessageResponse, ?> result = instruction.handle(message, session.connection(), appState);
             result.consume(e -> {}, q -> {
                 continueChain(session, instruction, (OUT) q, afterThread);
             });
@@ -98,10 +98,10 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     }
 
     @SuppressWarnings("unchecked")
-    private <OUT> void continueChain(WebSocketSession<?> session, WebSocketMapInstruction<?, OUT, APP> instruction, OUT result, ThreadContext currentThread) {
+    private <OUT> void continueChain(final WebSocketSession<?> session, final WebSocketMapInstruction<?, OUT, APP> instruction, final OUT result, final ThreadContext currentThread) {
         if(instruction.next().isPresent())
         {
-            WebSocketMapInstruction<OUT, ?, APP> next = (WebSocketMapInstruction<OUT, ?, APP>) instruction.next().get();
+            final WebSocketMapInstruction<OUT, ?, APP> next = (WebSocketMapInstruction<OUT, ?, APP>) instruction.next().get();
             executeInstruction(session, next, result, currentThread);
         }
         else
@@ -112,7 +112,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         }
     }
 
-    private void runOnThread(ThreadContext required, ThreadContext current, Runnable action) {
+    private void runOnThread(final ThreadContext required, final ThreadContext current, final Runnable action) {
         if(current == required)
         {
             action.run();
@@ -127,19 +127,19 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         }
     }
 
-    private <OUT> void sendFinalResponse(WebSocketSession<?> session, OUT result) {
+    private <OUT> void sendFinalResponse(final WebSocketSession<?> session, final OUT result) {
         try {
             session.connection().sendText(objectMapper.writeValueAsString(result));
-        } catch (JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             exceptionHandler.accept(e);
         }
     }
 
     @SuppressWarnings("unchecked")
-    public void onClose(WebSocketSession<?> session) {
+    public void onClose(final WebSocketSession<?> session) {
         try {
             route.onClose((WebSocketSession<OUT>) session, appState);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             exceptionHandler.accept(e);
         }
     }

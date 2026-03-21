@@ -5,12 +5,12 @@ import io.vertx.core.Vertx;
 public class VertxWebSocketRouterWrapperImpl implements WebSocketRouterWrapper {
     private final Vertx vertx;
 
-    public VertxWebSocketRouterWrapperImpl(Vertx vertx) {
+    public VertxWebSocketRouterWrapperImpl(final Vertx vertx) {
         this.vertx = vertx;
     }
 
     @Override
-    public void handleBlocking(Runnable o) {
+    public void handleBlocking(final Runnable o) {
         vertx.executeBlocking(() -> {
             o.run();
             return null;
@@ -18,7 +18,7 @@ public class VertxWebSocketRouterWrapperImpl implements WebSocketRouterWrapper {
     }
 
     @Override
-    public void handleOnEventLoop(Runnable o) {
+    public void handleOnEventLoop(final Runnable o) {
         vertx.runOnContext(unused -> o.run());
     }
 }

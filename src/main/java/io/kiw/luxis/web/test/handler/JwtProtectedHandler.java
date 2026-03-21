@@ -12,7 +12,7 @@ public class JwtProtectedHandler extends VertxJsonRoute<EmptyRequest, SubjectRes
 
     private final JwtProvider jwtProvider;
 
-    public JwtProtectedHandler(JwtProvider jwtProvider) {
+    public JwtProtectedHandler(final JwtProvider jwtProvider) {
         this.jwtProvider = jwtProvider;
     }
 

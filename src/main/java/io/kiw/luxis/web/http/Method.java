@@ -10,7 +10,7 @@ public enum Method {
 
     private final boolean requiresBody;
 
-    Method(boolean requiresBody) {
+    Method(final boolean requiresBody) {
         this.requiresBody = requiresBody;
     }
 

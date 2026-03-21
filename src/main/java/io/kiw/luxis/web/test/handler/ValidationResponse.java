@@ -8,7 +8,7 @@ public class ValidationResponse {
     public String page;
     public String userId;
 
-    public ValidationResponse(String name, String email, int age, String city, String page, String userId) {
+    public ValidationResponse(final String name, final String email, final int age, final String city, final String page, final String userId) {
         this.name = name;
         this.email = email;
         this.age = age;

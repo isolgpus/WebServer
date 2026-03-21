@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 public class AsyncFlatMapFailWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, WebSocketEchoResponse, MyApplicationState> {
 
     @Override
-    public WebSocketPipeline<WebSocketEchoResponse> onMessage(WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline<WebSocketEchoResponse> onMessage(final WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
         return stream
             .<WebSocketEchoResponse>asyncFlatMap(ctx ->
                 CompletableFuture.completedFuture(WebSocketResult.error(new ErrorMessageResponse("async flatMap failed"))))

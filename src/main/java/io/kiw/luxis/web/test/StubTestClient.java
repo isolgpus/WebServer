@@ -15,48 +15,48 @@ public class StubTestClient implements TestClient {
     private final StubRouter router;
 
 
-    public StubTestClient(String host, int port, Luxis<MyApplicationState> luxis) {
-        TestLuxis<MyApplicationState> testWebServer = (TestLuxis<MyApplicationState>) luxis;
+    public StubTestClient(final String host, final int port, final Luxis<MyApplicationState> luxis) {
+        final TestLuxis<MyApplicationState> testWebServer = (TestLuxis<MyApplicationState>) luxis;
         testWebServer.setExceptionHandler(seenExceptions::add);
         this.router = testWebServer.getRouter();
     }
 
     @Override
-    public TestHttpResponse post(StubRequest stubRequest) {
+    public TestHttpResponse post(final StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.POST);
     }
 
     @Override
-    public TestHttpResponse put(StubRequest stubRequest) {
+    public TestHttpResponse put(final StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.PUT);
     }
 
     @Override
-    public TestHttpResponse delete(StubRequest stubRequest) {
+    public TestHttpResponse delete(final StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.DELETE);
     }
 
     @Override
-    public TestHttpResponse patch(StubRequest stubRequest) {
+    public TestHttpResponse patch(final StubRequest stubRequest) {
 
         return router.handle(stubRequest, Method.PATCH);
     }
 
     @Override
-    public TestHttpResponse get(StubRequest stubRequest) {
+    public TestHttpResponse get(final StubRequest stubRequest) {
         return router.handle(stubRequest, Method.GET);
     }
 
     @Override
-    public TestHttpResponse options(StubRequest stubRequest) {
+    public TestHttpResponse options(final StubRequest stubRequest) {
         return router.handle(stubRequest, Method.OPTIONS);
     }
 
     @Override
-    public StubTestWebSocketClient webSocket(StubRequest stubRequest) {
+    public StubTestWebSocketClient webSocket(final StubRequest stubRequest) {
         return router.webSocket(stubRequest);
     }
 
@@ -68,11 +68,11 @@ public class StubTestClient implements TestClient {
         }
     }
 
-    public void assertException(String message) {
-        Iterator<Exception> iterator = this.seenExceptions.iterator();
+    public void assertException(final String message) {
+        final Iterator<Exception> iterator = this.seenExceptions.iterator();
         while(iterator.hasNext())
         {
-            Exception exception = iterator.next();
+            final Exception exception = iterator.next();
 
             if(exception.getMessage().contains(message))
             {

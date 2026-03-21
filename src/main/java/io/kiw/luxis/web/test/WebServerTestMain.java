@@ -4,9 +4,9 @@ import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.WebServiceConfigBuilder;
 
 public class WebServerTestMain {
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
 
-        Luxis<MyApplicationState> luxis = Luxis.start(
+        final Luxis<MyApplicationState> luxis = Luxis.start(
             routesRegister -> TestApplicationRoutes.registerRoutes(routesRegister, new MyApplicationState()), new WebServiceConfigBuilder()
                 .setPort(8080)
                 .setDefaultBlockingTimeoutMillis(5000)

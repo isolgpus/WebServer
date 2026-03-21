@@ -10,7 +10,7 @@ public class TestHelper {
         return MAPPER.createObjectNode();
     }
 
-    public static String file(String fileContents) {
+    public static String file(final String fileContents) {
         return fileContents;
     }
 }

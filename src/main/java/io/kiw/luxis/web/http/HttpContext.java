@@ -7,27 +7,27 @@ import java.util.Map;
 public class HttpContext {
     public final RequestContext ctx;
 
-    public HttpContext(RequestContext ctx) {
+    public HttpContext(final RequestContext ctx) {
         this.ctx = ctx;
     }
 
-    public String getQueryParam(String key) {
+    public String getQueryParam(final String key) {
         return ctx.getQueryParam(key);
     }
 
-    public String getRequestHeader(String key) {
+    public String getRequestHeader(final String key) {
         return ctx.getRequestHeader(key);
     }
 
-    public HttpCookie getRequestCookie(String key) {
+    public HttpCookie getRequestCookie(final String key) {
         return ctx.getRequestCookie(key);
     }
 
-    public void addResponseHeader(String key, String value) {
+    public void addResponseHeader(final String key, final String value) {
         ctx.addResponseHeader(key, value);
     }
 
-    public void addResponseCookie(HttpCookie value) {
+    public void addResponseCookie(final HttpCookie value) {
         ctx.addResponseCookie(value);
     }
 
@@ -35,7 +35,7 @@ public class HttpContext {
         return this.ctx.resolveUploadedFiles();
     }
 
-    public String getPathParam(String key) {
+    public String getPathParam(final String key) {
         return ctx.getPathParam(key);
     }
 

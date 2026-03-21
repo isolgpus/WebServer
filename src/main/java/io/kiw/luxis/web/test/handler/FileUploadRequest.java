@@ -6,7 +6,7 @@ public class FileUploadRequest {
     private final String name;
     private final HttpBuffer buffer;
 
-    public FileUploadRequest(String name, HttpBuffer buffer) {
+    public FileUploadRequest(final String name, final HttpBuffer buffer) {
         this.name = name;
         this.buffer = buffer;
     }

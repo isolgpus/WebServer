@@ -12,7 +12,7 @@ public class TestLuxis<APP> implements Luxis<APP> {
     private final Consumer<Exception>[] exceptionHandlerRef;
 
     @SuppressWarnings("unchecked")
-    TestLuxis(StubRouter router, APP applicationState, Consumer<Exception>[] exceptionHandlerRef) {
+    TestLuxis(final StubRouter router, final APP applicationState, final Consumer<Exception>[] exceptionHandlerRef) {
         this.router = router;
         this.applicationState = applicationState;
         this.exceptionHandlerRef = exceptionHandlerRef;
@@ -20,7 +20,7 @@ public class TestLuxis<APP> implements Luxis<APP> {
 
 
 
-    public void setExceptionHandler(Consumer<Exception> handler) {
+    public void setExceptionHandler(final Consumer<Exception> handler) {
         exceptionHandlerRef[0] = handler;
     }
 
@@ -29,7 +29,7 @@ public class TestLuxis<APP> implements Luxis<APP> {
     }
 
     @Override
-    public <IN> void apply(IN immutableState, BiConsumer<IN, APP> applicationStateConsumer) {
+    public <IN> void apply(final IN immutableState, final BiConsumer<IN, APP> applicationStateConsumer) {
         applicationStateConsumer.accept(immutableState, applicationState);
     }
 

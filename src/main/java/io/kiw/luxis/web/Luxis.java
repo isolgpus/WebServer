@@ -14,16 +14,16 @@ import java.util.function.Consumer;
 public interface Luxis<APP> extends AutoCloseable{
 
 
-    public static <APP> Luxis<APP> start(ApplicationRoutesRegister<APP> routesRegisterConsumer) {
+    public static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer) {
         return start(routesRegisterConsumer, new WebServiceConfigBuilder().build());
     }
 
-    public static <APP> Luxis<APP> start(ApplicationRoutesRegister<APP> routesRegisterConsumer, WebServerConfig webServerConfig) {
-        Vertx vertx = Vertx.vertx();
-        HttpServer httpServer = vertx.createHttpServer();
-        Router router = Router.router(vertx);
+    public static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final WebServerConfig webServerConfig) {
+        final Vertx vertx = Vertx.vertx();
+        final HttpServer httpServer = vertx.createHttpServer();
+        final Router router = Router.router(vertx);
 
-        APP applicationState = VertxRoutesRegistrar.register(router, vertx, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig);
+        final APP applicationState = VertxRoutesRegistrar.register(router, vertx, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig);
 
         httpServer.requestHandler(router).listen(webServerConfig.port).toCompletionStage().toCompletableFuture().join();
         return new VertxLuxis<>(vertx, applicationState);
@@ -31,23 +31,23 @@ public interface Luxis<APP> extends AutoCloseable{
 
 
     @SuppressWarnings("unchecked")
-    public static <APP> TestLuxis<APP> test(ApplicationRoutesRegister<APP> routesRegisterConsumer) {
-        Consumer<Exception>[] ref = new Consumer[]{e -> {}};
-        StubRouter router = new StubRouter(e -> ref[0].accept(e));
-        RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketStubRouterWrapper());
-        APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
+    public static <APP> TestLuxis<APP> test(final ApplicationRoutesRegister<APP> routesRegisterConsumer) {
+        final Consumer<Exception>[] ref = new Consumer[]{e -> {}};
+        final StubRouter router = new StubRouter(e -> ref[0].accept(e));
+        final RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketStubRouterWrapper());
+        final APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
         return new TestLuxis<>(router, applicationState, ref);
     }
 
     @SuppressWarnings("unchecked")
-    public static <APP> TestLuxis<APP> test(ApplicationRoutesRegister<APP> routesRegisterConsumer, WebServerConfig webServerConfig) {
-        Consumer<Exception>[] ref = new Consumer[]{webServerConfig.exceptionHandler};
-        StubRouter router = new StubRouter(e -> ref[0].accept(e));
+    public static <APP> TestLuxis<APP> test(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final WebServerConfig webServerConfig) {
+        final Consumer<Exception>[] ref = new Consumer[]{webServerConfig.exceptionHandler};
+        final StubRouter router = new StubRouter(e -> ref[0].accept(e));
         webServerConfig.corsConfig.ifPresent(router::configureCors);
-        RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketStubRouterWrapper());
-        APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
+        final RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketStubRouterWrapper());
+        final APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
         return new TestLuxis<>(router, applicationState, ref);
     }
 
-    <IN> void apply(IN immutableState, BiConsumer<IN, APP> applicationStateConsumer);
+    <IN> void apply(final IN immutableState, final BiConsumer<IN, APP> applicationStateConsumer);
 }

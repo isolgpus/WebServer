@@ -24,9 +24,9 @@ public class ValidationTestHandler extends VertxJsonRoute<ValidationRequest, Val
                 v.pathParam("userId").required().matches("[0-9]+");
             })
             .complete(ctx -> {
-                ValidationRequest r = ctx.in();
-                String page = ctx.http().getQueryParam("page");
-                String userId = ctx.http().getPathParam("userId");
+                final ValidationRequest r = ctx.in();
+                final String page = ctx.http().getQueryParam("page");
+                final String userId = ctx.http().getPathParam("userId");
                 return success(new ValidationResponse(r.name, r.email, r.age, r.address.city, page, userId));
             });
     }

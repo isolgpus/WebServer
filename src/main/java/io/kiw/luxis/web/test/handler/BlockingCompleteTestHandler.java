@@ -10,7 +10,7 @@ import static io.kiw.luxis.web.http.HttpResult.success;
 public class BlockingCompleteTestHandler extends VertxJsonRoute<BlockingRequest, BlockingTestResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<BlockingTestResponse> handle(HttpStream<BlockingRequest, MyApplicationState> httpStream) {
+    public RequestPipeline<BlockingTestResponse> handle(final HttpStream<BlockingRequest, MyApplicationState> httpStream) {
         return
             httpStream
                 .map(ctx -> ctx.in().numberToMultiply)

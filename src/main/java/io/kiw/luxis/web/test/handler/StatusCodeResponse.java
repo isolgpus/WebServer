@@ -5,7 +5,7 @@ public class StatusCodeResponse {
 
     public StatusCodeResponse() {}
 
-    public StatusCodeResponse(String value) {
+    public StatusCodeResponse(final String value) {
         this.value = value;
     }
 }

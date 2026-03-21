@@ -22,7 +22,7 @@ public class VertxTestClient implements TestClient {
     private final AutoCloseable onClose;
     private final long timeoutSeconds;
 
-    public VertxTestClient(String host, int port, AutoCloseable onClose) {
+    public VertxTestClient(final String host, final int port, final AutoCloseable onClose) {
         this.host = host;
         this.port = port;
         this.onClose = onClose;
@@ -32,42 +32,42 @@ public class VertxTestClient implements TestClient {
     }
 
     @Override
-    public TestHttpResponse post(StubRequest stubRequest) {
+    public TestHttpResponse post(final StubRequest stubRequest) {
         return request(stubRequest, HttpMethod.POST);
     }
 
     @Override
-    public TestHttpResponse put(StubRequest stubRequest) {
+    public TestHttpResponse put(final StubRequest stubRequest) {
         return request(stubRequest, HttpMethod.PUT);
     }
 
     @Override
-    public TestHttpResponse delete(StubRequest stubRequest) {
+    public TestHttpResponse delete(final StubRequest stubRequest) {
         return request(stubRequest, HttpMethod.DELETE);
     }
 
     @Override
-    public TestHttpResponse patch(StubRequest stubRequest) {
+    public TestHttpResponse patch(final StubRequest stubRequest) {
         return request(stubRequest, HttpMethod.PATCH);
     }
 
     @Override
-    public TestHttpResponse get(StubRequest stubRequest) {
+    public TestHttpResponse get(final StubRequest stubRequest) {
         return request(stubRequest, HttpMethod.GET);
     }
 
     @Override
-    public TestHttpResponse options(StubRequest stubRequest) {
+    public TestHttpResponse options(final StubRequest stubRequest) {
         return request(stubRequest, HttpMethod.OPTIONS);
     }
 
     @Override
-    public TestWebSocketClient webSocket(StubRequest stubRequest) {
+    public TestWebSocketClient webSocket(final StubRequest stubRequest) {
         return webSocketConnection(stubRequest);
     }
 
     @Override
-    public void assertException(String expected) {
+    public void assertException(final String expected) {
 
     }
 
@@ -76,16 +76,16 @@ public class VertxTestClient implements TestClient {
 
     }
 
-    public TestWebSocketClient webSocketConnection(StubRequest stubRequest) {
-        CompletableFuture<VertxTestWebSocketClient> future = new CompletableFuture<>();
+    public TestWebSocketClient webSocketConnection(final StubRequest stubRequest) {
+        final CompletableFuture<VertxTestWebSocketClient> future = new CompletableFuture<>();
 
-        String uri = buildUri(stubRequest);
-        WebSocketConnectOptions options = new WebSocketConnectOptions()
+        final String uri = buildUri(stubRequest);
+        final WebSocketConnectOptions options = new WebSocketConnectOptions()
             .setHost(host)
             .setPort(port)
             .setURI(uri);
 
-        for (Map.Entry<String, String> header : stubRequest.headers.entrySet()) {
+        for (final Map.Entry<String, String> header : stubRequest.headers.entrySet()) {
             options.addHeader(header.getKey(), header.getValue());
         }
 
@@ -95,32 +95,32 @@ public class VertxTestClient implements TestClient {
 
         try {
             return future.get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException("WebSocket connection failed", e);
         }
     }
 
-    private TestHttpResponse request(StubRequest stubRequest, HttpMethod method) {
-        CompletableFuture<TestHttpResponse> future = new CompletableFuture<>();
+    private TestHttpResponse request(final StubRequest stubRequest, final HttpMethod method) {
+        final CompletableFuture<TestHttpResponse> future = new CompletableFuture<>();
 
-        String uri = buildUri(stubRequest);
+        final String uri = buildUri(stubRequest);
 
         httpClient.request(method, port, host, uri)
             .onSuccess(req -> {
-                for (Map.Entry<String, String> header : stubRequest.headers.entrySet()) {
+                for (final Map.Entry<String, String> header : stubRequest.headers.entrySet()) {
                     req.putHeader(header.getKey(), header.getValue());
                 }
 
-                for (Map.Entry<String, HttpCookie> cookie : stubRequest.cookies.entrySet()) {
+                for (final Map.Entry<String, HttpCookie> cookie : stubRequest.cookies.entrySet()) {
                     req.putHeader("Cookie", cookie.getValue().name() + "=" + cookie.getValue().value());
                 }
 
                 if (!stubRequest.fileUploads.isEmpty()) {
-                    String boundary = "----VertxHttpClientBoundary" + System.nanoTime();
+                    final String boundary = "----VertxHttpClientBoundary" + System.nanoTime();
                     req.putHeader("Content-Type", "multipart/form-data; boundary=" + boundary);
 
-                    Buffer multipartBody = Buffer.buffer();
-                    for (Map.Entry<String, HttpBuffer> upload : stubRequest.fileUploads.entrySet()) {
+                    final Buffer multipartBody = Buffer.buffer();
+                    for (final Map.Entry<String, HttpBuffer> upload : stubRequest.fileUploads.entrySet()) {
                         multipartBody.appendString("--" + boundary + "\r\n");
                         multipartBody.appendString("Content-Disposition: form-data; name=\"" + upload.getKey() + "\"; filename=\"" + upload.getKey() + "\"\r\n");
                         multipartBody.appendString("Content-Type: application/octet-stream\r\n\r\n");
@@ -147,24 +147,24 @@ public class VertxTestClient implements TestClient {
 
         try {
             return future.get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new RuntimeException("HTTP request failed: " + method + " " + uri, e);
         }
     }
 
-    private void handleResponse(HttpClientResponse resp, CompletableFuture<TestHttpResponse> future) {
+    private void handleResponse(final HttpClientResponse resp, final CompletableFuture<TestHttpResponse> future) {
         resp.body()
             .onSuccess(body -> {
-                TestHttpResponse testResponse = new TestHttpResponse(body.toString())
+                final TestHttpResponse testResponse = new TestHttpResponse(body.toString())
                     .withStatusCode(resp.statusCode());
 
-                for (String headerName : resp.headers().names()) {
+                for (final String headerName : resp.headers().names()) {
                     testResponse.withHeader(headerName, resp.getHeader(headerName));
                 }
 
                 if (resp.cookies() != null) {
-                    for (String setCookie : resp.cookies()) {
-                        String[] parts = setCookie.split(";")[0].split("=", 2);
+                    for (final String setCookie : resp.cookies()) {
+                        final String[] parts = setCookie.split(";")[0].split("=", 2);
                         if (parts.length == 2) {
                             testResponse.withCookie(parts[0].trim(), parts[1].trim());
                         }
@@ -176,13 +176,13 @@ public class VertxTestClient implements TestClient {
             .onFailure(future::completeExceptionally);
     }
 
-    private String buildUri(StubRequest stubRequest) {
-        StringBuilder uri = new StringBuilder(stubRequest.path);
+    private String buildUri(final StubRequest stubRequest) {
+        final StringBuilder uri = new StringBuilder(stubRequest.path);
 
         if (!stubRequest.queryParams.isEmpty()) {
             uri.append("?");
             boolean first = true;
-            for (Map.Entry<String, String> entry : stubRequest.queryParams.entrySet()) {
+            for (final Map.Entry<String, String> entry : stubRequest.queryParams.entrySet()) {
                 if (!first) {
                     uri.append("&");
                 }
@@ -200,22 +200,22 @@ public class VertxTestClient implements TestClient {
     @Override
     public void close() throws Exception {
         try {
-            CompletableFuture<Void> clientClose = new CompletableFuture<>();
+            final CompletableFuture<Void> clientClose = new CompletableFuture<>();
             httpClient.close()
                 .onSuccess(v -> clientClose.complete(null))
                 .onFailure(clientClose::completeExceptionally);
             clientClose.get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // best effort
         }
 
         try {
-            CompletableFuture<Void> vertxClose = new CompletableFuture<>();
+            final CompletableFuture<Void> vertxClose = new CompletableFuture<>();
             vertx.close()
                 .onSuccess(v -> vertxClose.complete(null))
                 .onFailure(vertxClose::completeExceptionally);
             vertxClose.get(timeoutSeconds, TimeUnit.SECONDS);
-        } catch (Exception e) {
+        } catch (final Exception e) {
             // best effort
         }
 

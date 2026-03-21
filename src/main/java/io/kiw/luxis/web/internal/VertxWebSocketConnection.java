@@ -7,12 +7,12 @@ public class VertxWebSocketConnection implements WebSocketConnection {
 
     private final ServerWebSocket webSocket;
 
-    public VertxWebSocketConnection(ServerWebSocket webSocket) {
+    public VertxWebSocketConnection(final ServerWebSocket webSocket) {
         this.webSocket = webSocket;
     }
 
     @Override
-    public void sendText(String text) {
+    public void sendText(final String text) {
         webSocket.writeTextMessage(text);
     }
 

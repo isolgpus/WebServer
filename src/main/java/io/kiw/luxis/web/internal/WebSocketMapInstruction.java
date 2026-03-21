@@ -23,7 +23,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
     public final boolean lastStep;
     private Optional<WebSocketMapInstruction> next = Optional.empty();
 
-    public WebSocketMapInstruction(boolean isBlocking, WebSocketStreamFlatMapper<IN, OUT, APP> consumer, boolean lastStep) {
+    public WebSocketMapInstruction(final boolean isBlocking, final WebSocketStreamFlatMapper<IN, OUT, APP> consumer, final boolean lastStep) {
         this.isBlocking = isBlocking;
         this.isAsync = false;
         this.consumer = consumer;
@@ -33,7 +33,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         this.lastStep = lastStep;
     }
 
-    public WebSocketMapInstruction(boolean isBlocking, WebSocketStreamBlockingFlatMapper<IN, OUT> consumer, boolean lastStep) {
+    public WebSocketMapInstruction(final boolean isBlocking, final WebSocketStreamBlockingFlatMapper<IN, OUT> consumer, final boolean lastStep) {
         this.isBlocking = isBlocking;
         this.isAsync = false;
         this.consumer = null;
@@ -43,7 +43,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         this.lastStep = lastStep;
     }
 
-    public WebSocketMapInstruction(WebSocketStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer, boolean lastStep) {
+    public WebSocketMapInstruction(final WebSocketStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer, final boolean lastStep) {
         this.isBlocking = false;
         this.isAsync = true;
         this.consumer = null;
@@ -53,7 +53,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         this.lastStep = lastStep;
     }
 
-    public WebSocketMapInstruction(WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer, boolean lastStep) {
+    public WebSocketMapInstruction(final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer, final boolean lastStep) {
         this.isBlocking = true;
         this.isAsync = true;
         this.consumer = null;
@@ -63,7 +63,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         this.lastStep = lastStep;
     }
 
-    public void setNext(WebSocketMapInstruction next) {
+    public void setNext(final WebSocketMapInstruction next) {
         this.next = Optional.of(next);
     }
 
@@ -71,7 +71,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         return next;
     }
 
-    public Result<ErrorMessageResponse, OUT> handle(IN state, WebSocketConnection connection, APP applicationState) {
+    public Result<ErrorMessageResponse, OUT> handle(final IN state, final WebSocketConnection connection, final APP applicationState) {
         if (consumer != null) {
             return consumer.handle(new WebSocketContext<>(state, connection, applicationState));
         } else if (blockingConsumer != null) {
@@ -81,7 +81,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         throw new UnsupportedOperationException("Unknown consumer");
     }
 
-    public CompletableFuture<Result<ErrorMessageResponse, OUT>> handleAsync(IN state, WebSocketConnection connection, APP applicationState) {
+    public CompletableFuture<Result<ErrorMessageResponse, OUT>> handleAsync(final IN state, final WebSocketConnection connection, final APP applicationState) {
         if (asyncConsumer != null) {
             return asyncConsumer.handle(new WebSocketContext<>(state, connection, applicationState));
         } else if (asyncBlockingConsumer != null) {

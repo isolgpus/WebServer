@@ -9,12 +9,12 @@ public class StubWebSocketConnection implements WebSocketConnection {
     private final List<String> sentMessages;
     private boolean closed = false;
 
-    public StubWebSocketConnection(List<String> sentMessages) {
+    public StubWebSocketConnection(final List<String> sentMessages) {
         this.sentMessages = sentMessages;
     }
 
     @Override
-    public void sendText(String text) {
+    public void sendText(final String text) {
         sentMessages.add(text);
     }
 

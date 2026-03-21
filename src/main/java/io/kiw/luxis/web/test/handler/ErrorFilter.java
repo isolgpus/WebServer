@@ -11,7 +11,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 public class ErrorFilter implements VertxJsonFilter<MyApplicationState> {
 
     @Override
-    public RequestPipeline<Void> handle(HttpStream<Void, MyApplicationState> e) {
+    public RequestPipeline<Void> handle(final HttpStream<Void, MyApplicationState> e) {
         return e.complete(ctx -> HttpResult.error(ErrorStatusCode.UNAUTHORIZED, new ErrorMessageResponse("filter blocked")));
     }
 }

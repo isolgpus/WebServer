@@ -8,8 +8,8 @@ import io.kiw.luxis.web.test.jwt.StubJwtProvider;
 public class TestApplicationRoutes {
     public static final String JWT_SECRET = "test-secret-key-for-unit-tests";
 
-    public static MyApplicationState registerRoutes(RoutesRegister routesRegister, MyApplicationState state) {
-        StubJwtProvider jwtProvider = new StubJwtProvider(JWT_SECRET);
+    public static MyApplicationState registerRoutes(final RoutesRegister routesRegister, final MyApplicationState state) {
+        final StubJwtProvider jwtProvider = new StubJwtProvider(JWT_SECRET);
 
         routesRegister.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
         routesRegister.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));

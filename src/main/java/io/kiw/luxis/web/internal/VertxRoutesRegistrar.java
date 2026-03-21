@@ -12,15 +12,15 @@ import java.util.function.Consumer;
 
 public class VertxRoutesRegistrar {
 
-    public static <R> R register(Router router, Vertx vertx, ApplicationRoutesRegister<R> routesRegisterConsumer, int defaultTimeoutMillis, Consumer<Exception> exceptionHandler, OptionalLong maxBodySize, Optional<CorsConfig> corsConfig) {
-        VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler);
+    public static <R> R register(final Router router, final Vertx vertx, final ApplicationRoutesRegister<R> routesRegisterConsumer, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final OptionalLong maxBodySize, final Optional<CorsConfig> corsConfig) {
+        final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
-        BodyHandler handler = BodyHandler.create();
+        final BodyHandler handler = BodyHandler.create();
         maxBodySize.ifPresent(handler::setBodyLimit);
         router.route().handler(handler);
 
-        RoutesRegister routesRegister = new RoutesRegister(routerWrapper, new VertxWebSocketRouterWrapperImpl(vertx));
+        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, new VertxWebSocketRouterWrapperImpl(vertx));
         return routesRegisterConsumer.registerRoutes(routesRegister);
 
     }

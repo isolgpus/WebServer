@@ -11,11 +11,11 @@ import io.kiw.luxis.web.test.MyApplicationState;
 public class GetEchoHandler extends VertxJsonRoute<EmptyRequest, EchoResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<EchoResponse> handle(HttpStream<EmptyRequest, MyApplicationState> httpStream) {
+    public RequestPipeline<EchoResponse> handle(final HttpStream<EmptyRequest, MyApplicationState> httpStream) {
         return
             httpStream
                 .complete(ctx -> {
-                    HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
+                    final HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
 
                     return HttpResult.success(new EchoResponse(188,
                         "You invoked a GET",

@@ -7,13 +7,13 @@ public class VertxTimeoutHandler implements Handler<RoutingContext> {
 
     private final int timeout;
 
-    public VertxTimeoutHandler(int timeout) {
+    public VertxTimeoutHandler(final int timeout) {
         this.timeout = timeout;
     }
 
     @Override
-    public void handle(RoutingContext ctx) {
-        long tid = ctx.vertx().setTimer(timeout, (t) -> {
+    public void handle(final RoutingContext ctx) {
+        final long tid = ctx.vertx().setTimer(timeout, (t) -> {
             ctx.data().put("CONTEXT_DEAD", true);
             ctx.end("{\"message\":\"Service Unavailable\"}");
         });

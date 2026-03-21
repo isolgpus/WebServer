@@ -4,12 +4,12 @@ import io.kiw.luxis.web.internal.WebSocketRouterWrapper;
 
 public class WebSocketStubRouterWrapper implements WebSocketRouterWrapper {
     @Override
-    public void handleBlocking(Runnable o) {
+    public void handleBlocking(final Runnable o) {
         o.run();
     }
 
     @Override
-    public void handleOnEventLoop(Runnable o) {
+    public void handleOnEventLoop(final Runnable o) {
         o.run();
     }
 }

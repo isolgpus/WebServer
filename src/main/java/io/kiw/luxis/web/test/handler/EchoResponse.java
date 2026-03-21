@@ -8,7 +8,7 @@ public class EchoResponse {
     public final String requestHeaderExample;
     public final String requestCookieExample;
 
-    public EchoResponse(int intExample, String stringExample, String pathExample, String queryExample, String requestHeaderExample, String requestCookieExample) {
+    public EchoResponse(final int intExample, final String stringExample, final String pathExample, final String queryExample, final String requestHeaderExample, final String requestCookieExample) {
 
         this.intExample = intExample;
         this.stringExample = stringExample;
