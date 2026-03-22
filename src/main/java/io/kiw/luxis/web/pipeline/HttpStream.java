@@ -8,7 +8,7 @@ import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.ender.Ender;
 import io.kiw.luxis.web.jwt.JwtClaims;
 import io.kiw.luxis.web.jwt.JwtProvider;
-import io.kiw.luxis.web.validation.Validator;
+import io.kiw.luxis.web.validation.HttpValidator;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -19,9 +19,9 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
         super(instructionChain, canFinishSuccessfully, applicationState, ender);
     }
 
-    public HttpStream<IN, APP> validate(final Consumer<Validator<IN>> config) {
+    public HttpStream<IN, APP> validate(final Consumer<HttpValidator<IN>> config) {
         instructionChain.add(new MapInstruction<>(false, (HttpControlStreamFlatMapper<IN, IN, APP>) ctx -> {
-            final Validator<IN> v = new Validator<>(ctx.in(), ctx.http(), "");
+            final HttpValidator<IN> v = new HttpValidator<>(ctx.in(), ctx.http(), "");
             config.accept(v);
             return v.toResult();
         }, false));

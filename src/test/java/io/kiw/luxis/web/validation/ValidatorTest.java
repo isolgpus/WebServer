@@ -4,6 +4,7 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.test.StubRequestContext;
+import io.kiw.luxis.web.validation.HttpValidator;
 import org.junit.Test;
 
 import java.util.Arrays;
@@ -49,13 +50,13 @@ public class ValidatorTest {
     }
 
     private Validator<Body> validator(Body body) {
-        return new Validator<>(body, null, "");
+        return new Validator<>(body, "");
     }
 
-    private Validator<Body> validatorWithHttp(Body body, Map<String, String> queryParams, Map<String, String> pathParams) {
+    private HttpValidator<Body> validatorWithHttp(Body body, Map<String, String> queryParams, Map<String, String> pathParams) {
         StubRequestContext ctx = new StubRequestContext("{}", queryParams, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
         ctx.setPathParams(pathParams);
-        return new Validator<>(body, new HttpContext(ctx), "");
+        return new HttpValidator<>(body, new HttpContext(ctx), "");
     }
 
     // --- required ---
@@ -316,7 +317,7 @@ public class ValidatorTest {
     @Test
     public void shouldReturnSuccessFromToResultWhenNoErrors() {
         Body body = new Body("Alice", "a@b.com", 25, null);
-        Validator<Body> v = validator(body);
+        HttpValidator<Body> v = new HttpValidator<>(body, null, "");
         v.jsonField("name", r -> r.name).required();
         Result<HttpErrorResponse, Body> result = v.toResult();
         boolean[] isSuccess = {false};
@@ -326,7 +327,7 @@ public class ValidatorTest {
 
     @Test
     public void shouldReturnErrorFromToResultWhenErrors() {
-        Validator<Body> v = validator(new Body(null, null, null, null));
+        HttpValidator<Body> v = new HttpValidator<>(new Body(null, null, null, null), null, "");
         v.jsonField("name", r -> r.name).required();
         Result<HttpErrorResponse, Body> result = v.toResult();
         boolean[] isError = {false};

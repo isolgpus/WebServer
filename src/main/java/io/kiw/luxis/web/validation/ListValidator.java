@@ -37,7 +37,7 @@ public class ListValidator<P, E> {
         if (list != null) {
             for (int i = 0; i < list.size(); i++) {
                 final String elementPrefix = fieldName + "[" + i + "].";
-                final Validator<E> ev = new Validator<>(list.get(i), parent.http, elementPrefix);
+                final Validator<E> ev = new Validator<>(list.get(i), elementPrefix);
                 block.accept(ev);
                 parent.errors.putAll(ev.errors);
             }
