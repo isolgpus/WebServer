@@ -33,13 +33,13 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.TRANSFER_ENCODING;
 public class RoutesRegister {
 
     private final RouterWrapper router;
-    private final WebSocketRouterWrapper webSocketRouterWrapper;
+    private final ExecutionDispatcher executionDispatcher;
     private final ObjectMapper objectMapper = JacksonUtil.createMapper();
     private final OpenApiCollector openApiCollector = new OpenApiCollector();
 
-    public RoutesRegister(final RouterWrapper router, final WebSocketRouterWrapper webSocketRouterWrapper) {
+    public RoutesRegister(final RouterWrapper router, final ExecutionDispatcher executionDispatcher) {
         this.router = router;
-        this.webSocketRouterWrapper = webSocketRouterWrapper;
+        this.executionDispatcher = executionDispatcher;
     }
 
     public OpenApiCollector getOpenApiCollector() {
@@ -148,7 +148,7 @@ public class RoutesRegister {
             null
         ));
 
-        final WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler(), webSocketRouterWrapper);
+        final WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher);
         router.webSocketRoute(path, handler);
     }
 

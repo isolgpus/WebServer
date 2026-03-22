@@ -20,15 +20,15 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     private final ObjectMapper objectMapper;
     private final APP appState;
     private final Consumer<Exception> exceptionHandler;
-    private final WebSocketRouterWrapper webSocketRouterWrapper;
+    private final ExecutionDispatcher executionDispatcher;
     private final WebSocketPipeline<OUT> pipeline;
 
-    public WebSocketRouteHandler(final WebSocketRoute<IN, OUT, APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final WebSocketRouterWrapper webSocketRouterWrapper) {
+    public WebSocketRouteHandler(final WebSocketRoute<IN, OUT, APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
-        this.webSocketRouterWrapper = webSocketRouterWrapper;
+        this.executionDispatcher = executionDispatcher;
         this.pipeline = route.onMessage(new WebSocketStream<>(new ArrayList<>(), appState));
     }
 
@@ -72,7 +72,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future = instruction.handleAsync(message, session.connection(), appState);
 
-            webSocketRouterWrapper.handleOnEventLoop(() -> {
+            executionDispatcher.handleOnEventLoop(() -> {
                 try {
                     future.join().consume(e -> {}, q -> {
                         continueChain(session, instruction, (OUT) q, ThreadContext.EVENT_LOOP);
@@ -106,9 +106,9 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         if (current == required) {
             action.run();
         } else if (required == ThreadContext.BLOCKING) {
-            webSocketRouterWrapper.handleBlocking(action);
+            executionDispatcher.handleBlocking(action);
         } else {
-            webSocketRouterWrapper.handleOnEventLoop(action);
+            executionDispatcher.handleOnEventLoop(action);
         }
     }
 

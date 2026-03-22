@@ -1,6 +1,6 @@
 package io.kiw.luxis.web.internal;
 
-public interface WebSocketRouterWrapper {
+public interface ExecutionDispatcher {
     void handleBlocking(Runnable o);
 
     void handleOnEventLoop(Runnable o);

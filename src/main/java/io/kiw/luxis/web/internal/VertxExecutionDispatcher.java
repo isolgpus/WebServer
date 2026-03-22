@@ -2,10 +2,10 @@ package io.kiw.luxis.web.internal;
 
 import io.vertx.core.Vertx;
 
-public class VertxWebSocketRouterWrapperImpl implements WebSocketRouterWrapper {
+public class VertxExecutionDispatcher implements ExecutionDispatcher {
     private final Vertx vertx;
 
-    public VertxWebSocketRouterWrapperImpl(final Vertx vertx) {
+    public VertxExecutionDispatcher(final Vertx vertx) {
         this.vertx = vertx;
     }
 

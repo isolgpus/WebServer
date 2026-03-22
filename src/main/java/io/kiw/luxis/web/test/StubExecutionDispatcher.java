@@ -1,8 +1,8 @@
 package io.kiw.luxis.web.test;
 
-import io.kiw.luxis.web.internal.WebSocketRouterWrapper;
+import io.kiw.luxis.web.internal.ExecutionDispatcher;
 
-public class WebSocketStubRouterWrapper implements WebSocketRouterWrapper {
+public class StubExecutionDispatcher implements ExecutionDispatcher {
     @Override
     public void handleBlocking(final Runnable o) {
         o.run();

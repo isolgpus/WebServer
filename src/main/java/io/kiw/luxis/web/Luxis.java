@@ -3,7 +3,7 @@ package io.kiw.luxis.web;
 import io.kiw.luxis.web.internal.RoutesRegister;
 import io.kiw.luxis.web.internal.VertxRoutesRegistrar;
 import io.kiw.luxis.web.test.StubRouter;
-import io.kiw.luxis.web.test.WebSocketStubRouterWrapper;
+import io.kiw.luxis.web.test.StubExecutionDispatcher;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
@@ -34,7 +34,7 @@ public interface Luxis<APP> extends AutoCloseable {
     public static <APP> TestLuxis<APP> test(final ApplicationRoutesRegister<APP> routesRegisterConsumer) {
         final Consumer<Exception>[] ref = new Consumer[]{e -> {}};
         final StubRouter router = new StubRouter(e -> ref[0].accept(e));
-        final RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketStubRouterWrapper());
+        final RoutesRegister routesRegister = new RoutesRegister(router, new StubExecutionDispatcher());
         final APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
         return new TestLuxis<>(router, applicationState, ref);
     }
@@ -44,7 +44,7 @@ public interface Luxis<APP> extends AutoCloseable {
         final Consumer<Exception>[] ref = new Consumer[]{webServerConfig.exceptionHandler};
         final StubRouter router = new StubRouter(e -> ref[0].accept(e));
         webServerConfig.corsConfig.ifPresent(router::configureCors);
-        final RoutesRegister routesRegister = new RoutesRegister(router, new WebSocketStubRouterWrapper());
+        final RoutesRegister routesRegister = new RoutesRegister(router, new StubExecutionDispatcher());
         final APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
         return new TestLuxis<>(router, applicationState, ref);
     }

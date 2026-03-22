@@ -22,7 +22,7 @@ public final class VertxRoutesRegistrar {
         maxBodySize.ifPresent(handler::setBodyLimit);
         router.route().handler(handler);
 
-        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, new VertxWebSocketRouterWrapperImpl(vertx));
+        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, new VertxExecutionDispatcher(vertx));
         return routesRegisterConsumer.registerRoutes(routesRegister);
 
     }
