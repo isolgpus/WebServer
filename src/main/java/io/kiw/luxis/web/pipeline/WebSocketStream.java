@@ -3,9 +3,11 @@ package io.kiw.luxis.web.pipeline;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.internal.WebSocketMapInstruction;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
+import io.kiw.luxis.web.validation.WebSocketValidator;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
 import java.util.List;
+import java.util.function.Consumer;
 
 public class WebSocketStream<IN, APP> {
     private final List<WebSocketMapInstruction> instructionChain;
@@ -14,6 +16,20 @@ public class WebSocketStream<IN, APP> {
     public WebSocketStream(final List<WebSocketMapInstruction> instructionChain, final APP applicationState) {
         this.instructionChain = instructionChain;
         this.applicationState = applicationState;
+    }
+
+    public WebSocketStream<IN, APP> validate(final Consumer<WebSocketValidator<IN>> config) {
+        final WebSocketMapInstruction<IN, IN, APP> e = new WebSocketMapInstruction<>(false,
+                (WebSocketStreamFlatMapper<IN, IN, APP>) ctx -> {
+                    final WebSocketValidator<IN> v = new WebSocketValidator<>(ctx.in(), "");
+                    config.accept(v);
+                    return v.toResult();
+                }, false);
+        if (!instructionChain.isEmpty()) {
+            instructionChain.getLast().setNext(e);
+        }
+        instructionChain.add(e);
+        return new WebSocketStream<>(instructionChain, applicationState);
     }
 
     public <OUT> WebSocketStream<OUT, APP> map(final WebSocketStreamMapper<IN, OUT, APP> flowHandler) {
