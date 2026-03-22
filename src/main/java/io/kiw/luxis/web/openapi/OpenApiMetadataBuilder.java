@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.openapi;
 
-import io.kiw.luxis.web.test.handler.RouteConfig;
-import io.kiw.luxis.web.test.handler.RouteConfigBuilder;
+import io.kiw.luxis.web.RouteConfig;
+import io.kiw.luxis.web.RouteConfigBuilder;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

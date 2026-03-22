@@ -21,8 +21,8 @@ import io.kiw.luxis.web.openapi.RouteDescriptor;
 import io.kiw.luxis.web.openapi.TypeResolver;
 import io.kiw.luxis.web.pipeline.HttpMapStream;
 import io.kiw.luxis.web.pipeline.HttpStream;
-import io.kiw.luxis.web.test.handler.RouteConfig;
-import io.kiw.luxis.web.test.handler.RouteConfigBuilder;
+import io.kiw.luxis.web.RouteConfig;
+import io.kiw.luxis.web.RouteConfigBuilder;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;

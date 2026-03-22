@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.application.routes;
 
+import io.kiw.luxis.web.RouteConfigBuilder;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import io.kiw.luxis.web.internal.JacksonUtil;
@@ -9,7 +10,6 @@ import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.GetEchoHandler;
 import io.kiw.luxis.web.test.handler.PostEchoHandler;
-import io.kiw.luxis.web.test.handler.RouteConfigBuilder;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;

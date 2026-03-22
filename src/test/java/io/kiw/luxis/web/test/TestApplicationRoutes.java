@@ -24,7 +24,7 @@ import io.kiw.luxis.web.test.handler.GetTestFilterHandler;
 import io.kiw.luxis.web.test.handler.JwtFilterProtectedHandler;
 import io.kiw.luxis.web.test.handler.JwtProtectedHandler;
 import io.kiw.luxis.web.test.handler.PostEchoHandler;
-import io.kiw.luxis.web.test.handler.RouteConfigBuilder;
+import io.kiw.luxis.web.RouteConfigBuilder;
 import io.kiw.luxis.web.test.handler.StateTestHandler;
 import io.kiw.luxis.web.test.handler.StatefulWebSocketHandler;
 import io.kiw.luxis.web.test.handler.StatusCodeTestHandler;

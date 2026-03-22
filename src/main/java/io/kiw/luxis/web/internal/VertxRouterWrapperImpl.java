@@ -2,7 +2,7 @@ package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.http.Method;
-import io.kiw.luxis.web.test.handler.RouteConfig;
+import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Route;

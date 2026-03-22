@@ -6,7 +6,7 @@ import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.internal.RouterWrapper;
 import io.kiw.luxis.web.internal.WebSocketRouteHandler;
-import io.kiw.luxis.web.test.handler.RouteConfig;
+import io.kiw.luxis.web.RouteConfig;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;

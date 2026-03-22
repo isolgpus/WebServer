@@ -56,7 +56,7 @@ public class TestApplicationClientCreator {
         else
         {
             Luxis<MyApplicationState> luxis = Luxis.test(routes, config);
-            return new StubTestClient("127.0.0.1", 8080, luxis);
+            return new StubTestClient<>("127.0.0.1", 8080, luxis);
         }
 
     }

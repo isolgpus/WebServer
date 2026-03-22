@@ -1,4 +1,4 @@
-package io.kiw.luxis.web.test.handler;
+package io.kiw.luxis.web;
 
 import io.kiw.luxis.web.openapi.OpenApiMetadataBuilder;
 

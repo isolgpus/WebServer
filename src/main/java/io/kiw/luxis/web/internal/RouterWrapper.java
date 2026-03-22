@@ -9,7 +9,7 @@ import io.kiw.luxis.web.http.HttpContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpSuccessResponse;
 import io.kiw.luxis.web.internal.ender.Ender;
-import io.kiw.luxis.web.test.handler.RouteConfig;
+import io.kiw.luxis.web.RouteConfig;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
