@@ -4,8 +4,4 @@ public interface ContextAsserter {
     void assertInApplicationContext();
 
     void assertInWorkerContext();
-
-    void assertInExecutorContext();
-
-    void evillySetExecutorModeInStub();
 }

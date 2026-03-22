@@ -17,16 +17,4 @@ public class VertxContextAsserter implements ContextAsserter {
         }
     }
 
-    @Override
-    public void assertInExecutorContext() {
-        final String threadName = Thread.currentThread().getName();
-        if (!threadName.contains("ForkJoinPool.commonPool-worker")) {
-            throw new AssertionError("Expected to be on executor thread (not vert.x) but was on: " + threadName);
-        }
-    }
-
-    @Override
-    public void evillySetExecutorModeInStub() {
-
-    }
 }

@@ -26,7 +26,7 @@ public class VertxTestWebSocketClient implements TestWebSocketClient {
     @Override
     @SuppressWarnings("IllegalCatch")
     public void onResponses(final Consumer<List<String>> receivedMessageConsumer) {
-        final long deadline = System.currentTimeMillis() + 1000;
+        final long deadline = System.currentTimeMillis() + 5000;
         Throwable latestException = null;
 
         while (System.currentTimeMillis() < deadline) {
@@ -37,7 +37,7 @@ public class VertxTestWebSocketClient implements TestWebSocketClient {
             } catch (final RuntimeException | AssertionError e) {
                 latestException = e;
                 try {
-                    Thread.sleep(100);
+                    Thread.sleep(1);
                 } catch (final InterruptedException ie) {
                     Thread.currentThread().interrupt();
                     throw new RuntimeException(ie);

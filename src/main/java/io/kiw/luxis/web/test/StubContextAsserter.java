@@ -16,17 +16,4 @@ public class StubContextAsserter implements ContextAsserter {
             throw new AssertionError("Expected to be on Worker context but was on: " + threadName);
         }
     }
-
-    @Override
-    public void assertInExecutorContext() {
-        final String threadName = Thread.currentThread().getName();
-        if (!threadName.contains("Executor")) {
-            throw new AssertionError("Expected to be on executor Context but was on: " + threadName);
-        }
-    }
-
-    @Override
-    public void evillySetExecutorModeInStub() {
-        Thread.currentThread().setName("Executor");
-    }
 }

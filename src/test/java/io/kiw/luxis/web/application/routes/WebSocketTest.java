@@ -4,24 +4,41 @@ import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
 import io.kiw.luxis.web.pipeline.DisconnectSession;
 import io.kiw.luxis.web.pipeline.JustSendValidationError;
 import io.kiw.luxis.web.pipeline.SendValidationErrorsAndDisconnectSession;
+import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHelper;
 import io.kiw.luxis.web.test.TestWebSocketClient;
-import io.kiw.luxis.web.test.ContextAsserter;
-import io.kiw.luxis.web.test.handler.*;
-import org.junit.*;
+import io.kiw.luxis.web.test.handler.AsyncBlockingMapWebSocketHandler;
+import io.kiw.luxis.web.test.handler.AsyncFlatMapFailWebSocketHandler;
+import io.kiw.luxis.web.test.handler.AsyncMapWebSocketHandler;
+import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketHandler;
+import io.kiw.luxis.web.test.handler.BlockingMapWebSocketHandler;
+import io.kiw.luxis.web.test.handler.ContextAssertingAsyncWebSocketHandler;
+import io.kiw.luxis.web.test.handler.ContextAssertingWebSocketHandler;
+import io.kiw.luxis.web.test.handler.EchoWebSocketHandler;
+import io.kiw.luxis.web.test.handler.FlatMapFailWebSocketHandler;
+import io.kiw.luxis.web.test.handler.NoResponseWebSocketHandler;
+import io.kiw.luxis.web.test.handler.StatefulWebSocketHandler;
+import io.kiw.luxis.web.test.handler.ThrowWebSocketHandler;
+import io.kiw.luxis.web.test.handler.ValidationWebSocketHandler;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Ignore;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Collection;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 import static org.junit.Assert.fail;
 
 @RunWith(Parameterized.class)
-@Ignore
 public class WebSocketTest {
 
     @Parameterized.Parameters(name = "{0}")

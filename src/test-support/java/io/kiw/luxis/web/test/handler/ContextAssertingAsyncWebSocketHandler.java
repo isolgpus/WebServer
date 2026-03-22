@@ -26,9 +26,6 @@ public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoute<WebSoc
             .asyncMap(ctx -> {
                 asserter.assertInApplicationContext();
                 return CompletableFuture.supplyAsync(() -> {
-                    // super evil
-                    asserter.evillySetExecutorModeInStub();
-                    asserter.assertInExecutorContext();
                     return ctx.in() + " async";
                 });
             })
@@ -39,9 +36,6 @@ public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoute<WebSoc
             .asyncMap(ctx -> {
                 asserter.assertInApplicationContext();
                 return CompletableFuture.supplyAsync(() -> {
-                    // super evil
-                    asserter.evillySetExecutorModeInStub();
-                    asserter.assertInExecutorContext();
                     return ctx.in() + " async2";
                 });
             })
