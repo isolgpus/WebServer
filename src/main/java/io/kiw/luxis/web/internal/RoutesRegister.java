@@ -22,6 +22,7 @@ import io.kiw.luxis.web.openapi.OpenApiCollector;
 import io.kiw.luxis.web.openapi.OpenApiRoute;
 import io.kiw.luxis.web.openapi.RouteDescriptor;
 import io.kiw.luxis.web.openapi.TypeResolver;
+import io.kiw.luxis.web.pipeline.HttpMapStream;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.handler.RouteConfig;
 import io.kiw.luxis.web.test.handler.RouteConfigBuilder;
@@ -65,7 +66,8 @@ public class RoutesRegister {
 
     public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final VertxJsonRoute<IN, OUT, APP> vertxJsonRoute, final RouteConfig routeConfig) {
 
-        final HttpStream<IN, APP> httpStream = new HttpStream<>(new ArrayList<>(), true, applicationState, new JsonEnder(objectMapper))
+        final ArrayList<MapInstruction> chain = new ArrayList<>();
+        new HttpMapStream<>(chain, true, applicationState, new JsonEnder(objectMapper))
                 .flatMap(ctx -> {
                     ctx.http().addResponseHeader("Content-Type", "application/json");
 
@@ -81,6 +83,7 @@ public class RoutesRegister {
                     }
                 }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
+        final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, true, applicationState, new JsonEnder(objectMapper));
         final RequestPipeline flow = vertxJsonRoute.handle(httpStream);
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(vertxJsonRoute.getClass(), VertxJsonRoute.class);
@@ -101,11 +104,13 @@ public class RoutesRegister {
     }
 
     public <APP> void jsonFilter(final String path, final APP applicationState, final VertxJsonFilter<APP> jsonFilter, final RouteConfig routeConfig) {
-        final HttpStream<Void, APP> httpStream = new HttpStream<>(new ArrayList<>(), false, applicationState, null)
+        final ArrayList<MapInstruction> chain = new ArrayList<>();
+        new HttpMapStream<>(chain, false, applicationState, null)
                 .map(ctx -> {
                     ctx.http().addResponseHeader("Content-Type", "application/json");
                     return null;
                 });
+        final HttpStream<Void, APP> httpStream = new HttpStream<>(chain, false, applicationState, null);
         final RequestPipeline<Void> flow = jsonFilter.handle(httpStream);
 
 
@@ -114,9 +119,9 @@ public class RoutesRegister {
 
     public  <OUT, APP>  void uploadFileRoute(final String path, final Method method, final APP applicationState, final VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {
 
-        final HttpStream<Map<String, HttpBuffer>, APP> httpStream = new HttpStream<>(new ArrayList<>(), true, applicationState,  new JsonEnder(objectMapper));
+        final HttpMapStream<Map<String, HttpBuffer>, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState,  new JsonEnder(objectMapper));
 
-        final HttpStream<Map<String, HttpBuffer>, APP> fileUploadStream = httpStream.flatMap(ctx -> {
+        final HttpMapStream<Map<String, HttpBuffer>, APP> fileUploadStream = httpStream.flatMap(ctx -> {
             ctx.http().addResponseHeader("Content-Type", "application/json");
 
             final Map<String, HttpBuffer> uploadedFile = ctx.http().resolveUploadedFiles();
@@ -153,9 +158,9 @@ public class RoutesRegister {
     }
 
     public <IN, APP> void downloadFileRoute(final String path, final Method method, final APP applicationState, final VertxFileDownloadRoute<IN, APP> fileDownloadHandler, final String contentType) {
-        final HttpStream<IN, APP> httpStream = new HttpStream<>(new ArrayList<>(), true, applicationState, new FileEnder());
+        final HttpMapStream<IN, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new FileEnder());
 
-        final HttpStream<IN, APP> fileDownloadStream = httpStream.flatMap(ctx -> {
+        final HttpMapStream<IN, APP> fileDownloadStream = httpStream.flatMap(ctx -> {
             ctx.http().addResponseHeader("Content-Type", contentType);
             ctx.http().addResponseHeader(TRANSFER_ENCODING, "chunked");
             return HttpResult.success(ctx.in());
