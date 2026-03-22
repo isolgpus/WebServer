@@ -60,8 +60,8 @@ public abstract class RouterWrapper {
         }
 
         // whenComplete fires on whichever thread completes the future (e.g. ForkJoinPool).
-        // We must dispatch back to the Vert.x event loop before touching the pipeline
-        // (ctx.next(), ctx.end(), etc. are not thread-safe outside the event loop).
+        // We must dispatch back to the application context before touching the pipeline
+        // (ctx.next(), ctx.end(), etc. are not thread-safe outside the application context).
         future.whenComplete((result, throwable) ->
                 vertxContext.runOnContext(() -> {
                     if (throwable != null) {

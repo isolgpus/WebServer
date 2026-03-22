@@ -18,7 +18,7 @@ public class VertxExecutionDispatcher implements ExecutionDispatcher {
     }
 
     @Override
-    public void handleOnEventLoop(final Runnable o) {
+    public void handleOnApplicationContext(final Runnable o) {
         vertx.runOnContext(unused -> o.run());
     }
 }

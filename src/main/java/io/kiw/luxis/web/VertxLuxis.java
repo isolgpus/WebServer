@@ -18,7 +18,7 @@ public class VertxLuxis<APP> implements Luxis<APP> {
 
     @Override
     public <IN> void apply(final IN immutableState, final BiConsumer<IN, APP> applicationStateConsumer) {
-        executionDispatcher.handleOnEventLoop(() -> applicationStateConsumer.accept(immutableState, applicationState));
+        executionDispatcher.handleOnApplicationContext(() -> applicationStateConsumer.accept(immutableState, applicationState));
     }
 
     @Override

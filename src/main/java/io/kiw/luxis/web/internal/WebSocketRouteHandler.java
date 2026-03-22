@@ -17,7 +17,7 @@ import java.util.function.Consumer;
 
 public class WebSocketRouteHandler<IN, OUT, APP> {
 
-    enum ThreadContext { EVENT_LOOP, BLOCKING }
+    enum ThreadContext { APPLICATION_CONTEXT, BLOCKING }
 
     private final WebSocketRoute<IN, OUT, APP> route;
     private final ObjectMapper objectMapper;
@@ -57,7 +57,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
 
             final WebSocketMapInstruction webSocketMapInstruction = pipeline.getApplicationInstructions().getFirst();
 
-            executeInstruction(session, webSocketMapInstruction, message, ThreadContext.EVENT_LOOP);
+            executeInstruction(session, webSocketMapInstruction, message, ThreadContext.APPLICATION_CONTEXT);
 
         } catch (final Exception e) {
             handleCorruptInput(e, session);
@@ -72,7 +72,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     }
 
     private <IN, OUT> void executeInstruction(final WebSocketSession<?> session, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message, final ThreadContext currentThread) {
-        final ThreadContext requiredThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.EVENT_LOOP;
+        final ThreadContext requiredThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.APPLICATION_CONTEXT;
 
         runOnThread(requiredThread, currentThread, () -> {
             handleAndContinue(session, instruction, message);
@@ -84,17 +84,17 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future = instruction.handleAsync(message, session.connection(), appState);
 
-            executionDispatcher.handleOnEventLoop(() -> {
+            executionDispatcher.handleOnApplicationContext(() -> {
                 try {
                     future.join().consume(e -> {}, q -> {
-                        continueChain(session, instruction, (OUT) q, ThreadContext.EVENT_LOOP);
+                        continueChain(session, instruction, (OUT) q, ThreadContext.APPLICATION_CONTEXT);
                     });
                 } catch (final Exception e) {
                     exceptionHandler.accept(e);
                 }
             });
         } else {
-            final ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.EVENT_LOOP;
+            final ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.APPLICATION_CONTEXT;
             final Result<ErrorMessageResponse, ?> result = instruction.handle(message, session.connection(), appState);
             result.consume(e -> {}, q -> {
                 continueChain(session, instruction, (OUT) q, afterThread);
@@ -108,7 +108,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
             final WebSocketMapInstruction<OUT, ?, APP> next = (WebSocketMapInstruction<OUT, ?, APP>) instruction.next().get();
             executeInstruction(session, next, result, currentThread);
         } else if (pipeline.shouldSendResponse()) {
-            runOnThread(ThreadContext.EVENT_LOOP, currentThread, () -> {
+            runOnThread(ThreadContext.APPLICATION_CONTEXT, currentThread, () -> {
                 sendFinalResponse(session, result);
             });
         }
@@ -120,7 +120,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         } else if (required == ThreadContext.BLOCKING) {
             executionDispatcher.handleBlocking(action);
         } else {
-            executionDispatcher.handleOnEventLoop(action);
+            executionDispatcher.handleOnApplicationContext(action);
         }
     }
 
