@@ -9,7 +9,7 @@ public class StubExecutionDispatcher implements ExecutionDispatcher {
     }
 
     @Override
-    public void handleOnEventLoop(final Runnable o) {
+    public void handleOnApplicationContext(final Runnable o) {
         o.run();
     }
 }
