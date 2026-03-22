@@ -7,6 +7,31 @@
     <groupId>io.kiw.luxis</groupId>
     <artifactId>luxis</artifactId>
     <version>1.0-SNAPSHOT</version>
+
+    <name>Luxis</name>
+    <description>Type-safe, functional web framework built on Vert.x for Java 21</description>
+    <url>https://github.com/isolgpus/Luxis</url>
+
+    <licenses>
+        <license>
+            <name>Apache License, Version 2.0</name>
+            <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <id>isolgpus</id>
+            <url>https://github.com/isolgpus</url>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/isolgpus/Luxis.git</connection>
+        <developerConnection>scm:git:ssh://github.com/isolgpus/Luxis.git</developerConnection>
+        <url>https://github.com/isolgpus/Luxis</url>
+    </scm>
+
     <build>
         <plugins>
             <plugin>
