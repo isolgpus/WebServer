@@ -25,6 +25,7 @@ public class WebSocketStream<IN, APP> {
                     config.accept(v);
                     return v.toResult();
                 }, false);
+        e.markAsValidation();
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }

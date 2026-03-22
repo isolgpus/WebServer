@@ -1,8 +1,10 @@
 package io.kiw.luxis.web.websocket;
 
+import java.util.concurrent.CompletableFuture;
+
 public interface WebSocketConnection {
 
-    void sendText(String text);
+    CompletableFuture<Void> sendText(String text);
 
     void close();
 }

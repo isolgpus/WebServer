@@ -1,15 +1,17 @@
 package io.kiw.luxis.web.internal;
 
-import tools.jackson.databind.ObjectMapper;
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.WebSocketRouteConfig;
 import io.kiw.luxis.web.handler.WebSocketRoute;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
-import io.kiw.luxis.web.WebSocketRouteConfig;
 import io.kiw.luxis.web.pipeline.DisconnectSession;
-import io.kiw.luxis.web.pipeline.ErrorResponse;
+import io.kiw.luxis.web.pipeline.JustSendValidationError;
+import io.kiw.luxis.web.pipeline.SendErrorResponse;
+import io.kiw.luxis.web.pipeline.SendValidationErrorsAndDisconnectSession;
 import io.kiw.luxis.web.pipeline.WebSocketStream;
 import io.kiw.luxis.web.websocket.WebSocketConnection;
 import io.kiw.luxis.web.websocket.WebSocketSession;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.ArrayList;
 import java.util.concurrent.CompletableFuture;
@@ -67,7 +69,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     private void handleCorruptInput(final Exception e, final WebSocketSession<?> session) {
         switch (config.corruptInputStrategy()) {
             case DisconnectSession ignored -> session.close();
-            case ErrorResponse errorResponse -> session.connection().sendText(errorResponse.message());
+            case SendErrorResponse sendErrorResponse -> session.connection().sendText(sendErrorResponse.message());
         }
     }
 
@@ -79,32 +81,66 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         });
     }
 
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "checkstyle:FinalLocalVariable"})
     private <IN, OUT> void handleAndContinue(final WebSocketSession<?> session, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message) {
         if (instruction.isAsync) {
-            final CompletableFuture<Result<ErrorMessageResponse, OUT>> future = instruction.handleAsync(message, session.connection(), appState);
+            final CompletableFuture<Result<ErrorMessageResponse, OUT>> future;
+            try {
+                future = instruction.handleAsync(message, session.connection(), appState);
 
-            executionDispatcher.handleOnApplicationContext(() -> {
-                try {
-                    future.join().consume(e -> {
-                        sendFinalResponse(session, e);
-                    }, q -> {
-                        continueChain(session, instruction, (OUT) q, ThreadContext.APPLICATION_CONTEXT);
-                    });
-                } catch (final Exception e) {
-                    exceptionHandler.accept(e);
-                }
+            } catch (final Exception e) {
+                exceptionHandler.accept(e);
+                return;
+            }
+
+            future.thenAccept(r -> {
+                executionDispatcher.handleOnApplicationContext(() -> {
+                    try {
+                        r.consume(e -> {
+                            handleFailure(session, instruction, e);
+                        }, q -> {
+                            continueChain(session, instruction, (OUT) q, ThreadContext.APPLICATION_CONTEXT);
+                        });
+                    } catch (final Exception e) {
+                        exceptionHandler.accept(e);
+                    }
+                });
             });
+
+
         } else {
             final ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.APPLICATION_CONTEXT;
-            final Result<ErrorMessageResponse, ?> result = instruction.handle(message, session.connection(), appState);
+            final Result<ErrorMessageResponse, ?> result;
+            try {
+                result = instruction.handle(message, session.connection(), appState);
+            } catch (final Exception e) {
+//                result = Result.error(new ErrorMessageResponse(e.getMessage()));
+                exceptionHandler.accept(e);
+                return;
+            }
             result.consume(e -> {
                 runOnThread(ThreadContext.APPLICATION_CONTEXT, afterThread, () -> {
-                    sendFinalResponse(session, e);
+                    handleFailure(session, instruction, e);
                 });
             }, q -> {
                 continueChain(session, instruction, (OUT) q, afterThread);
             });
+        }
+    }
+
+    private void handleFailure(final WebSocketSession<?> session, final WebSocketMapInstruction<?, ?, APP> instruction, final ErrorMessageResponse error) {
+        if (instruction.isValidation()) {
+            switch (config.failedValidationStrategy()) {
+                case JustSendValidationError ignored -> sendFinalResponse(session, error);
+                case SendValidationErrorsAndDisconnectSession ignored -> {
+                    sendFinalResponse(session, error).thenAccept(result -> {
+                        session.close();
+                    });
+                }
+                case DisconnectSession ignored -> session.close();
+            }
+        } else {
+            sendFinalResponse(session, error);
         }
     }
 
@@ -130,8 +166,8 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         }
     }
 
-    private <OUT> void sendFinalResponse(final WebSocketSession<?> session, final OUT result) {
-        session.connection().sendText(objectMapper.writeValueAsString(result));
+    private <OUT> CompletableFuture<Void> sendFinalResponse(final WebSocketSession<?> session, final OUT result) {
+        return session.connection().sendText(objectMapper.writeValueAsString(result));
     }
 
     @SuppressWarnings("unchecked")

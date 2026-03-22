@@ -3,6 +3,7 @@ package io.kiw.luxis.web.test;
 import io.kiw.luxis.web.websocket.WebSocketConnection;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class StubWebSocketConnection implements WebSocketConnection {
 
@@ -14,8 +15,9 @@ public class StubWebSocketConnection implements WebSocketConnection {
     }
 
     @Override
-    public void sendText(final String text) {
+    public CompletableFuture<Void> sendText(final String text) {
         sentMessages.add(text);
+        return null;
     }
 
     @Override

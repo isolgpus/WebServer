@@ -1,5 +1,9 @@
 package io.kiw.luxis.web.application.routes;
 
+import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
+import io.kiw.luxis.web.pipeline.DisconnectSession;
+import io.kiw.luxis.web.pipeline.JustSendValidationError;
+import io.kiw.luxis.web.pipeline.SendValidationErrorsAndDisconnectSession;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHelper;
@@ -527,6 +531,103 @@ public class WebSocketTest {
                     .toString(),
                 received.get(0));
 
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldJustSendValidationErrorByDefault() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler(),
+                new WebSocketRouteConfigBuilder()
+                    .failedValidationStrategy(JustSendValidationError.INSTANCE)
+                    .build());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/validate"));
+
+        String body = json()
+            .putNull("name")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        ws.send(body);
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json()
+                    .put("message", "Validation failed")
+                    .set("errors", json()
+                        .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
+                    .toString(),
+                received.get(0));
+
+            Assert.assertFalse(ws.isClosed());
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldDisconnectSessionOnValidationFailure() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler(),
+                new WebSocketRouteConfigBuilder()
+                    .failedValidationStrategy(DisconnectSession.INSTANCE)
+                    .build());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/validate"));
+
+        String body = json()
+            .putNull("name")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        ws.send(body);
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
+            Assert.assertTrue(ws.isClosed());
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldSendValidationErrorsAndDisconnectSession() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler(),
+                new WebSocketRouteConfigBuilder()
+                    .failedValidationStrategy(SendValidationErrorsAndDisconnectSession.INSTANCE)
+                    .build());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/validate"));
+
+        String body = json()
+            .putNull("name")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        ws.send(body);
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json()
+                    .put("message", "Validation failed")
+                    .set("errors", json()
+                        .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
+                    .toString(),
+                received.get(0));
+
+            Assert.assertTrue(ws.isClosed());
             client.assertNoMoreExceptions();
         });
     }

@@ -3,6 +3,8 @@ package io.kiw.luxis.web.internal;
 import io.kiw.luxis.web.websocket.WebSocketConnection;
 import io.vertx.core.http.ServerWebSocket;
 
+import java.util.concurrent.CompletableFuture;
+
 public class VertxWebSocketConnection implements WebSocketConnection {
 
     private final ServerWebSocket webSocket;
@@ -12,8 +14,8 @@ public class VertxWebSocketConnection implements WebSocketConnection {
     }
 
     @Override
-    public void sendText(final String text) {
-        webSocket.writeTextMessage(text);
+    public CompletableFuture<Void> sendText(final String text) {
+        return webSocket.writeTextMessage(text).toCompletionStage().toCompletableFuture();
     }
 
     @Override

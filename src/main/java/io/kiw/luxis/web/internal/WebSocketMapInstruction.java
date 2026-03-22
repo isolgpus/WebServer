@@ -21,6 +21,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
     private final WebSocketStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer;
     private final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer;
     public final boolean lastStep;
+    private boolean isValidation;
     private Optional<WebSocketMapInstruction> next = Optional.empty();
 
     public WebSocketMapInstruction(final boolean isBlocking, final WebSocketStreamFlatMapper<IN, OUT, APP> consumer, final boolean lastStep) {
@@ -61,6 +62,14 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         this.asyncConsumer = null;
         this.asyncBlockingConsumer = asyncBlockingConsumer;
         this.lastStep = lastStep;
+    }
+
+    public void markAsValidation() {
+        this.isValidation = true;
+    }
+
+    public boolean isValidation() {
+        return isValidation;
     }
 
     public void setNext(final WebSocketMapInstruction next) {
