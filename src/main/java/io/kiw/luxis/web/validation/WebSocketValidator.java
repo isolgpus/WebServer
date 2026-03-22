@@ -11,7 +11,7 @@ public class WebSocketValidator<T> {
     private final T value;
     private final Validator<T> delegate;
 
-    WebSocketValidator(final T value, final String prefix) {
+    public WebSocketValidator(final T value, final String prefix) {
         this.value = value;
         this.delegate = new Validator<>(value, null, prefix);
     }
