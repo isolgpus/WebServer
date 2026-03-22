@@ -1,26 +1,28 @@
 package io.kiw.luxis.web;
 
-import io.vertx.core.Vertx;
+import io.kiw.luxis.web.internal.VertxExecutionDispatcher;
 
 import java.util.function.BiConsumer;
 
 public class VertxLuxis<APP> implements Luxis<APP> {
-    private final Vertx vertx;
+    private final VertxExecutionDispatcher executionDispatcher;
     private final APP applicationState;
+    private final AutoCloseable onClose;
 
-    public VertxLuxis(final Vertx vertx, final APP applicationState) {
-        this.vertx = vertx;
+    public VertxLuxis(final VertxExecutionDispatcher executionDispatcher, final APP applicationState, final AutoCloseable onClose) {
+        this.executionDispatcher = executionDispatcher;
         this.applicationState = applicationState;
+        this.onClose = onClose;
     }
 
 
     @Override
     public <IN> void apply(final IN immutableState, final BiConsumer<IN, APP> applicationStateConsumer) {
-        vertx.runOnContext((v) -> applicationStateConsumer.accept(immutableState, applicationState));
+        executionDispatcher.handleOnEventLoop(() -> applicationStateConsumer.accept(immutableState, applicationState));
     }
 
     @Override
-    public void close() {
-        vertx.close().toCompletionStage().toCompletableFuture().join();
+    public void close() throws Exception {
+        onClose.close();
     }
 }

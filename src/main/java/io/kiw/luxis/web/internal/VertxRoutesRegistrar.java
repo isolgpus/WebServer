@@ -2,7 +2,6 @@ package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.ApplicationRoutesRegister;
 import io.kiw.luxis.web.cors.CorsConfig;
-import io.vertx.core.Vertx;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 
@@ -13,7 +12,13 @@ import java.util.function.Consumer;
 public final class VertxRoutesRegistrar {
     private VertxRoutesRegistrar() { }
 
-    public static <R> R register(final Router router, final Vertx vertx, final ApplicationRoutesRegister<R> routesRegisterConsumer, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final OptionalLong maxBodySize, final Optional<CorsConfig> corsConfig) {
+    public static <R> R register(final Router router,
+                                 final ApplicationRoutesRegister<R> routesRegisterConsumer,
+                                 final int defaultTimeoutMillis,
+                                 final Consumer<Exception> exceptionHandler,
+                                 final OptionalLong maxBodySize,
+                                 final Optional<CorsConfig> corsConfig,
+                                 final VertxExecutionDispatcher executionDispatcher) {
         final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
@@ -22,7 +27,7 @@ public final class VertxRoutesRegistrar {
         maxBodySize.ifPresent(handler::setBodyLimit);
         router.route().handler(handler);
 
-        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, new VertxExecutionDispatcher(vertx));
+        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, executionDispatcher);
         return routesRegisterConsumer.registerRoutes(routesRegister);
 
     }

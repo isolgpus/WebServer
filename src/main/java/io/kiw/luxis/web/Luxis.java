@@ -1,6 +1,7 @@
 package io.kiw.luxis.web;
 
 import io.kiw.luxis.web.internal.RoutesRegister;
+import io.kiw.luxis.web.internal.VertxExecutionDispatcher;
 import io.kiw.luxis.web.internal.VertxRoutesRegistrar;
 import io.kiw.luxis.web.test.StubRouter;
 import io.kiw.luxis.web.test.StubExecutionDispatcher;
@@ -14,19 +15,20 @@ import java.util.function.Consumer;
 public interface Luxis<APP> extends AutoCloseable {
 
 
-    public static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer) {
+    static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer) {
         return start(routesRegisterConsumer, new WebServiceConfigBuilder().build());
     }
 
-    public static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final WebServerConfig webServerConfig) {
+    static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final WebServerConfig webServerConfig) {
         final Vertx vertx = Vertx.vertx();
         final HttpServer httpServer = vertx.createHttpServer();
         final Router router = Router.router(vertx);
 
-        final APP applicationState = VertxRoutesRegistrar.register(router, vertx, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig);
+        final VertxExecutionDispatcher executionDispatcher = new VertxExecutionDispatcher(vertx);
+        final APP applicationState = VertxRoutesRegistrar.register(router, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig, executionDispatcher);
 
         httpServer.requestHandler(router).listen(webServerConfig.port).toCompletionStage().toCompletableFuture().join();
-        return new VertxLuxis<>(vertx, applicationState);
+        return new VertxLuxis<>(executionDispatcher, applicationState, () -> vertx.close().toCompletionStage().toCompletableFuture().join());
     }
 
 
