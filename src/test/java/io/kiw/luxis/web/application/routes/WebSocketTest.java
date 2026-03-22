@@ -8,6 +8,7 @@ import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHelper;
 import io.kiw.luxis.web.test.TestWebSocketClient;
+import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.handler.*;
 import org.junit.*;
 import org.junit.runner.RunWith;
@@ -628,6 +629,42 @@ public class WebSocketTest {
                 received.get(0));
 
             Assert.assertTrue(ws.isClosed());
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldRunMapAndBlockingMapOnCorrectContext() {
+        final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/context", state, new ContextAssertingWebSocketHandler(asserter));
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/context"));
+        ws.send("{\"message\":\"hello\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"hello blocked\"}", received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldRunAsyncMapOnCorrectContext() {
+        final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/context-async", state, new ContextAssertingAsyncWebSocketHandler(asserter));
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/context-async"));
+        ws.send("{\"message\":\"hello\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"echo\":\"hello asyncmap async2 blocking\"}", received.get(0));
+
             client.assertNoMoreExceptions();
         });
     }

@@ -93,18 +93,19 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
                 return;
             }
 
-            future.thenAccept(r -> {
-                executionDispatcher.handleOnApplicationContext(() -> {
-                    try {
-                        r.consume(e -> {
-                            handleFailure(session, instruction, e);
-                        }, q -> {
-                            continueChain(session, instruction, (OUT) q, ThreadContext.APPLICATION_CONTEXT);
-                        });
-                    } catch (final Exception e) {
-                        exceptionHandler.accept(e);
-                    }
-                });
+
+            // Must join back on to the application context to handle result
+            // even if we immediately jump back off it again
+            executionDispatcher.handleOnApplicationContext(future, exceptionHandler, (r) -> {
+                try {
+                    r.consume(e -> {
+                        handleFailure(session, instruction, e);
+                    }, q -> {
+                        continueChain(session, instruction, (OUT) q, ThreadContext.APPLICATION_CONTEXT);
+                    });
+                } catch (final Exception e) {
+                    exceptionHandler.accept(e);
+                }
             });
 
 
@@ -114,7 +115,6 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
             try {
                 result = instruction.handle(message, session.connection(), appState);
             } catch (final Exception e) {
-//                result = Result.error(new ErrorMessageResponse(e.getMessage()));
                 exceptionHandler.accept(e);
                 return;
             }

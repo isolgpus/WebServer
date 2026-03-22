@@ -7,8 +7,11 @@ import io.kiw.luxis.web.WebServiceConfigBuilder;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.internal.RoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
+import io.kiw.luxis.web.test.ContextAsserter;
+import io.kiw.luxis.web.test.StubContextAsserter;
 import io.kiw.luxis.web.test.StubTestClient;
 import io.kiw.luxis.web.test.TestClient;
+import io.kiw.luxis.web.test.VertxContextAsserter;
 import io.kiw.luxis.web.test.VertxTestClient;
 import org.junit.Assume;
 
@@ -33,6 +36,14 @@ public class TestApplicationClientCreator {
 
     public static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes) {
         return createClient(mode, registerRoutes, null);
+    }
+
+    public static ContextAsserter createContextAsserter(String mode) {
+        if (REAL_MODE.equals(mode)) {
+            return new VertxContextAsserter();
+        } else {
+            return new StubContextAsserter();
+        }
     }
 
     public static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, CorsConfig corsConfig) {
