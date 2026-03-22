@@ -17,7 +17,7 @@ public class Validator<T> {
         this.prefix = prefix;
     }
 
-    public FieldChain jsonField(final String field, final Function<T, ?> getter) {
+    public FieldChain field(final String field, final Function<T, ?> getter) {
         Object resolved;
         try {
             resolved = getter.apply(value);
@@ -27,7 +27,7 @@ public class Validator<T> {
         return new FieldChain(prefix + field, resolved, this);
     }
 
-    public <N> Validator<T> jsonField(final String name, final Function<T, N> getter, final Consumer<Validator<N>> block) {
+    public <N> Validator<T> field(final String name, final Function<T, N> getter, final Consumer<Validator<N>> block) {
         N nested;
         try {
             nested = getter.apply(value);

@@ -11,12 +11,12 @@ public class ValidationWebSocketHandler extends WebSocketRoute<ValidationRequest
     public WebSocketPipeline<WebSocketValidationResponse> onMessage(final WebSocketStream<ValidationRequest, MyApplicationState> stream) {
         return stream
             .validate(v -> {
-                v.jsonField("name", r -> r.name).required().minLength(2);
-                v.jsonField("email", r -> r.email).required().email();
-                v.jsonField("age", r -> r.age).required().min(0).max(150);
-                v.jsonField("address", r -> r.address, a -> {
-                    a.jsonField("city", x -> x.city).required();
-                    a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
+                v.field("name", r -> r.name).required().minLength(2);
+                v.field("email", r -> r.email).required().email();
+                v.field("age", r -> r.age).required().min(0).max(150);
+                v.field("address", r -> r.address, a -> {
+                    a.field("city", x -> x.city).required();
+                    a.field("zip", x -> x.zip).required().matches("[0-9]{5}");
                 });
             })
             .map(ctx -> {
