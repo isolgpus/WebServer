@@ -95,7 +95,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         if (instruction.next().isPresent()) {
             final WebSocketMapInstruction<OUT, ?, APP> next = (WebSocketMapInstruction<OUT, ?, APP>) instruction.next().get();
             executeInstruction(session, next, result, currentThread);
-        } else {
+        } else if (pipeline.shouldSendResponse()) {
             runOnThread(ThreadContext.EVENT_LOOP, currentThread, () -> {
                 sendFinalResponse(session, result);
             });

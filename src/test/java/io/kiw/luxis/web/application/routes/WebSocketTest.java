@@ -341,6 +341,24 @@ public class WebSocketTest {
     }
 
     @Test
+    public void shouldNotSendResponseWhenCompleteWithNoResponse() {
+        final NoResponseWebSocketHandler handler = new NoResponseWebSocketHandler();
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/noresponse", state, handler);
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/noresponse"));
+        ws.send("{\"message\":\"hello\"}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
+            Assert.assertTrue(handler.messageReceived);
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
     public void shouldPassThroughAllStagesWhenNoException() {
         client = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());

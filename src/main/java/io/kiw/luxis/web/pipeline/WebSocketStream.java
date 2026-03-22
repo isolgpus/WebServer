@@ -88,6 +88,10 @@ public class WebSocketStream<IN, APP> {
         return new WebSocketPipeline<>(instructionChain, applicationState);
     }
 
+    public WebSocketPipeline<Void> completeWithNoResponse() {
+        return new WebSocketPipeline<>(instructionChain, applicationState, false);
+    }
+
     public <OUT> WebSocketPipeline<OUT> blockingComplete(final WebSocketStreamBlockingFlatMapper<IN, OUT> mapper) {
         final WebSocketMapInstruction<IN, OUT, Object> e = new WebSocketMapInstruction<>(true, mapper, true);
         if (!instructionChain.isEmpty()) {
