@@ -17,7 +17,8 @@ public final class VertxRoutesRegistrar {
         final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
-        final BodyHandler handler = BodyHandler.create();
+        final BodyHandler handler = BodyHandler.create()
+                .setDeleteUploadedFilesOnEnd(true);
         maxBodySize.ifPresent(handler::setBodyLimit);
         router.route().handler(handler);
 
