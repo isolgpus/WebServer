@@ -1,12 +1,5 @@
 package io.kiw.luxis.web.validation;
 
-import io.kiw.luxis.result.Result;
-import io.kiw.luxis.web.http.ErrorMessageResponse;
-import io.kiw.luxis.web.http.ErrorStatusCode;
-import io.kiw.luxis.web.http.HttpContext;
-import io.kiw.luxis.web.http.HttpErrorResponse;
-import io.kiw.luxis.web.http.HttpResult;
-
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -15,14 +8,12 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 public class Validator<T> {
-    private final T value;
-    final HttpContext http;
+    final T value;
     private final String prefix;
     final Map<String, List<String>> errors = new LinkedHashMap<>();
 
-    public Validator(final T value, final HttpContext http, final String prefix) {
+    public Validator(final T value, final String prefix) {
         this.value = value;
-        this.http = http;
         this.prefix = prefix;
     }
 
@@ -44,7 +35,7 @@ public class Validator<T> {
             nested = null;
         }
         if (nested != null) {
-            final Validator<N> nestedValidator = new Validator<>(nested, http, prefix + name + ".");
+            final Validator<N> nestedValidator = new Validator<>(nested, prefix + name + ".");
             block.accept(nestedValidator);
             errors.putAll(nestedValidator.errors);
         }
@@ -61,22 +52,7 @@ public class Validator<T> {
         return new ListValidator<>(prefix + name, list, this);
     }
 
-    public FieldChain queryParam(final String name) {
-        return new FieldChain(prefix + name, http.getQueryParam(name), this);
-    }
-
-    public FieldChain pathParam(final String name) {
-        return new FieldChain(prefix + name, http.getPathParam(name), this);
-    }
-
     void addError(final String field, final String message) {
         errors.computeIfAbsent(field, k -> new ArrayList<>()).add(message);
-    }
-
-    public Result<HttpErrorResponse, T> toResult() {
-        if (errors.isEmpty()) {
-            return Result.success(value);
-        }
-        return HttpResult.error(ErrorStatusCode.UNPROCESSABLE_ENTITY, new ErrorMessageResponse("Validation failed", errors));
     }
 }
