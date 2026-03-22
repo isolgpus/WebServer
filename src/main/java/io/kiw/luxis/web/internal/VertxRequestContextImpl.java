@@ -50,7 +50,7 @@ public class VertxRequestContextImpl implements RequestContext {
 
     @Override
     public String getRequestBody() {
-        return this.ctx.getBodyAsString();
+        return this.ctx.body().asString();
     }
 
     @Override

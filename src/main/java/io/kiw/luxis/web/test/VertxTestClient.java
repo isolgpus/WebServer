@@ -7,6 +7,7 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.WebSocketClient;
 import io.vertx.core.http.WebSocketConnectOptions;
 
 import java.util.Map;
@@ -17,6 +18,7 @@ public class VertxTestClient implements TestClient {
 
     private final Vertx vertx;
     private final HttpClient httpClient;
+    private final WebSocketClient webSocketClient;
     private final String host;
     private final int port;
     private final AutoCloseable onClose;
@@ -29,6 +31,7 @@ public class VertxTestClient implements TestClient {
         this.timeoutSeconds = 10;
         this.vertx = Vertx.vertx();
         this.httpClient = vertx.createHttpClient();
+        this.webSocketClient = vertx.createWebSocketClient();
     }
 
     @Override
@@ -89,7 +92,7 @@ public class VertxTestClient implements TestClient {
             options.addHeader(header.getKey(), header.getValue());
         }
 
-        httpClient.webSocket(options)
+        webSocketClient.connect(options)
                 .onSuccess(ws -> future.complete(new VertxTestWebSocketClient(ws)))
                 .onFailure(future::completeExceptionally);
 
@@ -204,6 +207,16 @@ public class VertxTestClient implements TestClient {
                     .onSuccess(v -> clientClose.complete(null))
                     .onFailure(clientClose::completeExceptionally);
             clientClose.get(timeoutSeconds, TimeUnit.SECONDS);
+        } catch (final Exception e) {
+            // best effort
+        }
+
+        try {
+            final CompletableFuture<Void> wsClientClose = new CompletableFuture<>();
+            webSocketClient.close()
+                    .onSuccess(v -> wsClientClose.complete(null))
+                    .onFailure(wsClientClose::completeExceptionally);
+            wsClientClose.get(timeoutSeconds, TimeUnit.SECONDS);
         } catch (final Exception e) {
             // best effort
         }
