@@ -1,7 +1,6 @@
 package io.kiw.luxis.web.internal;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.handler.WebSocketRoute;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
@@ -114,11 +113,7 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     }
 
     private <OUT> void sendFinalResponse(final WebSocketSession<?> session, final OUT result) {
-        try {
-            session.connection().sendText(objectMapper.writeValueAsString(result));
-        } catch (final JsonProcessingException e) {
-            exceptionHandler.accept(e);
-        }
+        session.connection().sendText(objectMapper.writeValueAsString(result));
     }
 
     @SuppressWarnings("unchecked")

@@ -1,12 +1,13 @@
 package io.kiw.luxis.web.test;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.node.ObjectNode;
+import io.kiw.luxis.web.internal.JacksonUtil;
 
 public final class TestHelper {
     private TestHelper() { }
 
-    public static final ObjectMapper MAPPER = new ObjectMapper();
+    public static final ObjectMapper MAPPER = JacksonUtil.createMapper();
 
     public static ObjectNode json() {
         return MAPPER.createObjectNode();

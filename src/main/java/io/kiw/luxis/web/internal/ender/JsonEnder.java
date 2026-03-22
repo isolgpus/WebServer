@@ -1,8 +1,7 @@
 package io.kiw.luxis.web.internal.ender;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.kiw.luxis.web.http.RequestContext;
+import tools.jackson.databind.ObjectMapper;
 
 public final class JsonEnder implements Ender {
     private final ObjectMapper objectMapper;
@@ -13,10 +12,6 @@ public final class JsonEnder implements Ender {
 
     @Override
     public <T> void end(final RequestContext requestContext, final T input) {
-        try {
-            requestContext.end(this.objectMapper.writeValueAsString(input));
-        } catch (final JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        requestContext.end(this.objectMapper.writeValueAsString(input));
     }
 }

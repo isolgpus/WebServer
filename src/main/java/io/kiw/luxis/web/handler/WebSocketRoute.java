@@ -1,6 +1,6 @@
 package io.kiw.luxis.web.handler;
 
-import com.fasterxml.jackson.core.type.TypeReference;
+import tools.jackson.core.type.TypeReference;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketStream;
 import io.kiw.luxis.web.websocket.WebSocketSession;

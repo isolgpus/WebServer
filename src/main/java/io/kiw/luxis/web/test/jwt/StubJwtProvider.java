@@ -1,8 +1,9 @@
 package io.kiw.luxis.web.test.jwt;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.internal.JacksonUtil;
 import io.kiw.luxis.web.jwt.JwtClaims;
 import io.kiw.luxis.web.jwt.JwtProvider;
 
@@ -14,7 +15,7 @@ import java.util.Map;
 
 public class StubJwtProvider implements JwtProvider {
 
-    private static final ObjectMapper MAPPER = new ObjectMapper();
+    private static final ObjectMapper MAPPER = JacksonUtil.createMapper();
     private static final String JWT_HEADER = "{\"alg\":\"HS256\",\"typ\":\"JWT\"}";
 
     private final String secret;

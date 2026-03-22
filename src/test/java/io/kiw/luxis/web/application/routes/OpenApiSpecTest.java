@@ -1,7 +1,8 @@
 package io.kiw.luxis.web.application.routes;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import io.kiw.luxis.web.internal.JacksonUtil;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
@@ -30,7 +31,7 @@ public class OpenApiSpecTest {
 
     private final String mode;
     private TestClient luxisTestClient;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper = JacksonUtil.createMapper();
 
     public OpenApiSpecTest(String mode) {
         this.mode = mode;

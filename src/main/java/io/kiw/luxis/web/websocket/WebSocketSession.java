@@ -1,7 +1,6 @@
 package io.kiw.luxis.web.websocket;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 
 public class WebSocketSession<OUT> {
 
@@ -18,11 +17,7 @@ public class WebSocketSession<OUT> {
     }
 
     public void send(final OUT message) {
-        try {
-            connection.sendText(objectMapper.writeValueAsString(message));
-        } catch (final JsonProcessingException e) {
-            throw new RuntimeException(e);
-        }
+        connection.sendText(objectMapper.writeValueAsString(message));
     }
 
     public void close() {

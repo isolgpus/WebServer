@@ -1,9 +1,6 @@
 package io.kiw.luxis.web.internal;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.databind.ObjectMapper;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.http.RequestContext;
@@ -29,9 +26,7 @@ public abstract class RouterWrapper {
         return exceptionHandler;
     }
 
-    private final ObjectMapper objectMapper = new ObjectMapper()
-            .configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false)
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private final ObjectMapper objectMapper = JacksonUtil.createMapper();
 
     protected abstract void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig);
 
@@ -91,12 +86,8 @@ public abstract class RouterWrapper {
     @SuppressWarnings("IllegalCatch")
     private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Ender ender) {
         result.consume(httpErrorResponse -> {
-                    try {
-                        vertxContext.setStatusCode(httpErrorResponse.statusCode);
-                        vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue));
-                    } catch (final JsonProcessingException e) {
-                        handleException(vertxContext, e);
-                    }
+                    vertxContext.setStatusCode(httpErrorResponse.statusCode);
+                    vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue));
                 },
                 s -> {
                     if (applicationInstruction.lastStep) {
