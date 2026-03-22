@@ -88,7 +88,7 @@ public class RoutesRegister {
             typeArgs != null ? typeArgs[1] : null,
             "application/json", "application/json",
             RouteDescriptor.RouteKind.JSON,
-            routeConfig.openApiMetadata.orElse(null)
+            routeConfig.openApiMetadata().orElse(null)
         ));
 
         router.route(path, method, "*", "application/json", flow, routeConfig);

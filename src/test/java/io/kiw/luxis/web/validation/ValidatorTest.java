@@ -333,7 +333,7 @@ public class ValidatorTest {
         int[] statusCode = {0};
         result.consume(err -> {
             isError[0] = true;
-            statusCode[0] = err.statusCode;
+            statusCode[0] = err.statusCode();
         }, val -> {});
         assertTrue(isError[0]);
         assertEquals(422, statusCode[0]);

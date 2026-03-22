@@ -3,15 +3,9 @@ package io.kiw.luxis.web.jwt;
 import java.util.Collections;
 import java.util.Map;
 
-public class JwtClaims {
+public record JwtClaims(Map<String, Object> claims) {
 
     private static final String SUBJECT_CLAIM = "sub";
-
-    private final Map<String, Object> claims;
-
-    public JwtClaims(final Map<String, Object> claims) {
-        this.claims = claims;
-    }
 
     public Object getClaim(final String key) {
         return claims.get(key);

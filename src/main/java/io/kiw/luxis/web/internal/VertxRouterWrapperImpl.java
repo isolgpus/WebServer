@@ -24,21 +24,21 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     @Override
     public void configureCors(final CorsConfig corsConfig) {
         final CorsHandler corsHandler = CorsHandler.create();
-        for (final String origin : corsConfig.getAllowedOrigins()) {
+        for (final String origin : corsConfig.allowedOrigins()) {
             corsHandler.addOrigin(origin);
         }
-        for (final String method : corsConfig.getAllowedMethods()) {
+        for (final String method : corsConfig.allowedMethods()) {
             corsHandler.allowedMethod(HttpMethod.valueOf(method));
         }
-        if (!corsConfig.getAllowedHeaders().isEmpty()) {
-            corsHandler.allowedHeaders(corsConfig.getAllowedHeaders());
+        if (!corsConfig.allowedHeaders().isEmpty()) {
+            corsHandler.allowedHeaders(corsConfig.allowedHeaders());
         }
-        if (!corsConfig.getExposedHeaders().isEmpty()) {
-            corsHandler.exposedHeaders(corsConfig.getExposedHeaders());
+        if (!corsConfig.exposedHeaders().isEmpty()) {
+            corsHandler.exposedHeaders(corsConfig.exposedHeaders());
         }
-        corsHandler.allowCredentials(corsConfig.isAllowCredentials());
-        if (corsConfig.getMaxAgeSeconds() >= 0) {
-            corsHandler.maxAgeSeconds(corsConfig.getMaxAgeSeconds());
+        corsHandler.allowCredentials(corsConfig.allowCredentials());
+        if (corsConfig.maxAgeSeconds() >= 0) {
+            corsHandler.maxAgeSeconds(corsConfig.maxAgeSeconds());
         }
         router.route().handler(corsHandler);
     }
@@ -73,7 +73,7 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     }
 
     private void registerHandlers(final Route route, final RequestPipeline flow, final RouteConfig routeConfig) {
-        final int timeout = routeConfig.timeoutInMillis.orElse(defaultTimeoutMillis);
+        final int timeout = routeConfig.timeoutInMillis().orElse(defaultTimeoutMillis);
 
         route.handler(new VertxTimeoutHandler(timeout));
 

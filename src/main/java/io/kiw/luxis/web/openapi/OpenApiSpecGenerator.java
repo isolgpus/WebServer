@@ -73,50 +73,50 @@ public class OpenApiSpecGenerator {
     private Map<String, Map<String, RouteDescriptor>> groupRoutes() {
         final Map<String, Map<String, RouteDescriptor>> grouped = new LinkedHashMap<>();
         for (final RouteDescriptor route : collector.getRoutes()) {
-            if (route.metadata != null && route.metadata.hidden) {
+            if (route.metadata() != null && route.metadata().hidden()) {
                 continue;
             }
-            if (route.kind == RouteDescriptor.RouteKind.FILTER) {
+            if (route.kind() == RouteDescriptor.RouteKind.FILTER) {
                 continue;
             }
-            final String methodName = route.method != null ? route.method.name() : "GET";
-            grouped.computeIfAbsent(route.path, k -> new LinkedHashMap<>())
+            final String methodName = route.method() != null ? route.method().name() : "GET";
+            grouped.computeIfAbsent(route.path(), k -> new LinkedHashMap<>())
                     .put(methodName, route);
         }
         return grouped;
     }
 
     private void buildOperation(final ObjectNode operation, final RouteDescriptor desc, final String rawPath) {
-        if (desc.metadata != null) {
-            if (desc.metadata.summary != null) {
-                operation.put("summary", desc.metadata.summary);
+        if (desc.metadata() != null) {
+            if (desc.metadata().summary() != null) {
+                operation.put("summary", desc.metadata().summary());
             }
-            if (desc.metadata.description != null) {
-                operation.put("description", desc.metadata.description);
+            if (desc.metadata().description() != null) {
+                operation.put("description", desc.metadata().description());
             }
-            if (!desc.metadata.tags.isEmpty()) {
+            if (!desc.metadata().tags().isEmpty()) {
                 final ArrayNode tags = operation.putArray("tags");
-                desc.metadata.tags.forEach(tags::add);
+                desc.metadata().tags().forEach(tags::add);
             }
         }
 
-        operation.put("operationId", generateOperationId(desc.method, rawPath));
+        operation.put("operationId", generateOperationId(desc.method(), rawPath));
 
-        final ArrayNode parameters = buildPathParameters(rawPath, desc.metadata);
+        final ArrayNode parameters = buildPathParameters(rawPath, desc.metadata());
         if (parameters.size() > 0) {
             operation.set("parameters", parameters);
         }
 
-        if (desc.method != null && desc.method.canHaveABody() && desc.inputType != null) {
+        if (desc.method() != null && desc.method().canHaveABody() && desc.inputType() != null) {
             final ObjectNode requestBody = operation.putObject("requestBody");
             requestBody.put("required", true);
             final ObjectNode content = requestBody.putObject("content");
-            final ObjectNode mediaType = content.putObject(desc.consumes);
-            final ObjectNode schema = schemaGenerator.generateSchema(desc.inputType);
+            final ObjectNode mediaType = content.putObject(desc.consumes());
+            final ObjectNode schema = schemaGenerator.generateSchema(desc.inputType());
             if (schema != null) {
                 mediaType.set("schema", schema);
             }
-        } else if (desc.kind == RouteDescriptor.RouteKind.UPLOAD) {
+        } else if (desc.kind() == RouteDescriptor.RouteKind.UPLOAD) {
             final ObjectNode requestBody = operation.putObject("requestBody");
             requestBody.put("required", true);
             final ObjectNode content = requestBody.putObject("content");
@@ -128,15 +128,15 @@ public class OpenApiSpecGenerator {
 
         final ObjectNode responses = operation.putObject("responses");
         final ObjectNode successResponse = responses.putObject("200");
-        final String responseDesc = (desc.metadata != null && desc.metadata.responseDescription != null)
-                ? desc.metadata.responseDescription : "Successful response";
+        final String responseDesc = (desc.metadata() != null && desc.metadata().responseDescription() != null)
+                ? desc.metadata().responseDescription() : "Successful response";
         successResponse.put("description", responseDesc);
 
-        if (desc.outputType != null && desc.outputType != Void.class) {
+        if (desc.outputType() != null && desc.outputType() != Void.class) {
             final ObjectNode respContent = successResponse.putObject("content");
-            if (desc.produces != null) {
-                final ObjectNode respMediaType = respContent.putObject(desc.produces);
-                final ObjectNode schema = schemaGenerator.generateSchema(desc.outputType);
+            if (desc.produces() != null) {
+                final ObjectNode respMediaType = respContent.putObject(desc.produces());
+                final ObjectNode schema = schemaGenerator.generateSchema(desc.outputType());
                 if (schema != null) {
                     respMediaType.set("schema", schema);
                 }
@@ -167,8 +167,8 @@ public class OpenApiSpecGenerator {
             param.put("in", "path");
             param.put("required", true);
             param.putObject("schema").put("type", "string");
-            if (metadata != null && metadata.parameterDescriptions.containsKey(paramName)) {
-                param.put("description", metadata.parameterDescriptions.get(paramName));
+            if (metadata != null && metadata.parameterDescriptions().containsKey(paramName)) {
+                param.put("description", metadata.parameterDescriptions().get(paramName));
             }
             params.add(param);
         }

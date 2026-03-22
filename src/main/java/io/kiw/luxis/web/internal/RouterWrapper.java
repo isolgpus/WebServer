@@ -86,16 +86,16 @@ public abstract class RouterWrapper {
     @SuppressWarnings("IllegalCatch")
     private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Ender ender) {
         result.consume(httpErrorResponse -> {
-                    vertxContext.setStatusCode(httpErrorResponse.statusCode);
-                    vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue));
+                    vertxContext.setStatusCode(httpErrorResponse.statusCode());
+                    vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue()));
                 },
                 s -> {
                     if (applicationInstruction.lastStep) {
                         try {
                             Object value = s;
                             if (s instanceof HttpSuccessResponse<?> successResponse) {
-                                vertxContext.setStatusCode(successResponse.statusCode);
-                                value = successResponse.value;
+                                vertxContext.setStatusCode(successResponse.statusCode());
+                                value = successResponse.value();
                             }
                             ender.end(vertxContext, value);
                         } catch (final RuntimeException e) {

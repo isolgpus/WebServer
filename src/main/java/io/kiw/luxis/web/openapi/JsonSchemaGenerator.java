@@ -7,6 +7,7 @@ import tools.jackson.databind.node.ObjectNode;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.List;
@@ -60,13 +61,22 @@ public class JsonSchemaGenerator {
         final ObjectNode properties = schema.putObject("properties");
         final ArrayNode required = objectMapper.createArrayNode();
 
-        for (final Field field : cls.getFields()) {
-            if (Modifier.isStatic(field.getModifiers())) {
-                continue;
+        if (cls.isRecord()) {
+            for (final RecordComponent component : cls.getRecordComponents()) {
+                properties.set(component.getName(), generateSchemaForType(component.getGenericType()));
+                if (component.getType().isPrimitive()) {
+                    required.add(component.getName());
+                }
             }
-            properties.set(field.getName(), generateSchemaForType(field.getGenericType()));
-            if (field.getType().isPrimitive()) {
-                required.add(field.getName());
+        } else {
+            for (final Field field : cls.getFields()) {
+                if (Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
+                properties.set(field.getName(), generateSchemaForType(field.getGenericType()));
+                if (field.getType().isPrimitive()) {
+                    required.add(field.getName());
+                }
             }
         }
         if (required.size() > 0) {
