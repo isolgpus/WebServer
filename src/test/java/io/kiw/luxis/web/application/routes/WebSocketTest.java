@@ -2,6 +2,7 @@ package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
+import io.kiw.luxis.web.test.TestHelper;
 import io.kiw.luxis.web.test.TestWebSocketClient;
 import io.kiw.luxis.web.test.handler.*;
 import org.junit.*;
@@ -368,6 +369,163 @@ public class WebSocketTest {
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals("{\"echo\":\"ok\"}", received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldPassValidationAndReturnResponse() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/validate"));
+
+        String body = json()
+            .put("name", "Alice")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        ws.send(body);
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json()
+                    .put("name", "Alice")
+                    .put("email", "alice@example.com")
+                    .put("age", 25)
+                    .put("city", "NYC")
+                    .toString(),
+                received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForInvalidBodyField() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/validate"));
+
+        String body = json()
+            .putNull("name")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        ws.send(body);
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json()
+                    .put("message", "Validation failed")
+                    .set("errors", json()
+                        .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
+                    .toString(),
+                received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForInvalidEmail() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/validate"));
+
+        String body = json()
+            .put("name", "Alice")
+            .put("email", "not-an-email")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        ws.send(body);
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json()
+                    .put("message", "Validation failed")
+                    .set("errors", json()
+                        .set("email", TestHelper.MAPPER.createArrayNode().add("must be a valid email address")))
+                    .toString(),
+                received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForNestedField() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/validate"));
+
+        String body = json()
+            .put("name", "Alice")
+            .put("email", "alice@example.com")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "bad"))
+            .toString();
+
+        ws.send(body);
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json()
+                    .put("message", "Validation failed")
+                    .set("errors", json()
+                        .set("address.zip", TestHelper.MAPPER.createArrayNode().add("must match pattern: [0-9]{5}")))
+                    .toString(),
+                received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldReturnValidationErrorForMultipleFields() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/validate"));
+
+        String body = json()
+            .putNull("name")
+            .put("email", "not-an-email")
+            .put("age", 25)
+            .set("address", json().put("city", "NYC").put("zip", "10001"))
+            .toString();
+
+        ws.send(body);
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json()
+                    .put("message", "Validation failed")
+                    .set("errors", json()
+                        .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank"))
+                        .set("email", TestHelper.MAPPER.createArrayNode().add("must be a valid email address")))
+                    .toString(),
+                received.get(0));
 
             client.assertNoMoreExceptions();
         });

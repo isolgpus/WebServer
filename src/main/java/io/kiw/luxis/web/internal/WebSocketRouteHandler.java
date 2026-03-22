@@ -86,7 +86,9 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
 
             executionDispatcher.handleOnApplicationContext(() -> {
                 try {
-                    future.join().consume(e -> {}, q -> {
+                    future.join().consume(e -> {
+                        sendFinalResponse(session, e);
+                    }, q -> {
                         continueChain(session, instruction, (OUT) q, ThreadContext.APPLICATION_CONTEXT);
                     });
                 } catch (final Exception e) {
@@ -96,7 +98,11 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
         } else {
             final ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.APPLICATION_CONTEXT;
             final Result<ErrorMessageResponse, ?> result = instruction.handle(message, session.connection(), appState);
-            result.consume(e -> {}, q -> {
+            result.consume(e -> {
+                runOnThread(ThreadContext.APPLICATION_CONTEXT, afterThread, () -> {
+                    sendFinalResponse(session, e);
+                });
+            }, q -> {
                 continueChain(session, instruction, (OUT) q, afterThread);
             });
         }
