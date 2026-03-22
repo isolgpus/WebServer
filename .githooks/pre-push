@@ -1,0 +1,7 @@
+#!/bin/bash
+untracked=$(git ls-files --others --exclude-standard)
+if [ -n "$untracked" ]; then
+  echo "ERROR: Untracked files found. Add them to git or .gitignore before pushing:"
+  echo "$untracked"
+  exit 1
+fi
