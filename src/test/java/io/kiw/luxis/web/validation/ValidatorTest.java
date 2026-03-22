@@ -272,7 +272,7 @@ public class ValidatorTest {
 
     @Test
     public void shouldFailQueryParamValidationWhenMissing() {
-        Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
+        HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Collections.emptyMap(), Collections.emptyMap());
         v.queryParam("page").required();
         assertError(v, "page", "must not be blank");
@@ -280,7 +280,7 @@ public class ValidatorTest {
 
     @Test
     public void shouldFailQueryParamValidationOnPatternMismatch() {
-        Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
+        HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Map.of("page", "abc"), Collections.emptyMap());
         v.queryParam("page").matches("[0-9]+");
         assertError(v, "page", "must match pattern: [0-9]+");
@@ -288,7 +288,7 @@ public class ValidatorTest {
 
     @Test
     public void shouldPassQueryParamValidationWhenValid() {
-        Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
+        HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Map.of("page", "5"), Collections.emptyMap());
         v.queryParam("page").required().matches("[0-9]+");
         assertNoErrors(v);
@@ -298,7 +298,7 @@ public class ValidatorTest {
 
     @Test
     public void shouldFailPathParamValidationWhenMissing() {
-        Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
+        HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Collections.emptyMap(), Collections.emptyMap());
         v.pathParam("userId").required();
         assertError(v, "userId", "must not be blank");
@@ -306,7 +306,7 @@ public class ValidatorTest {
 
     @Test
     public void shouldPassPathParamValidationWhenPresent() {
-        Validator<Body> v = validatorWithHttp(new Body(null, null, null, null),
+        HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
             Collections.emptyMap(), Map.of("userId", "42"));
         v.pathParam("userId").required().matches("[0-9]+");
         assertNoErrors(v);
