@@ -23,6 +23,8 @@ import io.kiw.luxis.web.pipeline.HttpMapStream;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.RouteConfigBuilder;
+import io.kiw.luxis.web.WebSocketRouteConfig;
+import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -138,6 +140,10 @@ public class RoutesRegister {
     }
 
     public <IN, OUT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoute<IN, OUT, APP> webSocketRoute) {
+        webSocketRoute(path, applicationState, webSocketRoute, new WebSocketRouteConfigBuilder().build());
+    }
+
+    public <IN, OUT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoute<IN, OUT, APP> webSocketRoute, final WebSocketRouteConfig config) {
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(webSocketRoute.getClass(), WebSocketRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(
             path, null,
@@ -148,7 +154,7 @@ public class RoutesRegister {
             null
         ));
 
-        final WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher);
+        final WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config);
         router.webSocketRoute(path, handler);
     }
 

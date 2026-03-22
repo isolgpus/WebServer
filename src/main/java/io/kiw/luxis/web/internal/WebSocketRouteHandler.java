@@ -4,6 +4,9 @@ import tools.jackson.databind.ObjectMapper;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.handler.WebSocketRoute;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
+import io.kiw.luxis.web.WebSocketRouteConfig;
+import io.kiw.luxis.web.pipeline.DisconnectSession;
+import io.kiw.luxis.web.pipeline.ErrorResponse;
 import io.kiw.luxis.web.pipeline.WebSocketStream;
 import io.kiw.luxis.web.websocket.WebSocketConnection;
 import io.kiw.luxis.web.websocket.WebSocketSession;
@@ -22,14 +25,16 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     private final Consumer<Exception> exceptionHandler;
     private final ExecutionDispatcher executionDispatcher;
     private final WebSocketPipeline<OUT> pipeline;
+    private final WebSocketRouteConfig config;
 
-    public WebSocketRouteHandler(final WebSocketRoute<IN, OUT, APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher) {
+    public WebSocketRouteHandler(final WebSocketRoute<IN, OUT, APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
         this.executionDispatcher = executionDispatcher;
         this.pipeline = route.onMessage(new WebSocketStream<>(new ArrayList<>(), appState));
+        this.config = config;
     }
 
     public WebSocketSession<?> createSession(final WebSocketConnection connection) {
@@ -55,7 +60,14 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
             executeInstruction(session, webSocketMapInstruction, message, ThreadContext.EVENT_LOOP);
 
         } catch (final Exception e) {
-            exceptionHandler.accept(e);
+            handleCorruptInput(e, session);
+        }
+    }
+
+    private void handleCorruptInput(final Exception e, final WebSocketSession<?> session) {
+        switch (config.corruptInputStrategy()) {
+            case DisconnectSession ignored -> session.close();
+            case ErrorResponse errorResponse -> session.connection().sendText(errorResponse.message());
         }
     }
 

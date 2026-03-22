@@ -137,9 +137,7 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(0, received.size());
-
-            client.assertException("Unrecognized token 'not': was expecting (JSON String, Number, Array, Object or token 'null', 'true' or 'false')\n at [Source: REDACTED (`StreamReadFeature.INCLUDE_SOURCE_IN_LOCATION` disabled); line: 1, column: 4]");
-
+            Assert.assertTrue(ws.isClosed());
             client.assertNoMoreExceptions();
         });
     }
