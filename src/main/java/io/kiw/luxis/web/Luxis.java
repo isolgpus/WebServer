@@ -46,6 +46,7 @@ public interface Luxis<APP> extends AutoCloseable {
         final Consumer<Exception>[] ref = new Consumer[]{webServerConfig.exceptionHandler};
         final StubRouter router = new StubRouter(e -> ref[0].accept(e));
         webServerConfig.corsConfig.ifPresent(router::configureCors);
+        router.setMaxBodySize(webServerConfig.maxBodySize);
         final RoutesRegister routesRegister = new RoutesRegister(router, new StubExecutionDispatcher());
         final APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
         return new TestLuxis<>(router, applicationState, ref);

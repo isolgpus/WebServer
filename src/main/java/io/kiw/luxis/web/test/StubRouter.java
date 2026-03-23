@@ -8,19 +8,26 @@ import io.kiw.luxis.web.internal.RouterWrapper;
 import io.kiw.luxis.web.internal.WebSocketRouteHandler;
 import io.kiw.luxis.web.RouteConfig;
 
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalLong;
 import java.util.function.Consumer;
 
 public class StubRouter extends RouterWrapper {
     private PathMatcher routes = new PathMatcher();
     private CorsConfig corsConfig;
+    private OptionalLong maxBodySize = OptionalLong.empty();
     private final List<WebSocketRouteEntry> webSocketRoutes = new ArrayList<>();
 
     public StubRouter(final Consumer<Exception> exceptionHandler) {
         super(exceptionHandler);
+    }
+
+    public void setMaxBodySize(final OptionalLong maxBodySize) {
+        this.maxBodySize = maxBodySize;
     }
 
     @Override
@@ -39,6 +46,11 @@ public class StubRouter extends RouterWrapper {
     }
 
     public TestHttpResponse handle(final StubRequest stubRequest, final Method method) {
+        if (maxBodySize.isPresent() && stubRequest.body != null
+                && stubRequest.body.getBytes(StandardCharsets.UTF_8).length > maxBodySize.getAsLong()) {
+            return new TestHttpResponse(null).withStatusCode(413);
+        }
+
         if (corsConfig != null) {
             final String origin = stubRequest.headers.get("Origin");
             if (method == Method.OPTIONS) {

@@ -3,6 +3,7 @@ package io.kiw.luxis.web.application.routes;
 import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
 import io.kiw.luxis.web.pipeline.DisconnectSession;
 import io.kiw.luxis.web.pipeline.JustSendValidationError;
+import io.kiw.luxis.web.pipeline.SendErrorResponse;
 import io.kiw.luxis.web.pipeline.SendValidationErrorsAndDisconnectSession;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.StubRequest;
@@ -19,6 +20,7 @@ import io.kiw.luxis.web.test.handler.ContextAssertingWebSocketHandler;
 import io.kiw.luxis.web.test.handler.EchoWebSocketHandler;
 import io.kiw.luxis.web.test.handler.FlatMapFailWebSocketHandler;
 import io.kiw.luxis.web.test.handler.NoResponseWebSocketHandler;
+import io.kiw.luxis.web.test.handler.OnCloseTrackingWebSocketHandler;
 import io.kiw.luxis.web.test.handler.StatefulWebSocketHandler;
 import io.kiw.luxis.web.test.handler.ThrowWebSocketHandler;
 import io.kiw.luxis.web.test.handler.ValidationWebSocketHandler;
@@ -682,6 +684,61 @@ public class WebSocketTest {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals("{\"echo\":\"hello asyncmap async2 blocking\"}", received.get(0));
 
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldTriggerOnCloseWhenClientDisconnects() {
+        final OnCloseTrackingWebSocketHandler handler = new OnCloseTrackingWebSocketHandler();
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/lifecycle", state, handler);
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/lifecycle"));
+        Assert.assertTrue(handler.onOpenCalled);
+        Assert.assertFalse(handler.onCloseCalled);
+
+        ws.close();
+        Assert.assertTrue(handler.onCloseCalled);
+
+        ws = null;
+        client.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldSendErrorResponseOnCorruptInputWhenConfigured() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler(),
+                new WebSocketRouteConfigBuilder()
+                    .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad json\"}"))
+                    .build());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/echo"));
+        ws.send("not valid json");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals("{\"error\":\"bad json\"}", received.get(0));
+            Assert.assertFalse(ws.isClosed());
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldDisconnectOnCorruptInputByDefault() {
+        client = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
+        });
+
+        ws = client.webSocket(StubRequest.request("/ws/echo"));
+        ws.send("not valid json");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
+            Assert.assertTrue(ws.isClosed());
             client.assertNoMoreExceptions();
         });
     }
