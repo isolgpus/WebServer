@@ -1,0 +1,128 @@
+package io.kiw.luxis.web.application.routes;
+
+import io.kiw.luxis.web.handler.VertxJsonFilter;
+import io.kiw.luxis.web.http.HttpCookie;
+import io.kiw.luxis.web.http.HttpResult;
+import io.kiw.luxis.web.http.Method;
+import io.kiw.luxis.web.test.StubRequest;
+import io.kiw.luxis.web.test.TestClient;
+import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.test.TestFilter;
+import io.kiw.luxis.web.test.handler.GetTestFilterHandler;
+import io.kiw.luxis.web.test.handler.PostEchoHandler;
+import io.kiw.luxis.web.test.handler.TestFilterHandler;
+import org.junit.After;
+import org.junit.Assert;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.test.TestHelper.json;
+
+@RunWith(Parameterized.class)
+public class FilterOrderTest {
+
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> modes() {
+        return TestApplicationClientCreator.modes();
+    }
+
+    private final String mode;
+    private TestClient client;
+
+    public FilterOrderTest(String mode) {
+        this.mode = mode;
+    }
+
+    @Before
+    public void setUp() {
+        if (REAL_MODE.equals(mode)) {
+            assumeRealModeEnabled();
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (client != null) {
+            client.assertNoMoreExceptions();
+            client.close();
+        }
+    }
+
+    @Test
+    public void shouldExecuteFiltersInRegistrationOrder() {
+        final List<String> executionOrder = new ArrayList<>();
+
+        client = createClient(mode, (r, state) -> {
+            r.jsonFilter("/ordered/*", state, e -> e.complete(ctx -> {
+                executionOrder.add("first");
+                ctx.http().addResponseCookie(new HttpCookie("filter-first", "hit"));
+                return HttpResult.success();
+            }));
+            r.jsonFilter("/ordered/*", state, e -> e.complete(ctx -> {
+                executionOrder.add("second");
+                ctx.http().addResponseCookie(new HttpCookie("filter-second", "hit"));
+                return HttpResult.success();
+            }));
+            r.jsonRoute("/ordered/test", Method.POST, state, new TestFilterHandler());
+        });
+
+        client.post(StubRequest.request("/ordered/test").body(json().toString()));
+
+        Assert.assertEquals(Arrays.asList("first", "second"), executionOrder);
+    }
+
+    @Test
+    public void shouldExecuteNarrowAndBroadFiltersInRegistrationOrder() {
+        final List<String> executionOrder = new ArrayList<>();
+
+        client = createClient(mode, (r, state) -> {
+            r.jsonFilter("/a/*", state, e -> e.complete(ctx -> {
+                executionOrder.add("broad");
+                ctx.http().addResponseCookie(new HttpCookie("broad", "hit"));
+                return HttpResult.success();
+            }));
+            r.jsonFilter("/a/b/*", state, e -> e.complete(ctx -> {
+                executionOrder.add("narrow");
+                ctx.http().addResponseCookie(new HttpCookie("narrow", "hit"));
+                return HttpResult.success();
+            }));
+            r.jsonRoute("/a/b/test", Method.GET, state, new GetTestFilterHandler());
+        });
+
+        TestHttpResponse response = client.get(StubRequest.request("/a/b/test"));
+
+        Assert.assertEquals(Arrays.asList("broad", "narrow"), executionOrder);
+        Assert.assertEquals("hit", response.getCookie("broad"));
+        Assert.assertEquals("hit", response.getCookie("narrow"));
+    }
+
+    @Test
+    public void shouldOnlyExecuteMatchingFilters() {
+        final List<String> executionOrder = new ArrayList<>();
+
+        client = createClient(mode, (r, state) -> {
+            r.jsonFilter("/api/*", state, e -> e.complete(ctx -> {
+                executionOrder.add("api");
+                return HttpResult.success();
+            }));
+            r.jsonFilter("/admin/*", state, e -> e.complete(ctx -> {
+                executionOrder.add("admin");
+                return HttpResult.success();
+            }));
+            r.jsonRoute("/api/echo", Method.POST, state, new PostEchoHandler());
+        });
+
+        client.post(StubRequest.request("/api/echo")
+            .body(json().put("intExample", 1).put("stringExample", "test").toString()));
+
+        Assert.assertEquals(Arrays.asList("api"), executionOrder);
+    }
+}

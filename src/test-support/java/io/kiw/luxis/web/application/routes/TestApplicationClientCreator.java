@@ -18,6 +18,7 @@ import org.junit.Assume;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public class TestApplicationClientCreator {
 
@@ -47,11 +48,21 @@ public class TestApplicationClientCreator {
     }
 
     public static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, CorsConfig corsConfig) {
-        MyApplicationState state = new MyApplicationState();
         WebServiceConfigBuilder builder = new WebServiceConfigBuilder().setPort(8080);
         if (corsConfig != null) {
             builder.setCorsConfig(corsConfig);
         }
+        return createClient(mode, registerRoutes, builder);
+    }
+
+    public static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, Consumer<WebServiceConfigBuilder> configCustomizer) {
+        WebServiceConfigBuilder builder = new WebServiceConfigBuilder().setPort(8080);
+        configCustomizer.accept(builder);
+        return createClient(mode, registerRoutes, builder);
+    }
+
+    private static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, WebServiceConfigBuilder builder) {
+        MyApplicationState state = new MyApplicationState();
         WebServerConfig config = builder.build();
 
         ApplicationRoutesRegister<MyApplicationState> routes = routesRegister -> {
