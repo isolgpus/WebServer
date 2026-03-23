@@ -36,7 +36,7 @@ public class TestApplicationClientCreator {
     }
 
     public static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes) {
-        return createClient(mode, registerRoutes, null);
+        return createClient(mode, registerRoutes, new WebServiceConfigBuilder().setPort(8080));
     }
 
     public static ContextAsserter createContextAsserter(String mode) {
