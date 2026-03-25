@@ -2,23 +2,30 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpResult;
+import io.kiw.luxis.web.http.CorrelatedBlockingContext;
+import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.internal.CorrelatedRouteContext;
 import io.kiw.luxis.web.internal.MapInstruction;
+import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.internal.ender.Ender;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public class HttpMapStream<IN, APP> {
     protected final List<MapInstruction> instructionChain;
     protected final boolean canFinishSuccessfully;
     protected final APP applicationState;
     protected final Ender ender;
+    protected final PendingAsyncResponses pendingAsyncResponses;
 
-    public HttpMapStream(final List<MapInstruction> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender) {
+    public HttpMapStream(final List<MapInstruction> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender, final PendingAsyncResponses pendingAsyncResponses) {
         this.instructionChain = instructionChain;
         this.canFinishSuccessfully = canFinishSuccessfully;
         this.applicationState = applicationState;
         this.ender = ender;
+        this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
     public <OUT> HttpMapStream<OUT, APP> map(final HttpControlStreamMapper<IN, OUT, APP> flowHandler) {
@@ -28,7 +35,7 @@ public class HttpMapStream<IN, APP> {
 
     public <OUT> HttpMapStream<OUT, APP> flatMap(final HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper) {
         instructionChain.add(new MapInstruction<>(false, httpControlStreamFlatMapper, false));
-        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
 
@@ -39,7 +46,7 @@ public class HttpMapStream<IN, APP> {
 
     public <OUT> HttpMapStream<OUT, APP> blockingFlatMap(final HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper) {
         instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, false));
-        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
     public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncMapper<IN, OUT, APP> flowHandler) {
@@ -48,7 +55,7 @@ public class HttpMapStream<IN, APP> {
 
     public <OUT> HttpMapStream<OUT, APP> asyncFlatMap(final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> mapper) {
         instructionChain.add(new MapInstruction<>(mapper, false));
-        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
     public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingMapper<IN, OUT> flowHandler) {
@@ -57,7 +64,29 @@ public class HttpMapStream<IN, APP> {
 
     public <OUT> HttpMapStream<OUT, APP> asyncBlockingFlatMap(final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> mapper) {
         instructionChain.add(new MapInstruction<>(mapper, false));
-        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
+    }
+
+    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncMap(final Class<OUT> responseType, final HttpControlStreamCorrelatedAsyncHandler<IN, APP> handler) {
+        HttpControlStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
+            final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
+            final long correlationId = pendingAsyncResponses.register(future);
+            handler.handle(new CorrelatedRouteContext<>(correlationId, ctx.in(), ctx.http(), ctx.app()));
+            return future;
+        };
+        instructionChain.add(new MapInstruction<>(wrapper, false));
+        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
+    }
+
+    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncBlockingMap(final Class<OUT> responseType, final HttpControlStreamCorrelatedAsyncBlockingHandler<IN> handler) {
+        HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
+            final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
+            final long correlationId = pendingAsyncResponses.register(future);
+            handler.handle(new CorrelatedBlockingContext<>(correlationId, ctx.in(), ctx.http()));
+            return future;
+        };
+        instructionChain.add(new MapInstruction<>(wrapper, false));
+        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
     public <OUT> RequestPipeline<OUT> complete(final HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper) {

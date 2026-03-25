@@ -38,10 +38,12 @@ public class RoutesRegister {
     private final ExecutionDispatcher executionDispatcher;
     private final ObjectMapper objectMapper = JacksonUtil.createMapper();
     private final OpenApiCollector openApiCollector = new OpenApiCollector();
+    private final PendingAsyncResponses pendingAsyncResponses;
 
-    public RoutesRegister(final RouterWrapper router, final ExecutionDispatcher executionDispatcher) {
+    public RoutesRegister(final RouterWrapper router, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses) {
         this.router = router;
         this.executionDispatcher = executionDispatcher;
+        this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
     public OpenApiCollector getOpenApiCollector() {
@@ -64,7 +66,7 @@ public class RoutesRegister {
     public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final VertxJsonRoute<IN, OUT, APP> vertxJsonRoute, final RouteConfig routeConfig) {
 
         final ArrayList<MapInstruction> chain = new ArrayList<>();
-        new HttpMapStream<>(chain, true, applicationState, new JsonEnder(objectMapper))
+        new HttpMapStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses)
             .flatMap(ctx -> {
                 ctx.http().addResponseHeader("Content-Type", "application/json");
 
@@ -80,7 +82,7 @@ public class RoutesRegister {
                 }
             }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
-        final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, true, applicationState, new JsonEnder(objectMapper));
+        final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses);
         final RequestPipeline flow = vertxJsonRoute.handle(httpStream);
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(vertxJsonRoute.getClass(), VertxJsonRoute.class);
@@ -102,12 +104,12 @@ public class RoutesRegister {
 
     public <APP> void jsonFilter(final String path, final APP applicationState, final VertxJsonFilter<APP> jsonFilter, final RouteConfig routeConfig) {
         final ArrayList<MapInstruction> chain = new ArrayList<>();
-        new HttpMapStream<>(chain, false, applicationState, null)
+        new HttpMapStream<>(chain, false, applicationState, null, pendingAsyncResponses)
             .map(ctx -> {
                 ctx.http().addResponseHeader("Content-Type", "application/json");
                 return null;
             });
-        final HttpStream<Void, APP> httpStream = new HttpStream<>(chain, false, applicationState, null);
+        final HttpStream<Void, APP> httpStream = new HttpStream<>(chain, false, applicationState, null, pendingAsyncResponses);
         final RequestPipeline<Void> flow = jsonFilter.handle(httpStream);
 
 
@@ -116,7 +118,7 @@ public class RoutesRegister {
 
     public <OUT, APP> void uploadFileRoute(final String path, final Method method, final APP applicationState, final VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {
 
-        final HttpMapStream<Map<String, HttpBuffer>, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new JsonEnder(objectMapper));
+        final HttpMapStream<Map<String, HttpBuffer>, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses);
 
         final HttpMapStream<Map<String, HttpBuffer>, APP> fileUploadStream = httpStream.flatMap(ctx -> {
             ctx.http().addResponseHeader("Content-Type", "application/json");
@@ -159,7 +161,7 @@ public class RoutesRegister {
     }
 
     public <IN, APP> void downloadFileRoute(final String path, final Method method, final APP applicationState, final VertxFileDownloadRoute<IN, APP> fileDownloadHandler, final String contentType) {
-        final HttpMapStream<IN, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new FileEnder());
+        final HttpMapStream<IN, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new FileEnder(), pendingAsyncResponses);
 
         final HttpMapStream<IN, APP> fileDownloadStream = httpStream.flatMap(ctx -> {
             ctx.http().addResponseHeader("Content-Type", contentType);

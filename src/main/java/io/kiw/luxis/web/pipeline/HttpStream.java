@@ -5,6 +5,7 @@ import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.MapInstruction;
+import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.ender.Ender;
 import io.kiw.luxis.web.jwt.JwtClaims;
 import io.kiw.luxis.web.jwt.JwtProvider;
@@ -15,8 +16,8 @@ import java.util.function.Consumer;
 
 public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
 
-    public HttpStream(final List<MapInstruction> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender) {
-        super(instructionChain, canFinishSuccessfully, applicationState, ender);
+    public HttpStream(final List<MapInstruction> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender, final PendingAsyncResponses pendingAsyncResponses) {
+        super(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
     public HttpStream<IN, APP> validate(final Consumer<HttpValidator<IN>> config) {
@@ -25,7 +26,7 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
             config.accept(v);
             return v.toResult();
         }, false));
-        return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
     public HttpStream<IN, APP> requireJwt(final JwtProvider jwtProvider) {
@@ -44,6 +45,6 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
                 }
             );
         }, false));
-        return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender);
+        return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 }
