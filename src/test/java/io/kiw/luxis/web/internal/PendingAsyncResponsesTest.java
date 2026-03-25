@@ -1,0 +1,100 @@
+package io.kiw.luxis.web.internal;
+
+import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.http.HttpErrorResponse;
+import org.junit.Assert;
+import org.junit.Test;
+
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
+
+public class PendingAsyncResponsesTest {
+
+    @Test
+    public void shouldAssignSequentialCorrelationIds() {
+        final PendingAsyncResponses pending = new PendingAsyncResponses();
+
+        final long id0 = pending.register(new CompletableFuture<>());
+        final long id1 = pending.register(new CompletableFuture<>());
+        final long id2 = pending.register(new CompletableFuture<>());
+
+        Assert.assertEquals(0L, id0);
+        Assert.assertEquals(1L, id1);
+        Assert.assertEquals(2L, id2);
+    }
+
+    @Test
+    public void shouldCompleteFutureWithSuccessResult() throws ExecutionException, InterruptedException {
+        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final CompletableFuture<Result<HttpErrorResponse, Integer>> future = new CompletableFuture<>();
+        final long id = pending.register(future);
+
+        pending.complete(id, Result.success(42));
+
+        Assert.assertTrue(future.isDone());
+        final Result<HttpErrorResponse, Integer> result = future.get();
+        result.consume(
+                error -> Assert.fail("Expected success but got error"),
+                value -> Assert.assertEquals(Integer.valueOf(42), value)
+        );
+    }
+
+    @Test
+    public void shouldCompleteFutureWithErrorResult() throws ExecutionException, InterruptedException {
+        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
+        final long id = pending.register(future);
+
+        pending.complete(id, Result.error(new HttpErrorResponse(null, 400)));
+
+        Assert.assertTrue(future.isDone());
+        final Result<HttpErrorResponse, String> result = future.get();
+        result.consume(
+                error -> Assert.assertEquals(400, error.statusCode()),
+                value -> Assert.fail("Expected error but got success")
+        );
+    }
+
+    @Test
+    public void shouldRemoveEntryAfterCompletion() {
+        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final CompletableFuture<Result<HttpErrorResponse, Integer>> future = new CompletableFuture<>();
+        final long id = pending.register(future);
+
+        pending.complete(id, Result.success(1));
+
+        try {
+            pending.complete(id, Result.success(2));
+            Assert.fail("Expected IllegalArgumentException for already-completed correlation ID");
+        } catch (final IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains(String.valueOf(id)));
+        }
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void shouldThrowForUnknownCorrelationId() {
+        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        pending.complete(999L, Result.success("value"));
+    }
+
+    @Test
+    public void shouldHandleMultiplePendingResponses() throws ExecutionException, InterruptedException {
+        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future0 = new CompletableFuture<>();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future1 = new CompletableFuture<>();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future2 = new CompletableFuture<>();
+
+        final long id0 = pending.register(future0);
+        final long id1 = pending.register(future1);
+        final long id2 = pending.register(future2);
+
+        // Complete out of order
+        pending.complete(id2, Result.success("third"));
+        pending.complete(id0, Result.success("first"));
+        pending.complete(id1, Result.success("second"));
+
+        future0.get().consume(e -> Assert.fail(), v -> Assert.assertEquals("first", v));
+        future1.get().consume(e -> Assert.fail(), v -> Assert.assertEquals("second", v));
+        future2.get().consume(e -> Assert.fail(), v -> Assert.assertEquals("third", v));
+    }
+}
