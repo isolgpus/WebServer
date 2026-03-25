@@ -63,6 +63,7 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldSupportCorrelatedAsyncBlockingMap() throws Exception {
+        CorrelatedAsyncBlockingMapTestHandler.capturedCorrelationId.set(-1);
         final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
             final MyApplicationState state = new MyApplicationState();
             routesRegister.jsonRoute("/correlatedAsyncBlocking", Method.POST, state, new CorrelatedAsyncBlockingMapTestHandler());
@@ -75,7 +76,15 @@ public class CorrelatedAsyncTest {
                         Method.POST)
         );
 
-        final long correlationId = waitForCorrelationId(luxis);
+        // Poll static field since blocking context doesn't have app state
+        long correlationId;
+        while (true) {
+            correlationId = CorrelatedAsyncBlockingMapTestHandler.capturedCorrelationId.get();
+            if (correlationId != -1) {
+                break;
+            }
+            Thread.sleep(10);
+        }
         Assert.assertEquals(0L, correlationId);
 
         luxis.handleAsyncResponse(correlationId, Result.success(60));
