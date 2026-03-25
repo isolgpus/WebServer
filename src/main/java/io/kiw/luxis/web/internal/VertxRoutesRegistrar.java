@@ -18,7 +18,8 @@ public final class VertxRoutesRegistrar {
                                  final Consumer<Exception> exceptionHandler,
                                  final OptionalLong maxBodySize,
                                  final Optional<CorsConfig> corsConfig,
-                                 final VertxExecutionDispatcher executionDispatcher) {
+                                 final VertxExecutionDispatcher executionDispatcher,
+                                 final PendingAsyncResponses pendingAsyncResponses) {
         final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
@@ -27,7 +28,7 @@ public final class VertxRoutesRegistrar {
         maxBodySize.ifPresent(handler::setBodyLimit);
         router.route().handler(handler);
 
-        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, executionDispatcher);
+        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, executionDispatcher, pendingAsyncResponses);
         return routesRegisterConsumer.registerRoutes(routesRegister);
 
     }
