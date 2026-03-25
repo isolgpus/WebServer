@@ -1,8 +1,5 @@
 package io.kiw.luxis.web.test;
 
-import io.kiw.luxis.result.Result;
-import io.kiw.luxis.web.http.HttpErrorResponse;
-
 public interface TestClient extends AutoCloseable {
     TestHttpResponse post(StubRequest stubRequest);
 
@@ -21,6 +18,4 @@ public interface TestClient extends AutoCloseable {
     void assertException(String expected);
 
     void assertNoMoreExceptions();
-
-    <T> void handleAsyncResponse(long correlationId, Result<HttpErrorResponse, T> result);
 }
