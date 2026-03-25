@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.test.handler;
 
+import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.handler.VertxJsonRoute;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
@@ -19,6 +20,7 @@ public class CorrelatedAsyncWithHttpContextTestHandler extends VertxJsonRoute<As
                 .correlatedAsyncMap(Integer.class, ctx -> {
                     ctx.app().setPendingCorrelationId(ctx.correlationId());
                     ctx.app().setPendingValue(ctx.in());
+                    ctx.app().getLuxis().handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() * 7));
                 })
                 .map(ctx -> new AsyncMapResponse(ctx.in()))
                 .complete(ctx -> success(ctx.in()));

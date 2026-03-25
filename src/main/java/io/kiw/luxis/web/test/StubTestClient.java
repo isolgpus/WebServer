@@ -1,9 +1,7 @@
 package io.kiw.luxis.web.test;
 
-import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.TestLuxis;
-import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.Method;
 
 import java.util.ArrayList;
@@ -15,11 +13,9 @@ public class StubTestClient<APP> implements TestClient {
 
     private List<Exception> seenExceptions = new ArrayList<>();
     private final StubRouter router;
-    private final Luxis<APP> luxis;
 
 
     public StubTestClient(final String host, final int port, final Luxis<APP> luxis) {
-        this.luxis = luxis;
         final TestLuxis<APP> testWebServer = (TestLuxis<APP>) luxis;
         testWebServer.setExceptionHandler(seenExceptions::add);
         this.router = testWebServer.getRouter();
@@ -84,11 +80,6 @@ public class StubTestClient<APP> implements TestClient {
 
         throw new AssertionError("Unable to find exception in seen exceptions " + seenExceptions.stream()
             .map(Throwable::getMessage).collect(Collectors.toList()));
-    }
-
-    @Override
-    public <T> void handleAsyncResponse(final long correlationId, final Result<HttpErrorResponse, T> result) {
-        luxis.handleAsyncResponse(correlationId, result);
     }
 
     @Override
