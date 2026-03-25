@@ -20,6 +20,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static io.kiw.luxis.web.test.TestHelper.json;
 
@@ -63,10 +64,10 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldSupportCorrelatedAsyncBlockingMap() throws Exception {
-        CorrelatedAsyncBlockingMapTestHandler.capturedCorrelationId.set(-1);
+        final AtomicLong capturedCorrelationId = new AtomicLong(-1);
         final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
             final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/correlatedAsyncBlocking", Method.POST, state, new CorrelatedAsyncBlockingMapTestHandler());
+            routesRegister.jsonRoute("/correlatedAsyncBlocking", Method.POST, state, new CorrelatedAsyncBlockingMapTestHandler(capturedCorrelationId));
             return state;
         });
 
@@ -76,10 +77,10 @@ public class CorrelatedAsyncTest {
                         Method.POST)
         );
 
-        // Poll static field since blocking context doesn't have app state
+        // Poll the state holder passed to the handler
         long correlationId;
         while (true) {
-            correlationId = CorrelatedAsyncBlockingMapTestHandler.capturedCorrelationId.get();
+            correlationId = capturedCorrelationId.get();
             if (correlationId != -1) {
                 break;
             }
