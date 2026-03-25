@@ -1,37 +1,67 @@
 package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.result.Result;
-import io.kiw.luxis.web.Luxis;
-import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.test.StubRequest;
+import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncBlockingMapTestHandler;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncMapTestHandler;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncThrowTestHandler;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncWithHttpContextTestHandler;
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.junit.runners.Parameterized;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
+@RunWith(Parameterized.class)
 public class CorrelatedAsyncTest {
 
-    private long waitForCorrelationId(final TestLuxis<MyApplicationState> luxis) throws InterruptedException {
+    @Parameterized.Parameters(name = "{0}")
+    public static Collection<Object[]> modes() {
+        return TestApplicationClientCreator.modes();
+    }
+
+    private final String mode;
+    private TestClient luxisTestClient;
+
+    public CorrelatedAsyncTest(final String mode) {
+        this.mode = mode;
+    }
+
+    @Before
+    public void setUp() {
+        if (REAL_MODE.equals(mode)) {
+            assumeRealModeEnabled();
+        }
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        if (luxisTestClient != null) {
+            luxisTestClient.assertNoMoreExceptions();
+            luxisTestClient.close();
+        }
+    }
+
+    private long waitForCorrelationId(final MyApplicationState state) throws InterruptedException {
         while (true) {
-            final long[] holder = {-1};
-            luxis.apply(null, (ignored, app) -> holder[0] = app.getPendingCorrelationId());
-            if (holder[0] != -1) {
-                return holder[0];
+            final long id = state.getPendingCorrelationId();
+            if (id != -1) {
+                return id;
             }
             Thread.sleep(10);
         }
@@ -39,22 +69,21 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldSupportCorrelatedAsyncMap() throws Exception {
-        final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
-            final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
-            return state;
+        final MyApplicationState[] stateRef = new MyApplicationState[1];
+        luxisTestClient = createClient(mode, (r, state) -> {
+            stateRef[0] = state;
+            r.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
         });
 
         final CompletableFuture<TestHttpResponse> responseFuture = CompletableFuture.supplyAsync(() ->
-                luxis.getRouter().handle(
-                        StubRequest.request("/correlatedAsync").body(json().put("value", 5).toString()),
-                        Method.POST)
+                luxisTestClient.post(
+                        StubRequest.request("/correlatedAsync").body(json().put("value", 5).toString()))
         );
 
-        final long correlationId = waitForCorrelationId(luxis);
+        final long correlationId = waitForCorrelationId(stateRef[0]);
         Assert.assertEquals(0L, correlationId);
 
-        luxis.handleAsyncResponse(correlationId, Result.success(50));
+        luxisTestClient.handleAsyncResponse(correlationId, Result.success(50));
 
         final TestHttpResponse response = responseFuture.join();
         Assert.assertEquals(
@@ -65,19 +94,15 @@ public class CorrelatedAsyncTest {
     @Test
     public void shouldSupportCorrelatedAsyncBlockingMap() throws Exception {
         final AtomicLong capturedCorrelationId = new AtomicLong(-1);
-        final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
-            final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/correlatedAsyncBlocking", Method.POST, state, new CorrelatedAsyncBlockingMapTestHandler(capturedCorrelationId));
-            return state;
+        luxisTestClient = createClient(mode, (r, state) -> {
+            r.jsonRoute("/correlatedAsyncBlocking", Method.POST, state, new CorrelatedAsyncBlockingMapTestHandler(capturedCorrelationId));
         });
 
         final CompletableFuture<TestHttpResponse> responseFuture = CompletableFuture.supplyAsync(() ->
-                luxis.getRouter().handle(
-                        StubRequest.request("/correlatedAsyncBlocking").body(json().put("value", 3).toString()),
-                        Method.POST)
+                luxisTestClient.post(
+                        StubRequest.request("/correlatedAsyncBlocking").body(json().put("value", 3).toString()))
         );
 
-        // Poll the state holder passed to the handler
         long correlationId;
         while (true) {
             correlationId = capturedCorrelationId.get();
@@ -88,7 +113,7 @@ public class CorrelatedAsyncTest {
         }
         Assert.assertEquals(0L, correlationId);
 
-        luxis.handleAsyncResponse(correlationId, Result.success(60));
+        luxisTestClient.handleAsyncResponse(correlationId, Result.success(60));
 
         final TestHttpResponse response = responseFuture.join();
         Assert.assertEquals(
@@ -98,21 +123,20 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldReturnErrorWhenAsyncResponseIsError() throws Exception {
-        final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
-            final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
-            return state;
+        final MyApplicationState[] stateRef = new MyApplicationState[1];
+        luxisTestClient = createClient(mode, (r, state) -> {
+            stateRef[0] = state;
+            r.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
         });
 
         final CompletableFuture<TestHttpResponse> responseFuture = CompletableFuture.supplyAsync(() ->
-                luxis.getRouter().handle(
-                        StubRequest.request("/correlatedAsync").body(json().put("value", 5).toString()),
-                        Method.POST)
+                luxisTestClient.post(
+                        StubRequest.request("/correlatedAsync").body(json().put("value", 5).toString()))
         );
 
-        final long correlationId = waitForCorrelationId(luxis);
+        final long correlationId = waitForCorrelationId(stateRef[0]);
 
-        luxis.handleAsyncResponse(correlationId, HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async error")));
+        luxisTestClient.handleAsyncResponse(correlationId, HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async error")));
 
         final TestHttpResponse response = responseFuture.join();
         Assert.assertEquals(400, response.statusCode);
@@ -123,108 +147,92 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldPassInputValueToHandler() throws Exception {
-        final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
-            final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
-            return state;
+        final MyApplicationState[] stateRef = new MyApplicationState[1];
+        luxisTestClient = createClient(mode, (r, state) -> {
+            stateRef[0] = state;
+            r.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
         });
 
         final CompletableFuture<TestHttpResponse> responseFuture = CompletableFuture.supplyAsync(() ->
-                luxis.getRouter().handle(
-                        StubRequest.request("/correlatedAsync").body(json().put("value", 42).toString()),
-                        Method.POST)
+                luxisTestClient.post(
+                        StubRequest.request("/correlatedAsync").body(json().put("value", 42).toString()))
         );
 
-        waitForCorrelationId(luxis);
+        waitForCorrelationId(stateRef[0]);
 
-        // Verify the handler received the input value
-        final int[] capturedValue = {0};
-        luxis.apply(null, (ignored, app) -> capturedValue[0] = app.getPendingValue());
-        Assert.assertEquals(42, capturedValue[0]);
+        Assert.assertEquals(42, stateRef[0].getPendingValue());
 
-        luxis.handleAsyncResponse(0L, Result.success(100));
+        luxisTestClient.handleAsyncResponse(0L, Result.success(100));
         responseFuture.join();
     }
 
     @Test
     public void shouldAssignIncrementingCorrelationIds() throws Exception {
-        final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
-            final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
-            return state;
+        final MyApplicationState[] stateRef = new MyApplicationState[1];
+        luxisTestClient = createClient(mode, (r, state) -> {
+            stateRef[0] = state;
+            r.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
         });
 
         // First request
         final CompletableFuture<TestHttpResponse> response1 = CompletableFuture.supplyAsync(() ->
-                luxis.getRouter().handle(
-                        StubRequest.request("/correlatedAsync").body(json().put("value", 1).toString()),
-                        Method.POST)
+                luxisTestClient.post(
+                        StubRequest.request("/correlatedAsync").body(json().put("value", 1).toString()))
         );
-        final long id1 = waitForCorrelationId(luxis);
+        final long id1 = waitForCorrelationId(stateRef[0]);
         Assert.assertEquals(0L, id1);
-        luxis.handleAsyncResponse(id1, Result.success(10));
+        luxisTestClient.handleAsyncResponse(id1, Result.success(10));
         response1.join();
 
         // Reset state for next request
-        luxis.apply(null, (ignored, app) -> app.setPendingCorrelationId(-1));
+        stateRef[0].setPendingCorrelationId(-1);
 
         // Second request should get next correlation ID
         final CompletableFuture<TestHttpResponse> response2 = CompletableFuture.supplyAsync(() ->
-                luxis.getRouter().handle(
-                        StubRequest.request("/correlatedAsync").body(json().put("value", 2).toString()),
-                        Method.POST)
+                luxisTestClient.post(
+                        StubRequest.request("/correlatedAsync").body(json().put("value", 2).toString()))
         );
-        final long id2 = waitForCorrelationId(luxis);
+        final long id2 = waitForCorrelationId(stateRef[0]);
         Assert.assertEquals(1L, id2);
-        luxis.handleAsyncResponse(id2, Result.success(20));
+        luxisTestClient.handleAsyncResponse(id2, Result.success(20));
         response2.join();
     }
 
     @Test
     public void shouldHandleExceptionInCorrelatedAsyncHandler() {
-        final List<Exception> exceptions = new ArrayList<>();
-        final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
-            final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/throw", Method.POST, state, new CorrelatedAsyncThrowTestHandler());
-            return state;
+        luxisTestClient = createClient(mode, (r, state) -> {
+            r.jsonRoute("/throw", Method.POST, state, new CorrelatedAsyncThrowTestHandler());
         });
-        luxis.setExceptionHandler(exceptions::add);
 
         // The handler throws synchronously inside the async wrapper,
         // which is caught by handleAsyncBlocking and returns a 500
-        final TestHttpResponse response = luxis.getRouter().handle(
-                StubRequest.request("/throw").body(json().put("value", 1).toString()),
-                Method.POST);
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/throw").body(json().put("value", 1).toString()));
 
         Assert.assertEquals(500, response.statusCode);
-        Assert.assertEquals(1, exceptions.size());
-        Assert.assertTrue(exceptions.get(0).getMessage().contains("app error in correlatedAsyncMap"));
+        luxisTestClient.assertException("app error in correlatedAsyncMap");
     }
 
     @Test
     public void shouldWorkWithPipelineStepsBeforeCorrelatedAsync() throws Exception {
-        final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
-            final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/withContext", Method.POST, state, new CorrelatedAsyncWithHttpContextTestHandler());
-            return state;
+        final MyApplicationState[] stateRef = new MyApplicationState[1];
+        luxisTestClient = createClient(mode, (r, state) -> {
+            stateRef[0] = state;
+            r.jsonRoute("/withContext", Method.POST, state, new CorrelatedAsyncWithHttpContextTestHandler());
         });
 
         final CompletableFuture<TestHttpResponse> responseFuture = CompletableFuture.supplyAsync(() ->
-                luxis.getRouter().handle(
+                luxisTestClient.post(
                         StubRequest.request("/withContext")
                                 .body(json().put("value", 7).toString())
-                                .queryParam("multiplier", "3"),
-                        Method.POST)
+                                .queryParam("multiplier", "3"))
         );
 
-        final long correlationId = waitForCorrelationId(luxis);
+        final long correlationId = waitForCorrelationId(stateRef[0]);
 
-        // Verify the map step before correlatedAsyncMap ran and passed its result
-        final int[] capturedValue = {0};
-        luxis.apply(null, (ignored, app) -> capturedValue[0] = app.getPendingValue());
-        Assert.assertEquals(3, capturedValue[0]);
+        Assert.assertEquals(3, stateRef[0].getPendingValue());
 
-        luxis.handleAsyncResponse(correlationId, Result.success(21));
+        luxisTestClient.handleAsyncResponse(correlationId, Result.success(21));
 
         final TestHttpResponse response = responseFuture.join();
         Assert.assertEquals(
@@ -234,31 +242,28 @@ public class CorrelatedAsyncTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowWhenCompletingUnknownCorrelationId() {
-        final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
-            final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
-            return state;
+        luxisTestClient = createClient(mode, (r, state) -> {
+            r.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
         });
-        luxis.handleAsyncResponse(999L, Result.success("value"));
+        luxisTestClient.handleAsyncResponse(999L, Result.success("value"));
     }
 
     @Test
     public void shouldReturnDifferentErrorStatusCodes() throws Exception {
-        final TestLuxis<MyApplicationState> luxis = Luxis.test(routesRegister -> {
-            final MyApplicationState state = new MyApplicationState();
-            routesRegister.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
-            return state;
+        final MyApplicationState[] stateRef = new MyApplicationState[1];
+        luxisTestClient = createClient(mode, (r, state) -> {
+            stateRef[0] = state;
+            r.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
         });
 
         final CompletableFuture<TestHttpResponse> responseFuture = CompletableFuture.supplyAsync(() ->
-                luxis.getRouter().handle(
-                        StubRequest.request("/correlatedAsync").body(json().put("value", 1).toString()),
-                        Method.POST)
+                luxisTestClient.post(
+                        StubRequest.request("/correlatedAsync").body(json().put("value", 1).toString()))
         );
 
-        final long correlationId = waitForCorrelationId(luxis);
+        final long correlationId = waitForCorrelationId(stateRef[0]);
 
-        luxis.handleAsyncResponse(correlationId, HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("not found")));
+        luxisTestClient.handleAsyncResponse(correlationId, HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("not found")));
 
         final TestHttpResponse response = responseFuture.join();
         Assert.assertEquals(404, response.statusCode);
