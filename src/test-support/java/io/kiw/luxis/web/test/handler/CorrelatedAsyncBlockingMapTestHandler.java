@@ -11,7 +11,11 @@ import static io.kiw.luxis.web.http.HttpResult.success;
 
 public class CorrelatedAsyncBlockingMapTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
-    public static final AtomicLong capturedCorrelationId = new AtomicLong(-1);
+    private final AtomicLong capturedCorrelationId;
+
+    public CorrelatedAsyncBlockingMapTestHandler(final AtomicLong capturedCorrelationId) {
+        this.capturedCorrelationId = capturedCorrelationId;
+    }
 
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
