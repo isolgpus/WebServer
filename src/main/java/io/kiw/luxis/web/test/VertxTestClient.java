@@ -1,7 +1,10 @@
 package io.kiw.luxis.web.test;
 
+import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.http.HttpBuffer;
 import io.kiw.luxis.web.http.HttpCookie;
+import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
@@ -21,13 +24,13 @@ public class VertxTestClient implements TestClient {
     private final WebSocketClient webSocketClient;
     private final String host;
     private final int port;
-    private final AutoCloseable onClose;
+    private final Luxis<?> luxis;
     private final long timeoutSeconds;
 
-    public VertxTestClient(final String host, final int port, final AutoCloseable onClose) {
+    public VertxTestClient(final String host, final int port, final Luxis<?> luxis) {
         this.host = host;
         this.port = port;
-        this.onClose = onClose;
+        this.luxis = luxis;
         this.timeoutSeconds = 10;
         this.vertx = Vertx.vertx();
         this.httpClient = vertx.createHttpClient();
@@ -200,6 +203,11 @@ public class VertxTestClient implements TestClient {
     }
 
     @Override
+    public <T> void handleAsyncResponse(final long correlationId, final Result<HttpErrorResponse, T> result) {
+        luxis.handleAsyncResponse(correlationId, result);
+    }
+
+    @Override
     public void close() throws Exception {
         try {
             final CompletableFuture<Void> clientClose = new CompletableFuture<>();
@@ -231,6 +239,6 @@ public class VertxTestClient implements TestClient {
             // best effort
         }
 
-        onClose.close();
+        luxis.close();
     }
 }
