@@ -10,16 +10,16 @@ import tools.jackson.databind.ObjectMapper;
 
 import java.util.function.Consumer;
 
-public class WebSocketSplitRouteHandler<APP> implements WebSocketHandler {
+public class WebSocketSplitRouteHandler<SPLIT, APP> implements WebSocketHandler {
 
-    private final WebSocketSplitRoute<APP> route;
+    private final WebSocketSplitRoute<SPLIT, APP> route;
     private final ObjectMapper objectMapper;
     private final APP appState;
     private final Consumer<Exception> exceptionHandler;
     private final WebSocketSplitPipeline splitPipeline;
     private final WebSocketPipelineExecutor executor;
 
-    public WebSocketSplitRouteHandler(final WebSocketSplitRoute<APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
+    public WebSocketSplitRouteHandler(final WebSocketSplitRoute<SPLIT, APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;

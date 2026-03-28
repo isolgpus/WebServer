@@ -1,5 +1,5 @@
 package io.kiw.luxis.web.test.handler;
 
-public class WebSocketNumberRequest {
+public class WebSocketNumberRequest implements SplitWebSocketMessage {
     public int value;
 }

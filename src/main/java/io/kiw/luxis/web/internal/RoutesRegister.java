@@ -161,12 +161,12 @@ public class RoutesRegister {
         router.webSocketRoute(path, handler);
     }
 
-    public <APP> void webSocketSplitRoute(final String path, final APP applicationState, final WebSocketSplitRoute<APP> route) {
+    public <SPLIT, APP> void webSocketSplitRoute(final String path, final APP applicationState, final WebSocketSplitRoute<SPLIT, APP> route) {
         webSocketSplitRoute(path, applicationState, route, new WebSocketRouteConfigBuilder().build());
     }
 
-    public <APP> void webSocketSplitRoute(final String path, final APP applicationState, final WebSocketSplitRoute<APP> route, final WebSocketRouteConfig config) {
-        final WebSocketSplitRouteHandler<APP> handler = new WebSocketSplitRouteHandler<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
+    public <SPLIT, APP> void webSocketSplitRoute(final String path, final APP applicationState, final WebSocketSplitRoute<SPLIT, APP> route, final WebSocketRouteConfig config) {
+        final WebSocketSplitRouteHandler<SPLIT, APP> handler = new WebSocketSplitRouteHandler<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
         router.webSocketRoute(path, handler);
     }
 
