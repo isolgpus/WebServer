@@ -9,12 +9,12 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 public class SplitWebSocketHandler extends WebSocketSplitRoute<SplitWebSocketMessage, MyApplicationState> {
 
-    private static WebSocketPipeline<?> handleEcho(WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    private static WebSocketPipeline<WebSocketEchoResponse> handleEcho(WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
         return stream.map(ctx -> new WebSocketEchoResponse("echo: " + ctx.in().message))
                 .complete();
     }
 
-    private static WebSocketPipeline<?> handleNumber(WebSocketStream<WebSocketNumberRequest, MyApplicationState> stream) {
+    private static WebSocketPipeline<WebSocketNumberResponse> handleNumber(WebSocketStream<WebSocketNumberRequest, MyApplicationState> stream) {
         return stream.map(ctx -> new WebSocketNumberResponse(ctx.in().value * 2))
                 .complete();
     }
