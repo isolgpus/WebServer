@@ -19,7 +19,7 @@ public class CorrelatedAsyncBlockingMapTestHandler extends VertxJsonRoute<AsyncM
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
-                .correlatedAsyncBlockingMap(Integer.class, ctx -> {
+                .<Integer>correlatedAsyncBlockingMap(ctx -> {
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 20));
                 })
                 .map(ctx -> new AsyncMapResponse(ctx.in()))

@@ -11,7 +11,7 @@ public class CorrelatedAsyncThrowTestHandler extends VertxJsonRoute<AsyncMapRequ
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
-                .correlatedAsyncMap(Integer.class, ctx -> {
+                .<Integer>correlatedAsyncMap(ctx -> {
                     throw new RuntimeException("app error in correlatedAsyncMap");
                 })
                 .complete(ctx -> HttpResult.success(new AsyncMapResponse(ctx.in())));

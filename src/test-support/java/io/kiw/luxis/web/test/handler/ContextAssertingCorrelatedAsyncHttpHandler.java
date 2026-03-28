@@ -26,7 +26,7 @@ public class ContextAssertingCorrelatedAsyncHttpHandler extends VertxJsonRoute<C
                 asserter.assertInApplicationContext();
                 return ctx.in().message;
             })
-            .correlatedAsyncMap(String.class, ctx -> {
+            .<String>correlatedAsyncMap(ctx -> {
                 asserter.assertInApplicationContext();
                 luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " correlatedAsync"));
             })
@@ -34,7 +34,7 @@ public class ContextAssertingCorrelatedAsyncHttpHandler extends VertxJsonRoute<C
                 asserter.assertInWorkerContext();
                 return ctx.in() + " blocking";
             })
-            .correlatedAsyncBlockingMap(String.class, ctx -> {
+            .<String>correlatedAsyncBlockingMap(ctx -> {
                 asserter.assertInWorkerContext();
                 luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " correlatedAsyncBlocking"));
             })

@@ -14,7 +14,7 @@ public class AsyncBlockingMapWebSocketHandler extends WebSocketRoute<WebSocketNu
     @Override
     public WebSocketPipeline<WebSocketNumberResponse> onMessage(final WebSocketStream<WebSocketNumberRequest, MyApplicationState> stream) {
         return stream
-            .correlatedAsyncBlockingMap(Integer.class, ctx -> {
+            .<Integer>correlatedAsyncBlockingMap(ctx -> {
                 luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 20));
             })
             .map(ctx -> new WebSocketNumberResponse(ctx.in()))

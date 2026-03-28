@@ -49,7 +49,7 @@ public class HttpMapStream<IN, APP> {
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncMap(final Class<OUT> responseType, final HttpControlStreamCorrelatedAsyncHandler<IN, APP> handler) {
+    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncMap(final HttpControlStreamCorrelatedAsyncHandler<IN, APP> handler) {
         final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
             final long correlationId = pendingAsyncResponses.register(future);
@@ -60,7 +60,7 @@ public class HttpMapStream<IN, APP> {
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncBlockingMap(final Class<OUT> responseType, final HttpControlStreamCorrelatedAsyncBlockingHandler<IN> handler) {
+    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncBlockingMap(final HttpControlStreamCorrelatedAsyncBlockingHandler<IN> handler) {
         final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
             final long correlationId = pendingAsyncResponses.register(future);

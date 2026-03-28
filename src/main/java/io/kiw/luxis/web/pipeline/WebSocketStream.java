@@ -67,7 +67,7 @@ public class WebSocketStream<IN, APP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncMap(final Class<OUT> responseType, final WebSocketStreamCorrelatedAsyncHandler<IN, APP> handler) {
+    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncMap(final WebSocketStreamCorrelatedAsyncHandler<IN, APP> handler) {
         final WebSocketStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
             final long correlationId = pendingAsyncResponses.register(future);
@@ -82,7 +82,7 @@ public class WebSocketStream<IN, APP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncBlockingMap(final Class<OUT> responseType, final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler) {
+    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncBlockingMap(final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler) {
         final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
             final long correlationId = pendingAsyncResponses.register(future);

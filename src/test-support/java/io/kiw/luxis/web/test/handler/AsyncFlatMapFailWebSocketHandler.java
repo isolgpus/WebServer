@@ -16,7 +16,7 @@ public class AsyncFlatMapFailWebSocketHandler extends WebSocketRoute<WebSocketEc
     @Override
     public WebSocketPipeline<WebSocketEchoResponse> onMessage(final WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
         return stream
-            .<WebSocketEchoResponse>correlatedAsyncMap(WebSocketEchoResponse.class, ctx -> {
+            .<WebSocketEchoResponse>correlatedAsyncMap(ctx -> {
                 luxis.handleAsyncResponse(ctx.correlationId(), HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async flatMap failed")));
             })
             .complete();

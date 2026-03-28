@@ -20,7 +20,7 @@ public class CorrelatedAsyncWithHttpContextTestHandler extends VertxJsonRoute<As
                     final String multiplier = ctx.http().getQueryParam("multiplier");
                     return multiplier != null ? Integer.parseInt(multiplier) : 1;
                 })
-                .correlatedAsyncMap(Integer.class, ctx -> {
+                .<Integer>correlatedAsyncMap(ctx -> {
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() * 7));
                 })
                 .map(ctx -> new AsyncMapResponse(ctx.in()))
