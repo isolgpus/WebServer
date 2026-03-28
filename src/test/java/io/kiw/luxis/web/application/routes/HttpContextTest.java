@@ -60,7 +60,51 @@ public class HttpContextTest {
         TestHttpResponse response = client.post(StubRequest.request("/context").body(requestBody));
 
         final String expectedResponse = json()
-                .put("result", "hello blocking async map blocking2 async2")
+                .put("result", "hello flatMap async blockingFlatMap map blocking2 async2")
+                .toString();
+
+        Assert.assertEquals(TestHttpResponse.response(expectedResponse), response);
+    }
+
+    @Test
+    public void shouldRunAsyncBlockingMapOnCorrectContext() {
+        final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
+        testClientAndServer = createClient(mode, (r, state) -> {
+            r.jsonRoute("/context-async-blocking", Method.POST, state, new ContextAssertingAsyncBlockingHttpHandler(asserter));
+        });
+        TestClient client = testClientAndServer.client();
+
+        final String requestBody = json()
+                .put("message", "hello")
+                .toString();
+
+        TestHttpResponse response = client.post(StubRequest.request("/context-async-blocking").body(requestBody));
+
+        final String expectedResponse = json()
+                .put("result", "hello asyncBlocking map blocking asyncBlocking2 async")
+                .toString();
+
+        Assert.assertEquals(TestHttpResponse.response(expectedResponse), response);
+    }
+
+    @Test
+    public void shouldRunCorrelatedAsyncOnCorrectContext() {
+        final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
+        final ContextAssertingCorrelatedAsyncHttpHandler handler = new ContextAssertingCorrelatedAsyncHttpHandler(asserter);
+        testClientAndServer = createClient(mode, (r, state) -> {
+            r.jsonRoute("/context-correlated", Method.POST, state, handler);
+        });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
+        TestClient client = testClientAndServer.client();
+
+        final String requestBody = json()
+                .put("message", "hello")
+                .toString();
+
+        TestHttpResponse response = client.post(StubRequest.request("/context-correlated").body(requestBody));
+
+        final String expectedResponse = json()
+                .put("result", "hello correlatedAsync blocking correlatedAsyncBlocking map")
                 .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expectedResponse), response);

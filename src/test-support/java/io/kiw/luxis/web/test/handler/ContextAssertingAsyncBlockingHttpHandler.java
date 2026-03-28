@@ -10,32 +10,24 @@ import java.util.concurrent.CompletableFuture;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class ContextAssertingHttpHandler extends VertxJsonRoute<ContextRequest, ContextResponse, MyApplicationState> {
+public class ContextAssertingAsyncBlockingHttpHandler extends VertxJsonRoute<ContextRequest, ContextResponse, MyApplicationState> {
 
     private final ContextAsserter asserter;
 
-    public ContextAssertingHttpHandler(final ContextAsserter asserter) {
+    public ContextAssertingAsyncBlockingHttpHandler(final ContextAsserter asserter) {
         this.asserter = asserter;
     }
 
     @Override
     public RequestPipeline<ContextResponse> handle(final HttpStream<ContextRequest, MyApplicationState> httpStream) {
         return httpStream
-            .blockingMap(ctx -> {
-                asserter.assertInWorkerContext();
+            .map(ctx -> {
+                asserter.assertInApplicationContext();
                 return ctx.in().message;
             })
-            .flatMap(ctx -> {
-                asserter.assertInApplicationContext();
-                return success(ctx.in() + " flatMap");
-            })
-            .asyncMap(ctx -> {
-                asserter.assertInApplicationContext();
-                return CompletableFuture.supplyAsync(() -> ctx.in() + " async");
-            })
-            .blockingFlatMap(ctx -> {
+            .asyncBlockingMap(ctx -> {
                 asserter.assertInWorkerContext();
-                return success(ctx.in() + " blockingFlatMap");
+                return CompletableFuture.supplyAsync(() -> ctx.in() + " asyncBlocking");
             })
             .map(ctx -> {
                 asserter.assertInApplicationContext();
@@ -43,11 +35,15 @@ public class ContextAssertingHttpHandler extends VertxJsonRoute<ContextRequest, 
             })
             .blockingMap(ctx -> {
                 asserter.assertInWorkerContext();
-                return ctx.in() + " blocking2";
+                return ctx.in() + " blocking";
+            })
+            .asyncBlockingMap(ctx -> {
+                asserter.assertInWorkerContext();
+                return CompletableFuture.supplyAsync(() -> ctx.in() + " asyncBlocking2");
             })
             .asyncMap(ctx -> {
                 asserter.assertInApplicationContext();
-                return CompletableFuture.supplyAsync(() -> ctx.in() + " async2");
+                return CompletableFuture.supplyAsync(() -> ctx.in() + " async");
             })
             .complete(ctx -> success(new ContextResponse(ctx.in())));
     }
