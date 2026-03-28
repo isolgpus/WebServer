@@ -10,9 +10,12 @@ import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHelper;
 import io.kiw.luxis.web.test.TestWebSocketClient;
+import io.kiw.luxis.web.TestLuxis;
+import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.test.handler.AsyncBlockingMapWebSocketHandler;
 import io.kiw.luxis.web.test.handler.AsyncFlatMapFailWebSocketHandler;
 import io.kiw.luxis.web.test.handler.AsyncMapWebSocketHandler;
+import io.kiw.luxis.web.test.handler.WebSocketCustomTimeoutHandler;
 import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketHandler;
 import io.kiw.luxis.web.test.handler.BlockingMapWebSocketHandler;
 import io.kiw.luxis.web.test.handler.ContextAssertingAsyncWebSocketHandler;
@@ -35,6 +38,7 @@ import org.junit.runners.Parameterized;
 import java.util.Collection;
 
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.STUB_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
@@ -793,6 +797,34 @@ public class WebSocketTest {
             Assert.assertEquals(0, received.size());
             Assert.assertTrue(ws.isClosed());
             client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldTimeoutWebSocketWithCustomOneSecondTimeout() {
+        final WebSocketCustomTimeoutHandler handler = new WebSocketCustomTimeoutHandler(
+                new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build());
+
+        testClientAndServer = createClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/customTimeout", state, handler);
+        });
+
+        if (STUB_MODE.equals(mode)) {
+            handler.setOnRegistered(() -> ((TestLuxis<?>) testClientAndServer.luxis()).advanceTimeBy(1_001));
+        }
+
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/customTimeout"));
+        ws.send("{\"value\":1}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                json().put("message", "Something went wrong").set("errors", json()).toString(),
+                received.get(0));
+
+            client.assertException("Correlated async response timed out");
         });
     }
 

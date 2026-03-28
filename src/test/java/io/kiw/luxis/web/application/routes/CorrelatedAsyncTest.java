@@ -10,7 +10,9 @@ import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.application.routes.TestClientAndServer;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.TestLuxis;
+import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncBlockingMapTestHandler;
+import io.kiw.luxis.web.test.handler.CorrelatedAsyncCustomTimeoutTestHandler;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncMapTestHandler;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncThrowTestHandler;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncTimeoutTestHandler;
@@ -194,6 +196,28 @@ public class CorrelatedAsyncTest {
 
         final TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/timeout").body(json().put("value", 1).toString()));
+
+        Assert.assertEquals(500, response.statusCode);
+        luxisTestClient.assertException("Correlated async response timed out");
+    }
+
+    @Test
+    public void shouldTimeoutWithCustomOneSecondTimeout() {
+        final CorrelatedAsyncCustomTimeoutTestHandler handler = new CorrelatedAsyncCustomTimeoutTestHandler(
+                new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build());
+
+        testClientAndServer = createClient(mode, (r, state) -> {
+            r.jsonRoute("/customTimeout", Method.POST, state, handler);
+        });
+
+        if (STUB_MODE.equals(mode)) {
+            handler.setOnRegistered(() -> ((TestLuxis<?>) testClientAndServer.luxis()).advanceTimeBy(1_001));
+        }
+
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/customTimeout").body(json().put("value", 1).toString()));
 
         Assert.assertEquals(500, response.statusCode);
         luxisTestClient.assertException("Correlated async response timed out");

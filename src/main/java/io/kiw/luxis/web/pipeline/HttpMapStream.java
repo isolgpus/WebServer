@@ -50,9 +50,13 @@ public class HttpMapStream<IN, APP> {
     }
 
     public <OUT> HttpMapStream<OUT, APP> correlatedAsyncMap(final HttpControlStreamCorrelatedAsyncHandler<IN, APP> handler) {
+        return correlatedAsyncMap(handler, AsyncMapConfig.defaultConfig());
+    }
+
+    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncMap(final HttpControlStreamCorrelatedAsyncHandler<IN, APP> handler, final AsyncMapConfig config) {
         final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
-            final long correlationId = pendingAsyncResponses.register(future);
+            final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
             handler.handle(new CorrelatedRouteContext<>(correlationId, ctx.in(), ctx.http(), ctx.app()));
             return future;
         };
@@ -61,9 +65,13 @@ public class HttpMapStream<IN, APP> {
     }
 
     public <OUT> HttpMapStream<OUT, APP> correlatedAsyncBlockingMap(final HttpControlStreamCorrelatedAsyncBlockingHandler<IN> handler) {
+        return correlatedAsyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
+    }
+
+    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncBlockingMap(final HttpControlStreamCorrelatedAsyncBlockingHandler<IN> handler, final AsyncMapConfig config) {
         final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
-            final long correlationId = pendingAsyncResponses.register(future);
+            final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
             handler.handle(new CorrelatedBlockingContext<>(correlationId, ctx.in(), ctx.http()));
             return future;
         };

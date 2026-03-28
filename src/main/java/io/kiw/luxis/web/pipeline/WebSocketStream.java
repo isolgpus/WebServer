@@ -68,9 +68,13 @@ public class WebSocketStream<IN, APP> {
     }
 
     public <OUT> WebSocketStream<OUT, APP> correlatedAsyncMap(final WebSocketStreamCorrelatedAsyncHandler<IN, APP> handler) {
+        return correlatedAsyncMap(handler, AsyncMapConfig.defaultConfig());
+    }
+
+    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncMap(final WebSocketStreamCorrelatedAsyncHandler<IN, APP> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
-            final long correlationId = pendingAsyncResponses.register(future);
+            final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
             handler.handle(new CorrelatedWebSocketContext<>(correlationId, ctx.in(), ctx.connection(), ctx.app()));
             return future.thenApply(result -> result.mapError(HttpErrorResponse::errorMessageValue));
         };
@@ -83,9 +87,13 @@ public class WebSocketStream<IN, APP> {
     }
 
     public <OUT> WebSocketStream<OUT, APP> correlatedAsyncBlockingMap(final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler) {
+        return correlatedAsyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
+    }
+
+    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncBlockingMap(final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
-            final long correlationId = pendingAsyncResponses.register(future);
+            final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
             handler.handle(new CorrelatedWebSocketBlockingContext<>(correlationId, ctx.in()));
             return future.thenApply(result -> result.mapError(HttpErrorResponse::errorMessageValue));
         };

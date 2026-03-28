@@ -13,20 +13,22 @@ import java.util.concurrent.ExecutionException;
 
 public class PendingAsyncResponsesTest {
 
+    private static final long DEFAULT_TIMEOUT = 30_000;
+
     private final StubTimeoutScheduler scheduler = new StubTimeoutScheduler();
     private final List<Exception> exceptions = new ArrayList<>();
 
     private PendingAsyncResponses createPending() {
-        return new PendingAsyncResponses(scheduler, exceptions::add, 30_000);
+        return new PendingAsyncResponses(scheduler, exceptions::add);
     }
 
     @Test
     public void shouldAssignSequentialCorrelationIds() {
         final PendingAsyncResponses pending = createPending();
 
-        final long id0 = pending.register(new CompletableFuture<>());
-        final long id1 = pending.register(new CompletableFuture<>());
-        final long id2 = pending.register(new CompletableFuture<>());
+        final long id0 = pending.register(new CompletableFuture<>(), DEFAULT_TIMEOUT);
+        final long id1 = pending.register(new CompletableFuture<>(), DEFAULT_TIMEOUT);
+        final long id2 = pending.register(new CompletableFuture<>(), DEFAULT_TIMEOUT);
 
         Assert.assertEquals(0L, id0);
         Assert.assertEquals(1L, id1);
@@ -37,7 +39,7 @@ public class PendingAsyncResponsesTest {
     public void shouldCompleteFutureWithSuccessResult() throws ExecutionException, InterruptedException {
         final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, Integer>> future = new CompletableFuture<>();
-        final long id = pending.register(future);
+        final long id = pending.register(future, DEFAULT_TIMEOUT);
 
         pending.complete(id, Result.success(42));
 
@@ -53,7 +55,7 @@ public class PendingAsyncResponsesTest {
     public void shouldCompleteFutureWithErrorResult() throws ExecutionException, InterruptedException {
         final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
-        final long id = pending.register(future);
+        final long id = pending.register(future, DEFAULT_TIMEOUT);
 
         pending.complete(id, Result.error(new HttpErrorResponse(null, 400)));
 
@@ -69,7 +71,7 @@ public class PendingAsyncResponsesTest {
     public void shouldRemoveEntryAfterCompletion() {
         final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, Integer>> future = new CompletableFuture<>();
-        final long id = pending.register(future);
+        final long id = pending.register(future, DEFAULT_TIMEOUT);
 
         pending.complete(id, Result.success(1));
 
@@ -94,9 +96,9 @@ public class PendingAsyncResponsesTest {
         final CompletableFuture<Result<HttpErrorResponse, String>> future1 = new CompletableFuture<>();
         final CompletableFuture<Result<HttpErrorResponse, String>> future2 = new CompletableFuture<>();
 
-        final long id0 = pending.register(future0);
-        final long id1 = pending.register(future1);
-        final long id2 = pending.register(future2);
+        final long id0 = pending.register(future0, DEFAULT_TIMEOUT);
+        final long id1 = pending.register(future1, DEFAULT_TIMEOUT);
+        final long id2 = pending.register(future2, DEFAULT_TIMEOUT);
 
         // Complete out of order
         pending.complete(id2, Result.success("third"));
@@ -112,7 +114,7 @@ public class PendingAsyncResponsesTest {
     public void timeoutCompletesFutureWithErrorAfterDelay() throws ExecutionException, InterruptedException {
         final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
-        pending.register(future);
+        pending.register(future, DEFAULT_TIMEOUT);
 
         Assert.assertFalse(future.isDone());
 
@@ -133,7 +135,7 @@ public class PendingAsyncResponsesTest {
     public void timeoutInvokesExceptionHandler() {
         final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
-        final long id = pending.register(future);
+        final long id = pending.register(future, DEFAULT_TIMEOUT);
 
         scheduler.advanceBy(30_001);
 
@@ -146,7 +148,7 @@ public class PendingAsyncResponsesTest {
     public void timeoutRemovesEntryFromPending() {
         final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
-        final long id = pending.register(future);
+        final long id = pending.register(future, DEFAULT_TIMEOUT);
 
         scheduler.advanceBy(30_001);
 
@@ -162,7 +164,7 @@ public class PendingAsyncResponsesTest {
     public void normalCompletionCancelsTimeout() {
         final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
-        final long id = pending.register(future);
+        final long id = pending.register(future, DEFAULT_TIMEOUT);
 
         pending.complete(id, Result.success("done"));
 
@@ -176,7 +178,7 @@ public class PendingAsyncResponsesTest {
     public void doubleCompleteAfterTimeoutThrows() {
         final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
-        final long id = pending.register(future);
+        final long id = pending.register(future, DEFAULT_TIMEOUT);
 
         scheduler.advanceBy(30_001);
 
@@ -186,5 +188,26 @@ public class PendingAsyncResponsesTest {
         } catch (final IllegalArgumentException e) {
             Assert.assertTrue(e.getMessage().contains(String.valueOf(id)));
         }
+    }
+
+    @Test
+    public void customTimeoutRespectsProvidedDuration() throws ExecutionException, InterruptedException {
+        final PendingAsyncResponses pending = createPending();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
+        pending.register(future, 1_000);
+
+        Assert.assertFalse(future.isDone());
+
+        scheduler.advanceBy(999);
+        Assert.assertFalse(future.isDone());
+
+        scheduler.advanceBy(2);
+        Assert.assertTrue(future.isDone());
+
+        final Result<HttpErrorResponse, String> result = future.get();
+        result.consume(
+                error -> Assert.assertEquals(500, error.statusCode()),
+                value -> Assert.fail("Expected error but got success")
+        );
     }
 }

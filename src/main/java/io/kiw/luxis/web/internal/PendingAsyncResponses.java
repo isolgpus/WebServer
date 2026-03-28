@@ -15,16 +15,14 @@ public class PendingAsyncResponses {
     private final ConcurrentHashMap<Long, PendingEntry> pending = new ConcurrentHashMap<>();
     private final TimeoutScheduler scheduler;
     private final Consumer<Exception> exceptionHandler;
-    private final long timeoutMillis;
 
-    public PendingAsyncResponses(final TimeoutScheduler scheduler, final Consumer<Exception> exceptionHandler, final long timeoutMillis) {
+    public PendingAsyncResponses(final TimeoutScheduler scheduler, final Consumer<Exception> exceptionHandler) {
         this.scheduler = scheduler;
         this.exceptionHandler = exceptionHandler;
-        this.timeoutMillis = timeoutMillis;
     }
 
     @SuppressWarnings("unchecked")
-    public <T> long register(final CompletableFuture<Result<HttpErrorResponse, T>> future) {
+    public <T> long register(final CompletableFuture<Result<HttpErrorResponse, T>> future, final long timeoutMillis) {
         final long id = nextId.getAndIncrement();
         final TimeoutScheduler.Cancellable cancellable = scheduler.schedule(timeoutMillis, () -> expire(id));
         pending.put(id, new PendingEntry((CompletableFuture<Result<HttpErrorResponse, ?>>) (CompletableFuture<?>) future, cancellable));
