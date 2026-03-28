@@ -34,7 +34,7 @@ public abstract class RouterWrapper {
 
     public abstract void configureCors(final CorsConfig corsConfig);
 
-    protected abstract void webSocketRoute(final String path, final WebSocketRouteHandler<?, ?, ?> handler);
+    protected abstract void webSocketRoute(final String path, final WebSocketHandler handler);
 
     public <T> void handle(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
         final HttpContext httpContext = new HttpContext(vertxContext);

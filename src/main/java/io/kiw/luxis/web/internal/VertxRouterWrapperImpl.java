@@ -56,7 +56,7 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     }
 
     @Override
-    protected void webSocketRoute(final String path, final WebSocketRouteHandler<?, ?, ?> handler) {
+    protected void webSocketRoute(final String path, final WebSocketHandler handler) {
         router.route(path).handler(ctx -> {
             ctx.request().toWebSocket()
                     .onSuccess(ws -> {

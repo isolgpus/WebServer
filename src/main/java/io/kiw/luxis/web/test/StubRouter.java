@@ -5,7 +5,7 @@ import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.internal.RouterWrapper;
-import io.kiw.luxis.web.internal.WebSocketRouteHandler;
+import io.kiw.luxis.web.internal.WebSocketHandler;
 import io.kiw.luxis.web.RouteConfig;
 
 import java.nio.charset.StandardCharsets;
@@ -142,7 +142,7 @@ public class StubRouter extends RouterWrapper {
     }
 
     @Override
-    protected void webSocketRoute(final String path, final WebSocketRouteHandler<?, ?, ?> handler) {
+    protected void webSocketRoute(final String path, final WebSocketHandler handler) {
         webSocketRoutes.add(new WebSocketRouteEntry(path, handler));
     }
 
@@ -175,9 +175,9 @@ public class StubRouter extends RouterWrapper {
 
     private static class WebSocketRouteEntry {
         final String path;
-        final WebSocketRouteHandler<?, ?, ?> handler;
+        final WebSocketHandler handler;
 
-        WebSocketRouteEntry(final String path, final WebSocketRouteHandler<?, ?, ?> handler) {
+        WebSocketRouteEntry(final String path, final WebSocketHandler handler) {
             this.path = path;
             this.handler = handler;
         }

@@ -7,6 +7,7 @@ import io.kiw.luxis.web.handler.VertxFileUploadRoute;
 import io.kiw.luxis.web.handler.VertxJsonFilter;
 import io.kiw.luxis.web.handler.VertxJsonRoute;
 import io.kiw.luxis.web.handler.WebSocketRoute;
+import io.kiw.luxis.web.handler.WebSocketSplitRoute;
 import io.kiw.luxis.web.http.DownloadFileResponse;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
@@ -157,6 +158,15 @@ public class RoutesRegister {
         ));
 
         final WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
+        router.webSocketRoute(path, handler);
+    }
+
+    public <APP> void webSocketSplitRoute(final String path, final APP applicationState, final WebSocketSplitRoute<APP> route) {
+        webSocketSplitRoute(path, applicationState, route, new WebSocketRouteConfigBuilder().build());
+    }
+
+    public <APP> void webSocketSplitRoute(final String path, final APP applicationState, final WebSocketSplitRoute<APP> route, final WebSocketRouteConfig config) {
+        final WebSocketSplitRouteHandler<APP> handler = new WebSocketSplitRouteHandler<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
         router.webSocketRoute(path, handler);
     }
 
