@@ -1,18 +1,17 @@
 package io.kiw.luxis.web.test.handler;
 
-import io.kiw.luxis.web.handler.VertxJsonRoute;
-import io.kiw.luxis.web.http.HttpResult;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.handler.WebSocketRoute;
+import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.AsyncMapConfig;
 import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
-import io.kiw.luxis.web.pipeline.HttpStream;
+import io.kiw.luxis.web.pipeline.WebSocketStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class CorrelatedAsyncCustomTimeoutTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class WebSocketCustomTimeoutHandler extends WebSocketRoute<WebSocketNumberRequest, WebSocketNumberResponse, MyApplicationState> {
 
     private Runnable onRegistered = () -> {};
 
-    public CorrelatedAsyncCustomTimeoutTestHandler() {
+    public WebSocketCustomTimeoutHandler() {
     }
 
     public void setOnRegistered(final Runnable onRegistered) {
@@ -20,13 +19,13 @@ public class CorrelatedAsyncCustomTimeoutTestHandler extends VertxJsonRoute<Asyn
     }
 
     @Override
-    public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
-        return httpStream
+    public WebSocketPipeline<WebSocketNumberResponse> onMessage(final WebSocketStream<WebSocketNumberRequest, MyApplicationState> stream) {
+        return stream
                 .<Integer>correlatedAsyncMap(ctx -> {
                     // Deliberately do NOT call handleAsyncResponse — simulates missing response
                     onRegistered.run();
                 }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())
-                .map(ctx -> new AsyncMapResponse(ctx.in()))
-                .complete(ctx -> HttpResult.success(ctx.in()));
+                .map(ctx -> new WebSocketNumberResponse(ctx.in()))
+                .complete();
     }
 }

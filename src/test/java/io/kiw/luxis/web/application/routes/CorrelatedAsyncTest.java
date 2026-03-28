@@ -203,8 +203,7 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldTimeoutWithCustomOneSecondTimeout() {
-        final CorrelatedAsyncCustomTimeoutTestHandler handler = new CorrelatedAsyncCustomTimeoutTestHandler(
-                new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build());
+        final CorrelatedAsyncCustomTimeoutTestHandler handler = new CorrelatedAsyncCustomTimeoutTestHandler();
 
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/customTimeout", Method.POST, state, handler);

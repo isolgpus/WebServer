@@ -802,8 +802,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldTimeoutWebSocketWithCustomOneSecondTimeout() {
-        final WebSocketCustomTimeoutHandler handler = new WebSocketCustomTimeoutHandler(
-                new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build());
+        final WebSocketCustomTimeoutHandler handler = new WebSocketCustomTimeoutHandler();
 
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/customTimeout", state, handler);
