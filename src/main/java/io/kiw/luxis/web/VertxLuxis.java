@@ -29,6 +29,7 @@ public class VertxLuxis<APP> implements Luxis<APP> {
     @Override
     public <T> void handleAsyncResponse(final long correlationId, final Result<HttpErrorResponse, T> result) {
         pendingAsyncResponses.complete(correlationId, result);
+        // triggers RouterWrapper.handleAsync
     }
 
     @Override
