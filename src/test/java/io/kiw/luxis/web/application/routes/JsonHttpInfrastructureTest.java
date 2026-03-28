@@ -25,7 +25,7 @@ public class JsonHttpInfrastructureTest {
     }
 
     private final String mode;
-    private TestClient luxisTestClient;
+    private TestClientAndServer testClientAndServer;
     private static final String DEFAULT_POST_RESPONSE = json()
             .put("intExample", 0)
             .putNull("stringExample")
@@ -48,17 +48,18 @@ public class JsonHttpInfrastructureTest {
 
     @After
     public void tearDown() throws Exception {
-        if (luxisTestClient != null) {
-            luxisTestClient.assertNoMoreExceptions();
-            luxisTestClient.close();
+        if (testClientAndServer != null) {
+            testClientAndServer.client().assertNoMoreExceptions();
+            testClientAndServer.close();
         }
     }
 
     @Test
     public void shouldHandlePopulatingJsonValues() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         final String requestBody = json()
                 .put("intExample", 17)
@@ -83,9 +84,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadQueryParamsInPost() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.put(
                 StubRequest.request("/echo")
@@ -108,9 +110,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnPost() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/echo")
@@ -134,9 +137,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnPut() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.put(
             StubRequest.request("/echo")
@@ -160,9 +164,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnDelete() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.DELETE, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.delete(
             StubRequest.request("/echo")
@@ -186,9 +191,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnPatch() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.PATCH, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.patch(
             StubRequest.request("/echo")
@@ -212,9 +218,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestHeaderParamsOnGet() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.get(
             StubRequest.request("/echo")
@@ -237,9 +244,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadQueryParamsInGet() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.get(
                 StubRequest.request("/echo")
@@ -262,9 +270,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldIgnoreWhenClientSendsUnknownValues() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         final String requestBody = json()
                 .put("intExample", 17)
@@ -291,9 +300,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldRespondWithErrorNicelyWhenRequestBodyIsNotPresentOnPost() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(StubRequest.request("/echo"));
 
@@ -307,9 +317,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldCallGetRoute() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.get(StubRequest.request("/echo"));
 
@@ -327,9 +338,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldPopulateResponseHeaders() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         final String request = json()
                 .put("responseHeaderExample", "responseTest")
@@ -345,9 +357,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReadRequestCookies() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/echo")
@@ -367,9 +380,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldPopulateResponseCookie() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/echo")
@@ -381,9 +395,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldMapThroughABlockingCall() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/blocking", Method.POST, state, new BlockingTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/blocking")
@@ -394,9 +409,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldMapThroughABlockingCompleteCall() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/blockingComplete", Method.POST, state, new BlockingCompleteTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/blockingComplete")
@@ -407,9 +423,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnWithErrorOnBadRequest() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/failing", Method.POST, state, new FailingTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/failing")
@@ -424,11 +441,12 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldAccessRequestBodyInHandlerWhenRoutedThroughFilter() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
             r.jsonRoute("/root/filter/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         String requestBody = json()
             .put("intExample", 42)
@@ -456,11 +474,12 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldApplyFilterBeforeHandle() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
             r.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/root/filter/test")
@@ -476,11 +495,12 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldApplyFilterBeforeHandleOnGet() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
             r.jsonRoute("/root/filter/test", Method.GET, state, new GetTestFilterHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.get(
             StubRequest.request("/root/filter/test"));
@@ -495,11 +515,12 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldApplyFilterBeforeHandleOnPut() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
             r.jsonRoute("/root/filter/test", Method.PUT, state, new TestFilterHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.put(
             StubRequest.request("/root/filter/test")
@@ -515,11 +536,12 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldApplyFilterBeforeHandleOnDelete() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
             r.jsonRoute("/root/filter/test", Method.DELETE, state, new TestFilterHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.delete(
             StubRequest.request("/root/filter/test")
@@ -535,11 +557,12 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldApplyFilterBeforeHandleOnPatch() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
             r.jsonRoute("/root/filter/test", Method.PATCH, state, new TestFilterHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.patch(
             StubRequest.request("/root/filter/test")
@@ -555,9 +578,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleMalformedJsonRequest() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/throw")
@@ -574,9 +598,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleItWhenThrowingAnExceptionWithinTheHandler() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/throw")
@@ -592,9 +617,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleItWhenThrowingAnExceptionInMapHandler() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/throw")
@@ -610,9 +636,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleItWhenThrowingAnExceptionInBlockingHandler() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/throw")
@@ -628,9 +655,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldUploadAFile() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/upload")
@@ -647,9 +675,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldDownloadFile() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.get(StubRequest.request("/download"));
 
@@ -664,9 +693,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldSupportAsyncMap() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/asyncMap", Method.POST, state, new AsyncMapTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/asyncMap").body(json().put("value", 5).toString()));
@@ -678,9 +708,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldSupportAsyncBlockingMap() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/asyncBlockingMap", Method.POST, state, new AsyncBlockingMapTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/asyncBlockingMap").body(json().put("value", 3).toString()));
@@ -692,9 +723,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldSupportPathParam() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo/:pathExample", Method.GET, state, new GetEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.get(
                 StubRequest.request("/echo/myvariable"));
@@ -716,9 +748,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldPassValidationAndReturnResponse() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
             .put("name", "Alice")
@@ -746,9 +779,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForInvalidBodyField() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
             .putNull("name")
@@ -773,9 +807,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForInvalidEmail() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
             .put("name", "Alice")
@@ -800,9 +835,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForNestedField() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
             .put("name", "Alice")
@@ -827,9 +863,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForMissingQueryParam() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
             .put("name", "Alice")
@@ -852,9 +889,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnApplicationState() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/state", Method.POST, state, new StateTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(StubRequest.request("/state").body("{}"));
 
@@ -863,10 +901,11 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldShortCircuitWhenFilterReturnsError() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/protected/*", state, new ErrorFilter());
             r.jsonRoute("/protected/resource", Method.GET, state, new GetEchoHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.get(StubRequest.request("/protected/resource"));
 
@@ -881,9 +920,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleBlockingFlatMapFailure() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/blockingFailing", Method.POST, state, new BlockingFlatMapFailHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/blockingFailing").body(json().put("numberToMultiply", 5).toString()));
@@ -899,9 +939,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleAsyncFlatMapFailure() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/asyncFailing", Method.POST, state, new AsyncFlatMapFailHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/asyncFailing").body(json().put("value", 5).toString()));
@@ -917,9 +958,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleExceptionInAsyncMapHandler() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/throw").body(json().put("where", "asyncMap").toString()));
@@ -934,9 +976,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldHandleExceptionInAsyncBlockingMapHandler() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
             StubRequest.request("/throw").body(json().put("where", "asyncBlockingMap").toString()));
@@ -951,9 +994,10 @@ public class JsonHttpInfrastructureTest {
 
     @Test
     public void shouldReturnValidationErrorForInvalidPathParam() {
-        luxisTestClient = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
         });
+        TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
             .put("name", "Alice")

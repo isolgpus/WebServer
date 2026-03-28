@@ -35,7 +35,7 @@ public class FilterOrderTest {
     }
 
     private final String mode;
-    private TestClient client;
+    private TestClientAndServer testClientAndServer;
 
     public FilterOrderTest(String mode) {
         this.mode = mode;
@@ -50,9 +50,9 @@ public class FilterOrderTest {
 
     @After
     public void tearDown() throws Exception {
-        if (client != null) {
-            client.assertNoMoreExceptions();
-            client.close();
+        if (testClientAndServer != null) {
+            testClientAndServer.client().assertNoMoreExceptions();
+            testClientAndServer.close();
         }
     }
 
@@ -60,7 +60,7 @@ public class FilterOrderTest {
     public void shouldExecuteFiltersInRegistrationOrder() {
         final List<String> executionOrder = new ArrayList<>();
 
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/ordered/*", state, e -> e.complete(ctx -> {
                 executionOrder.add("first");
                 ctx.http().addResponseCookie(new HttpCookie("filter-first", "hit"));
@@ -73,6 +73,7 @@ public class FilterOrderTest {
             }));
             r.jsonRoute("/ordered/test", Method.POST, state, new TestFilterHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         client.post(StubRequest.request("/ordered/test").body(json().toString()));
 
@@ -83,7 +84,7 @@ public class FilterOrderTest {
     public void shouldExecuteNarrowAndBroadFiltersInRegistrationOrder() {
         final List<String> executionOrder = new ArrayList<>();
 
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/a/*", state, e -> e.complete(ctx -> {
                 executionOrder.add("broad");
                 ctx.http().addResponseCookie(new HttpCookie("broad", "hit"));
@@ -96,6 +97,7 @@ public class FilterOrderTest {
             }));
             r.jsonRoute("/a/b/test", Method.GET, state, new GetTestFilterHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(StubRequest.request("/a/b/test"));
 
@@ -108,7 +110,7 @@ public class FilterOrderTest {
     public void shouldOnlyExecuteMatchingFilters() {
         final List<String> executionOrder = new ArrayList<>();
 
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/api/*", state, e -> e.complete(ctx -> {
                 executionOrder.add("api");
                 return HttpResult.success();
@@ -119,6 +121,7 @@ public class FilterOrderTest {
             }));
             r.jsonRoute("/api/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         client.post(StubRequest.request("/api/echo")
             .body(json().put("intExample", 1).put("stringExample", "test").toString()));

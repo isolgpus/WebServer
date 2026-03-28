@@ -26,7 +26,7 @@ public class CustomStatusCodeTest {
     }
 
     private final String mode;
-    private TestClient client;
+    private TestClientAndServer testClientAndServer;
 
     public CustomStatusCodeTest(String mode) {
         this.mode = mode;
@@ -41,17 +41,18 @@ public class CustomStatusCodeTest {
 
     @After
     public void tearDown() throws Exception {
-        if (client != null) {
-            client.assertNoMoreExceptions();
-            client.close();
+        if (testClientAndServer != null) {
+            testClientAndServer.client().assertNoMoreExceptions();
+            testClientAndServer.close();
         }
     }
 
     @Test
     public void shouldAllowHandlerToSetCreatedStatusCode() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
             StubRequest.request("/statusCode")
@@ -64,9 +65,10 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetNoContentStatusCode() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
             StubRequest.request("/statusCode")
@@ -79,9 +81,10 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldDefaultToOkWhenStatusCodeNotSet() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
             StubRequest.request("/statusCode")

@@ -26,7 +26,7 @@ public class MaxBodySizeTest {
     }
 
     private final String mode;
-    private TestClient client;
+    private TestClientAndServer testClientAndServer;
 
     public MaxBodySizeTest(String mode) {
         this.mode = mode;
@@ -41,17 +41,18 @@ public class MaxBodySizeTest {
 
     @After
     public void tearDown() throws Exception {
-        if (client != null) {
-            client.assertNoMoreExceptions();
-            client.close();
+        if (testClientAndServer != null) {
+            testClientAndServer.client().assertNoMoreExceptions();
+            testClientAndServer.close();
         }
     }
 
     @Test
     public void shouldRejectRequestExceedingMaxBodySize() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         }, builder -> builder.setMaxBodySize(10));
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
             StubRequest.request("/echo")
@@ -62,9 +63,10 @@ public class MaxBodySizeTest {
 
     @Test
     public void shouldAcceptRequestWithinMaxBodySize() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         }, builder -> builder.setMaxBodySize(1000));
+        TestClient client = testClientAndServer.client();
 
         String body = json().put("intExample", 42).put("stringExample", "hello").toString();
 
@@ -76,9 +78,10 @@ public class MaxBodySizeTest {
 
     @Test
     public void shouldNotEnforceBodyLimitWhenNotConfigured() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         String body = json().put("intExample", 42).put("stringExample", "any size body is fine").toString();
 

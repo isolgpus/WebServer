@@ -50,7 +50,7 @@ public class WebSocketTest {
 
     private final String mode;
     private TestWebSocketClient ws;
-    private TestClient client;
+    private TestClientAndServer testClientAndServer;
 
     public WebSocketTest(String mode) {
         this.mode = mode;
@@ -65,9 +65,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldEchoWebSocketMessage() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"hello\"}");
@@ -82,9 +83,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleMultipleMessages() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("{\"message\":\"first\"}");
@@ -101,9 +103,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldSendMessageOnConnect() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/chat/general"));
 
@@ -117,9 +120,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldCloseWebSocket() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/chat/general"));
         ws.onResponses(received -> {
@@ -136,9 +140,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldThrowWhenNoWebSocketRouteMatches() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         try {
             client.webSocket(StubRequest.request("/ws/nonexistent"));
@@ -153,9 +158,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleInvalidJsonGracefully() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("not valid json");
@@ -169,9 +175,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughBlockingCall() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/blocking", state, new BlockingMapWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/blocking"));
         ws.send("{\"value\":22}");
@@ -186,9 +193,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughAsyncMap() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/asyncMap", state, new AsyncMapWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/asyncMap"));
         ws.send("{\"value\":5}");
@@ -203,9 +211,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughAsyncBlockingMap() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/asyncBlockingMap", state, new AsyncBlockingMapWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/asyncBlockingMap"));
         ws.send("{\"value\":3}");
@@ -221,9 +230,10 @@ public class WebSocketTest {
     @Test
     @Ignore
     public void shouldReturnErrorOnFlatMapFailure() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/flatMapFail", state, new FlatMapFailWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/flatMapFail"));
         ws.send("{\"message\":\"hello\"}");
@@ -241,9 +251,10 @@ public class WebSocketTest {
     @Test
     @Ignore
     public void shouldReturnErrorOnBlockingFlatMapFailure() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/blockingFlatMapFail", state, new BlockingFlatMapFailWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/blockingFlatMapFail"));
         ws.send("{\"message\":\"hello\"}");
@@ -261,9 +272,10 @@ public class WebSocketTest {
     @Test
     @Ignore
     public void shouldReturnErrorOnAsyncFlatMapFailure() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/asyncFlatMapFail", state, new AsyncFlatMapFailWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/asyncFlatMapFail"));
         ws.send("{\"message\":\"hello\"}");
@@ -280,9 +292,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInMapHandler() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
         ws.send("{\"where\":\"map\"}");
@@ -297,9 +310,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInBlockingHandler() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
         ws.send("{\"where\":\"blocking\"}");
@@ -314,9 +328,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInAsyncMapHandler() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
         ws.send("{\"where\":\"asyncMap\"}");
@@ -331,9 +346,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInAsyncBlockingMapHandler() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
         ws.send("{\"where\":\"asyncBlockingMap\"}");
@@ -348,9 +364,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInCompleteHandler() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
         ws.send("{\"where\":\"complete\"}");
@@ -366,9 +383,10 @@ public class WebSocketTest {
     @Test
     public void shouldNotSendResponseWhenCompleteWithNoResponse() {
         final NoResponseWebSocketHandler handler = new NoResponseWebSocketHandler();
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/noresponse", state, handler);
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/noresponse"));
         ws.send("{\"message\":\"hello\"}");
@@ -383,9 +401,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldPassThroughAllStagesWhenNoException() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
         ws.send("{\"where\":\"none\"}");
@@ -400,9 +419,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldPassValidationAndReturnResponse() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
@@ -432,9 +452,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldReturnValidationErrorForInvalidBodyField() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
@@ -463,9 +484,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldReturnValidationErrorForInvalidEmail() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
@@ -494,9 +516,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldReturnValidationErrorForNestedField() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
@@ -525,9 +548,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldReturnValidationErrorForMultipleFields() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
@@ -557,12 +581,13 @@ public class WebSocketTest {
 
     @Test
     public void shouldJustSendValidationErrorByDefault() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler(),
                 new WebSocketRouteConfigBuilder()
                     .failedValidationStrategy(JustSendValidationError.INSTANCE)
                     .build());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
@@ -592,12 +617,13 @@ public class WebSocketTest {
 
     @Test
     public void shouldDisconnectSessionOnValidationFailure() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler(),
                 new WebSocketRouteConfigBuilder()
                     .failedValidationStrategy(DisconnectSession.INSTANCE)
                     .build());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
@@ -619,12 +645,13 @@ public class WebSocketTest {
 
     @Test
     public void shouldSendValidationErrorsAndDisconnectSession() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler(),
                 new WebSocketRouteConfigBuilder()
                     .failedValidationStrategy(SendValidationErrorsAndDisconnectSession.INSTANCE)
                     .build());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
@@ -655,9 +682,10 @@ public class WebSocketTest {
     @Test
     public void shouldRunMapAndBlockingMapOnCorrectContext() {
         final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/context", state, new ContextAssertingWebSocketHandler(asserter));
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/context"));
         ws.send("{\"message\":\"hello\"}");
@@ -673,9 +701,10 @@ public class WebSocketTest {
     @Test
     public void shouldRunAsyncMapOnCorrectContext() {
         final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/context-async", state, new ContextAssertingAsyncWebSocketHandler(asserter));
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/context-async"));
         ws.send("{\"message\":\"hello\"}");
@@ -691,15 +720,17 @@ public class WebSocketTest {
     @Test
     public void shouldTriggerOnCloseWhenClientDisconnects() {
         final OnCloseTrackingWebSocketHandler handler = new OnCloseTrackingWebSocketHandler();
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/lifecycle", state, handler);
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/lifecycle"));
         Assert.assertTrue(handler.onOpenCalled);
         Assert.assertFalse(handler.onCloseCalled);
 
         ws.close();
+
         Assert.assertTrue(handler.onCloseCalled);
 
         ws = null;
@@ -708,12 +739,13 @@ public class WebSocketTest {
 
     @Test
     public void shouldSendErrorResponseOnCorruptInputWhenConfigured() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler(),
                 new WebSocketRouteConfigBuilder()
                     .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad json\"}"))
                     .build());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("not valid json");
@@ -729,9 +761,10 @@ public class WebSocketTest {
 
     @Test
     public void shouldDisconnectOnCorruptInputByDefault() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
         ws.send("not valid json");
@@ -748,8 +781,9 @@ public class WebSocketTest {
         if (ws != null) {
             ws.close();
         }
-        if (client != null) {
-            client.close();
+        if (testClientAndServer != null) {
+            testClientAndServer.client().assertNoMoreExceptions();
+            testClientAndServer.close();
         }
     }
 }

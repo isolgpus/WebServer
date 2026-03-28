@@ -21,13 +21,11 @@ public class VertxTestClient implements TestClient {
     private final WebSocketClient webSocketClient;
     private final String host;
     private final int port;
-    private final AutoCloseable onClose;
     private final long timeoutSeconds;
 
-    public VertxTestClient(final String host, final int port, final AutoCloseable onClose) {
+    public VertxTestClient(final String host, final int port) {
         this.host = host;
         this.port = port;
-        this.onClose = onClose;
         this.timeoutSeconds = 10;
         this.vertx = Vertx.vertx();
         this.httpClient = vertx.createHttpClient();
@@ -199,7 +197,6 @@ public class VertxTestClient implements TestClient {
         return uri.toString();
     }
 
-    @Override
     public void close() throws Exception {
         try {
             final CompletableFuture<Void> clientClose = new CompletableFuture<>();
@@ -230,7 +227,5 @@ public class VertxTestClient implements TestClient {
         } catch (final Exception e) {
             // best effort
         }
-
-        onClose.close();
     }
 }

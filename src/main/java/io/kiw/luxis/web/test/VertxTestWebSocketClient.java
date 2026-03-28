@@ -50,7 +50,7 @@ public class VertxTestWebSocketClient implements TestWebSocketClient {
 
     @Override
     public void close() {
-        webSocket.close();
+        webSocket.close().toCompletionStage().toCompletableFuture().join();
         closed = true;
     }
 

@@ -35,7 +35,7 @@ public class TestApplicationClientCreator {
             "VERTX".equals(System.getenv("TEST_MODE")));
     }
 
-    public static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes) {
+    public static TestClientAndServer createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes) {
         return createClient(mode, registerRoutes, new WebServiceConfigBuilder().setPort(8080));
     }
 
@@ -47,7 +47,7 @@ public class TestApplicationClientCreator {
         }
     }
 
-    public static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, CorsConfig corsConfig) {
+    public static TestClientAndServer createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, CorsConfig corsConfig) {
         WebServiceConfigBuilder builder = new WebServiceConfigBuilder().setPort(8080);
         if (corsConfig != null) {
             builder.setCorsConfig(corsConfig);
@@ -55,13 +55,13 @@ public class TestApplicationClientCreator {
         return createClient(mode, registerRoutes, builder);
     }
 
-    public static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, Consumer<WebServiceConfigBuilder> configCustomizer) {
+    public static TestClientAndServer createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, Consumer<WebServiceConfigBuilder> configCustomizer) {
         WebServiceConfigBuilder builder = new WebServiceConfigBuilder().setPort(8080);
         configCustomizer.accept(builder);
         return createClient(mode, registerRoutes, builder);
     }
 
-    private static TestClient createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, WebServiceConfigBuilder builder) {
+    private static TestClientAndServer createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, WebServiceConfigBuilder builder) {
         MyApplicationState state = new MyApplicationState();
         WebServerConfig config = builder.build();
 
@@ -74,13 +74,13 @@ public class TestApplicationClientCreator {
 
             Luxis<MyApplicationState> luxis = Luxis.start(routes, config);
             state.setLuxis(luxis);
-            return new VertxTestClient("127.0.0.1", 8080, luxis);
+            return new TestClientAndServer(new VertxTestClient("127.0.0.1", 8080), luxis);
         }
         else
         {
             Luxis<MyApplicationState> luxis = Luxis.test(routes, config);
             state.setLuxis(luxis);
-            return new StubTestClient<>("127.0.0.1", 8080, luxis);
+            return new TestClientAndServer(new StubTestClient<>("127.0.0.1", 8080, luxis), luxis);
         }
 
     }

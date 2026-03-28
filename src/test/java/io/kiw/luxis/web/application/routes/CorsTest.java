@@ -32,7 +32,7 @@ public class CorsTest {
 
     private final String mode;
     private CorsConfig defaultCorsConfig;
-    private TestClient client;
+    private TestClientAndServer testClientAndServer;
 
     public CorsTest(String mode) {
         this.mode = mode;
@@ -59,10 +59,11 @@ public class CorsTest {
 
     @Test
     public void shouldReturnCorsHeadersOnPreflightRequest() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -79,10 +80,11 @@ public class CorsTest {
 
     @Test
     public void shouldReturnCorsHeadersOnPreflightForSecondAllowedOrigin() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -95,10 +97,11 @@ public class CorsTest {
 
     @Test
     public void shouldRejectPreflightFromDisallowedOrigin() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -111,10 +114,11 @@ public class CorsTest {
 
     @Test
     public void shouldRejectPreflightWithNoOrigin() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo"));
@@ -125,10 +129,11 @@ public class CorsTest {
 
     @Test
     public void shouldAddCorsHeadersToNormalGetResponse() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
             StubRequest.request("/echo")
@@ -142,10 +147,11 @@ public class CorsTest {
 
     @Test
     public void shouldAddCorsHeadersToNormalPostResponse() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
             StubRequest.request("/echo")
@@ -159,10 +165,11 @@ public class CorsTest {
 
     @Test
     public void shouldNotAddCorsHeadersForDisallowedOriginOnNormalRequest() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
             StubRequest.request("/echo")
@@ -174,10 +181,11 @@ public class CorsTest {
 
     @Test
     public void shouldNotAddCorsHeadersWhenNoOriginOnNormalRequest() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
             StubRequest.request("/echo"));
@@ -192,10 +200,11 @@ public class CorsTest {
             .allowOrigin("*")
             .allowMethod("GET")
             .build();
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, wildcardConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse preflight = client.options(
             StubRequest.request("/echo")
@@ -219,10 +228,11 @@ public class CorsTest {
             .allowOrigin("http://simple.example.com")
             .allowMethod("GET")
             .build();
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         }, simpleConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
             StubRequest.request("/echo")
@@ -236,10 +246,11 @@ public class CorsTest {
 
     @Test
     public void shouldNotInterfereWithNormalRequestsWhenNoCorsConfigured() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
         });
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(StubRequest.request("/echo"));
 
@@ -249,11 +260,12 @@ public class CorsTest {
 
     @Test
     public void shouldAddCorsHeadersToFilteredRoutes() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
             r.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
             StubRequest.request("/root/filter/test")
@@ -266,11 +278,12 @@ public class CorsTest {
 
     @Test
     public void shouldHandlePreflightOnFilteredRoutes() {
-        client = createClient(mode, (r, state) -> {
+        testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
             r.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
         }, defaultCorsConfig);
+        TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
             StubRequest.request("/root/filter/test")
@@ -284,8 +297,9 @@ public class CorsTest {
 
     @After
     public void tearDown() throws Exception {
-        if (client != null) {
-            client.close();
+        if (testClientAndServer != null) {
+            testClientAndServer.client().assertNoMoreExceptions();
+            testClientAndServer.close();
         }
     }
 
