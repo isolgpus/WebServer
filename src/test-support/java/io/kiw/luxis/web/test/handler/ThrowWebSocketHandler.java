@@ -1,14 +1,16 @@
 package io.kiw.luxis.web.test.handler;
 
+import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.WebSocketRoute;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
-import java.util.concurrent.CompletableFuture;
-
 public class ThrowWebSocketHandler extends WebSocketRoute<WebSocketThrowRequest, WebSocketEchoResponse, MyApplicationState> {
+
+    private Luxis<?> luxis;
 
     @Override
     public WebSocketPipeline<WebSocketEchoResponse> onMessage(final WebSocketStream<WebSocketThrowRequest, MyApplicationState> stream) {
@@ -26,17 +28,17 @@ public class ThrowWebSocketHandler extends WebSocketRoute<WebSocketThrowRequest,
                 }
                 return ctx.in();
             })
-            .asyncMap(ctx -> {
+            .correlatedAsyncMap(String.class, ctx -> {
                 if ("asyncMap".equals(ctx.in())) {
                     throw new RuntimeException("app error in asyncMap");
                 }
-                return CompletableFuture.completedFuture(ctx.in());
+                luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in()));
             })
-            .asyncBlockingMap(ctx -> {
+            .correlatedAsyncBlockingMap(String.class, ctx -> {
                 if ("asyncBlockingMap".equals(ctx.in())) {
                     throw new RuntimeException("app error in asyncBlockingMap");
                 }
-                return CompletableFuture.completedFuture(ctx.in());
+                luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in()));
             })
             .flatMap(ctx -> {
                 if ("complete".equals(ctx.in())) {
@@ -45,5 +47,9 @@ public class ThrowWebSocketHandler extends WebSocketRoute<WebSocketThrowRequest,
                 return WebSocketResult.success(new WebSocketEchoResponse("ok"));
             })
             .complete();
+    }
+
+    public void evillyReferenceLuxis(Luxis<?> luxis) {
+        this.luxis = luxis;
     }
 }

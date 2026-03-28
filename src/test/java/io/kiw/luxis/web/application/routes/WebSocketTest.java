@@ -193,9 +193,11 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughAsyncMap() {
+        final AsyncMapWebSocketHandler handler = new AsyncMapWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/asyncMap", state, new AsyncMapWebSocketHandler());
+            r.webSocketRoute("/ws/asyncMap", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/asyncMap"));
@@ -211,9 +213,11 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughAsyncBlockingMap() {
+        final AsyncBlockingMapWebSocketHandler handler = new AsyncBlockingMapWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/asyncBlockingMap", state, new AsyncBlockingMapWebSocketHandler());
+            r.webSocketRoute("/ws/asyncBlockingMap", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/asyncBlockingMap"));
@@ -272,9 +276,11 @@ public class WebSocketTest {
     @Test
     @Ignore
     public void shouldReturnErrorOnAsyncFlatMapFailure() {
+        final AsyncFlatMapFailWebSocketHandler handler = new AsyncFlatMapFailWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/asyncFlatMapFail", state, new AsyncFlatMapFailWebSocketHandler());
+            r.webSocketRoute("/ws/asyncFlatMapFail", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/asyncFlatMapFail"));
@@ -292,9 +298,11 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInMapHandler() {
+        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
+            r.webSocketRoute("/ws/throw", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
@@ -310,9 +318,11 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInBlockingHandler() {
+        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
+            r.webSocketRoute("/ws/throw", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
@@ -328,9 +338,11 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInAsyncMapHandler() {
+        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
+            r.webSocketRoute("/ws/throw", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
@@ -346,9 +358,11 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInAsyncBlockingMapHandler() {
+        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
+            r.webSocketRoute("/ws/throw", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
@@ -364,9 +378,11 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInCompleteHandler() {
+        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
+            r.webSocketRoute("/ws/throw", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
@@ -401,9 +417,11 @@ public class WebSocketTest {
 
     @Test
     public void shouldPassThroughAllStagesWhenNoException() {
+        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/throw", state, new ThrowWebSocketHandler());
+            r.webSocketRoute("/ws/throw", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
@@ -701,9 +719,11 @@ public class WebSocketTest {
     @Test
     public void shouldRunAsyncMapOnCorrectContext() {
         final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
+        final ContextAssertingAsyncWebSocketHandler handler = new ContextAssertingAsyncWebSocketHandler(asserter);
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/context-async", state, new ContextAssertingAsyncWebSocketHandler(asserter));
+            r.webSocketRoute("/ws/context-async", state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/context-async"));
@@ -711,7 +731,7 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"hello asyncmap async2 blocking\"}", received.get(0));
+            Assert.assertEquals("{\"echo\":\"hello asyncmap async2 async3 blocking\"}", received.get(0));
 
             client.assertNoMoreExceptions();
         });

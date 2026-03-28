@@ -29,13 +29,13 @@ public class WebSocketRouteHandler<IN, OUT, APP> {
     private final WebSocketPipeline<OUT> pipeline;
     private final WebSocketRouteConfig config;
 
-    public WebSocketRouteHandler(final WebSocketRoute<IN, OUT, APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config) {
+    public WebSocketRouteHandler(final WebSocketRoute<IN, OUT, APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
         this.executionDispatcher = executionDispatcher;
-        this.pipeline = route.onMessage(new WebSocketStream<>(new ArrayList<>(), appState));
+        this.pipeline = route.onMessage(new WebSocketStream<>(new ArrayList<>(), appState, pendingAsyncResponses));
         this.config = config;
     }
 

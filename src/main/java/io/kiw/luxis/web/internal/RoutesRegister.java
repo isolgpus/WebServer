@@ -156,7 +156,7 @@ public class RoutesRegister {
             null
         ));
 
-        final WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config);
+        final WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
         router.webSocketRoute(path, handler);
     }
 
