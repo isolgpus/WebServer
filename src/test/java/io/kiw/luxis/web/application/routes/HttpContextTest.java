@@ -60,7 +60,7 @@ public class HttpContextTest {
         TestHttpResponse response = client.post(StubRequest.request("/context").body(requestBody));
 
         final String expectedResponse = json()
-                .put("result", "hello flatMap async blockingFlatMap map blocking2 async2")
+                .put("result", "hello flatMap blockingFlatMap map blocking2")
                 .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expectedResponse), response);
@@ -81,7 +81,7 @@ public class HttpContextTest {
         TestHttpResponse response = client.post(StubRequest.request("/context-async-blocking").body(requestBody));
 
         final String expectedResponse = json()
-                .put("result", "hello asyncBlocking map blocking asyncBlocking2 async")
+                .put("result", "hello blocking map")
                 .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expectedResponse), response);

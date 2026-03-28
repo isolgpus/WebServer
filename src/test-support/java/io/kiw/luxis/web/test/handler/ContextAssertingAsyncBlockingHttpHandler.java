@@ -6,8 +6,6 @@ import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-import java.util.concurrent.CompletableFuture;
-
 import static io.kiw.luxis.web.http.HttpResult.success;
 
 public class ContextAssertingAsyncBlockingHttpHandler extends VertxJsonRoute<ContextRequest, ContextResponse, MyApplicationState> {
@@ -25,25 +23,13 @@ public class ContextAssertingAsyncBlockingHttpHandler extends VertxJsonRoute<Con
                 asserter.assertInApplicationContext();
                 return ctx.in().message;
             })
-            .asyncBlockingMap(ctx -> {
-                asserter.assertInWorkerContext();
-                return CompletableFuture.supplyAsync(() -> ctx.in() + " asyncBlocking");
-            })
-            .map(ctx -> {
-                asserter.assertInApplicationContext();
-                return ctx.in() + " map";
-            })
             .blockingMap(ctx -> {
                 asserter.assertInWorkerContext();
                 return ctx.in() + " blocking";
             })
-            .asyncBlockingMap(ctx -> {
-                asserter.assertInWorkerContext();
-                return CompletableFuture.supplyAsync(() -> ctx.in() + " asyncBlocking2");
-            })
-            .asyncMap(ctx -> {
+            .map(ctx -> {
                 asserter.assertInApplicationContext();
-                return CompletableFuture.supplyAsync(() -> ctx.in() + " async");
+                return ctx.in() + " map";
             })
             .complete(ctx -> success(new ContextResponse(ctx.in())));
     }

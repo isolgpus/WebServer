@@ -692,36 +692,6 @@ public class JsonHttpInfrastructureTest {
 
 
     @Test
-    public void shouldSupportAsyncMap() {
-        testClientAndServer = createClient(mode, (r, state) -> {
-            r.jsonRoute("/asyncMap", Method.POST, state, new AsyncMapTestHandler());
-        });
-        TestClient luxisTestClient = testClientAndServer.client();
-
-        TestHttpResponse response = luxisTestClient.post(
-                StubRequest.request("/asyncMap").body(json().put("value", 5).toString()));
-
-        Assert.assertEquals(
-                TestHttpResponse.response(json().put("result", 50).toString()),
-                response);
-    }
-
-    @Test
-    public void shouldSupportAsyncBlockingMap() {
-        testClientAndServer = createClient(mode, (r, state) -> {
-            r.jsonRoute("/asyncBlockingMap", Method.POST, state, new AsyncBlockingMapTestHandler());
-        });
-        TestClient luxisTestClient = testClientAndServer.client();
-
-        TestHttpResponse response = luxisTestClient.post(
-                StubRequest.request("/asyncBlockingMap").body(json().put("value", 3).toString()));
-
-        Assert.assertEquals(
-                TestHttpResponse.response(json().put("result", 60).toString()),
-                response);
-    }
-
-    @Test
     public void shouldSupportPathParam() {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo/:pathExample", Method.GET, state, new GetEchoHandler());
@@ -935,61 +905,6 @@ public class JsonHttpInfrastructureTest {
                 .toString()).withStatusCode(400),
             response
         );
-    }
-
-    @Test
-    public void shouldHandleAsyncFlatMapFailure() {
-        testClientAndServer = createClient(mode, (r, state) -> {
-            r.jsonRoute("/asyncFailing", Method.POST, state, new AsyncFlatMapFailHandler());
-        });
-        TestClient luxisTestClient = testClientAndServer.client();
-
-        TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/asyncFailing").body(json().put("value", 5).toString()));
-
-        Assert.assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "async flat map failed")
-                .set("errors", json())
-                .toString()).withStatusCode(400),
-            response
-        );
-    }
-
-    @Test
-    public void shouldHandleExceptionInAsyncMapHandler() {
-        testClientAndServer = createClient(mode, (r, state) -> {
-            r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
-        });
-        TestClient luxisTestClient = testClientAndServer.client();
-
-        TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/throw").body(json().put("where", "asyncMap").toString()));
-
-        Assert.assertEquals(
-            TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
-            response
-        );
-
-        luxisTestClient.assertException("app error in asyncMap");
-    }
-
-    @Test
-    public void shouldHandleExceptionInAsyncBlockingMapHandler() {
-        testClientAndServer = createClient(mode, (r, state) -> {
-            r.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
-        });
-        TestClient luxisTestClient = testClientAndServer.client();
-
-        TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/throw").body(json().put("where", "asyncBlockingMap").toString()));
-
-        Assert.assertEquals(
-            TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
-            response
-        );
-
-        luxisTestClient.assertException("app error in asyncBlockingMap");
     }
 
     @Test
