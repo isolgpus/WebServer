@@ -6,8 +6,10 @@ import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RoutesRegister;
 import io.kiw.luxis.web.internal.VertxExecutionDispatcher;
 import io.kiw.luxis.web.internal.VertxRoutesRegistrar;
+import io.kiw.luxis.web.internal.VertxTimeoutScheduler;
 import io.kiw.luxis.web.test.StubRouter;
 import io.kiw.luxis.web.test.StubExecutionDispatcher;
+import io.kiw.luxis.web.test.StubTimeoutScheduler;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpServer;
 import io.vertx.ext.web.Router;
@@ -28,7 +30,8 @@ public interface Luxis<APP> extends AutoCloseable {
         final Router router = Router.router(vertx);
 
         final VertxExecutionDispatcher executionDispatcher = new VertxExecutionDispatcher(vertx);
-        final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses();
+        final VertxTimeoutScheduler timeoutScheduler = new VertxTimeoutScheduler(vertx);
+        final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses(timeoutScheduler, webServerConfig.exceptionHandler, 30_000);
         final APP applicationState = VertxRoutesRegistrar.register(router, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig, executionDispatcher, pendingAsyncResponses);
 
         httpServer.requestHandler(router).listen(webServerConfig.port).toCompletionStage().toCompletableFuture().join();
@@ -40,10 +43,11 @@ public interface Luxis<APP> extends AutoCloseable {
     public static <APP> TestLuxis<APP> test(final ApplicationRoutesRegister<APP> routesRegisterConsumer) {
         final Consumer<Exception>[] ref = new Consumer[]{e -> {}};
         final StubRouter router = new StubRouter(e -> ref[0].accept(e));
-        final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses();
+        final StubTimeoutScheduler stubTimeoutScheduler = new StubTimeoutScheduler();
+        final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses(stubTimeoutScheduler, e -> ref[0].accept(e), 30_000);
         final RoutesRegister routesRegister = new RoutesRegister(router, new StubExecutionDispatcher(), pendingAsyncResponses);
         final APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
-        return new TestLuxis<>(router, applicationState, ref, pendingAsyncResponses);
+        return new TestLuxis<>(router, applicationState, ref, pendingAsyncResponses, stubTimeoutScheduler);
     }
 
     @SuppressWarnings("unchecked")
@@ -52,10 +56,11 @@ public interface Luxis<APP> extends AutoCloseable {
         final StubRouter router = new StubRouter(e -> ref[0].accept(e));
         webServerConfig.corsConfig.ifPresent(router::configureCors);
         router.setMaxBodySize(webServerConfig.maxBodySize);
-        final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses();
+        final StubTimeoutScheduler stubTimeoutScheduler = new StubTimeoutScheduler();
+        final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses(stubTimeoutScheduler, e -> ref[0].accept(e), 30_000);
         final RoutesRegister routesRegister = new RoutesRegister(router, new StubExecutionDispatcher(), pendingAsyncResponses);
         final APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
-        return new TestLuxis<>(router, applicationState, ref, pendingAsyncResponses);
+        return new TestLuxis<>(router, applicationState, ref, pendingAsyncResponses, stubTimeoutScheduler);
     }
 
     <IN> void apply(final IN immutableState, final BiConsumer<IN, APP> applicationStateConsumer);

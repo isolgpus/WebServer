@@ -9,12 +9,15 @@ import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.application.routes.TestClientAndServer;
 import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncBlockingMapTestHandler;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncMapTestHandler;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncThrowTestHandler;
+import io.kiw.luxis.web.test.handler.CorrelatedAsyncTimeoutTestHandler;
 import io.kiw.luxis.web.test.handler.CorrelatedAsyncWithHttpContextTestHandler;
 import org.junit.After;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -176,5 +179,23 @@ public class CorrelatedAsyncTest {
                 StubRequest.request("/correlatedAsync").body(json().put("value", 1).toString()));
 
         Assert.assertEquals(404, response.statusCode);
+    }
+
+    @Test
+    public void shouldTimeoutCorrelatedAsyncAfterDelay() {
+        Assume.assumeTrue("Timeout test only runs in stub mode", STUB_MODE.equals(mode));
+
+        final CorrelatedAsyncTimeoutTestHandler handler = new CorrelatedAsyncTimeoutTestHandler();
+        testClientAndServer = createClient(mode, (r, state) -> {
+            r.jsonRoute("/timeout", Method.POST, state, handler);
+        });
+        handler.evillyReferenceLuxis((TestLuxis<?>) testClientAndServer.luxis());
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/timeout").body(json().put("value", 1).toString()));
+
+        Assert.assertEquals(500, response.statusCode);
+        luxisTestClient.assertException("Correlated async response timed out");
     }
 }

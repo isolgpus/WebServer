@@ -2,17 +2,27 @@ package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.test.StubTimeoutScheduler;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 public class PendingAsyncResponsesTest {
 
+    private final StubTimeoutScheduler scheduler = new StubTimeoutScheduler();
+    private final List<Exception> exceptions = new ArrayList<>();
+
+    private PendingAsyncResponses createPending() {
+        return new PendingAsyncResponses(scheduler, exceptions::add, 30_000);
+    }
+
     @Test
     public void shouldAssignSequentialCorrelationIds() {
-        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final PendingAsyncResponses pending = createPending();
 
         final long id0 = pending.register(new CompletableFuture<>());
         final long id1 = pending.register(new CompletableFuture<>());
@@ -25,7 +35,7 @@ public class PendingAsyncResponsesTest {
 
     @Test
     public void shouldCompleteFutureWithSuccessResult() throws ExecutionException, InterruptedException {
-        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, Integer>> future = new CompletableFuture<>();
         final long id = pending.register(future);
 
@@ -41,7 +51,7 @@ public class PendingAsyncResponsesTest {
 
     @Test
     public void shouldCompleteFutureWithErrorResult() throws ExecutionException, InterruptedException {
-        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
         final long id = pending.register(future);
 
@@ -57,7 +67,7 @@ public class PendingAsyncResponsesTest {
 
     @Test
     public void shouldRemoveEntryAfterCompletion() {
-        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, Integer>> future = new CompletableFuture<>();
         final long id = pending.register(future);
 
@@ -73,13 +83,13 @@ public class PendingAsyncResponsesTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void shouldThrowForUnknownCorrelationId() {
-        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final PendingAsyncResponses pending = createPending();
         pending.complete(999L, Result.success("value"));
     }
 
     @Test
     public void shouldHandleMultiplePendingResponses() throws ExecutionException, InterruptedException {
-        final PendingAsyncResponses pending = new PendingAsyncResponses();
+        final PendingAsyncResponses pending = createPending();
         final CompletableFuture<Result<HttpErrorResponse, String>> future0 = new CompletableFuture<>();
         final CompletableFuture<Result<HttpErrorResponse, String>> future1 = new CompletableFuture<>();
         final CompletableFuture<Result<HttpErrorResponse, String>> future2 = new CompletableFuture<>();
@@ -96,5 +106,85 @@ public class PendingAsyncResponsesTest {
         future0.get().consume(e -> Assert.fail(), v -> Assert.assertEquals("first", v));
         future1.get().consume(e -> Assert.fail(), v -> Assert.assertEquals("second", v));
         future2.get().consume(e -> Assert.fail(), v -> Assert.assertEquals("third", v));
+    }
+
+    @Test
+    public void timeoutCompletesFutureWithErrorAfterDelay() throws ExecutionException, InterruptedException {
+        final PendingAsyncResponses pending = createPending();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
+        pending.register(future);
+
+        Assert.assertFalse(future.isDone());
+
+        scheduler.advanceBy(30_001);
+
+        Assert.assertTrue(future.isDone());
+        final Result<HttpErrorResponse, String> result = future.get();
+        result.consume(
+                error -> {
+                    Assert.assertEquals(500, error.statusCode());
+                    Assert.assertEquals("Something went wrong", error.errorMessageValue().message());
+                },
+                value -> Assert.fail("Expected error but got success")
+        );
+    }
+
+    @Test
+    public void timeoutInvokesExceptionHandler() {
+        final PendingAsyncResponses pending = createPending();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
+        final long id = pending.register(future);
+
+        scheduler.advanceBy(30_001);
+
+        Assert.assertEquals(1, exceptions.size());
+        Assert.assertTrue(exceptions.get(0).getMessage().contains("timed out"));
+        Assert.assertTrue(exceptions.get(0).getMessage().contains(String.valueOf(id)));
+    }
+
+    @Test
+    public void timeoutRemovesEntryFromPending() {
+        final PendingAsyncResponses pending = createPending();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
+        final long id = pending.register(future);
+
+        scheduler.advanceBy(30_001);
+
+        try {
+            pending.complete(id, Result.success("late"));
+            Assert.fail("Expected IllegalArgumentException after timeout removed the entry");
+        } catch (final IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains(String.valueOf(id)));
+        }
+    }
+
+    @Test
+    public void normalCompletionCancelsTimeout() {
+        final PendingAsyncResponses pending = createPending();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
+        final long id = pending.register(future);
+
+        pending.complete(id, Result.success("done"));
+
+        // Advancing past timeout should not invoke exception handler
+        scheduler.advanceBy(30_001);
+
+        Assert.assertTrue(exceptions.isEmpty());
+    }
+
+    @Test
+    public void doubleCompleteAfterTimeoutThrows() {
+        final PendingAsyncResponses pending = createPending();
+        final CompletableFuture<Result<HttpErrorResponse, String>> future = new CompletableFuture<>();
+        final long id = pending.register(future);
+
+        scheduler.advanceBy(30_001);
+
+        try {
+            pending.complete(id, Result.success("late"));
+            Assert.fail("Expected IllegalArgumentException for already-timed-out correlation ID");
+        } catch (final IllegalArgumentException e) {
+            Assert.assertTrue(e.getMessage().contains(String.valueOf(id)));
+        }
     }
 }

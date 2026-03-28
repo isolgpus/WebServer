@@ -4,6 +4,7 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.test.StubRouter;
+import io.kiw.luxis.web.test.StubTimeoutScheduler;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -14,13 +15,15 @@ public class TestLuxis<APP> implements Luxis<APP> {
     private final APP applicationState;
     private final Consumer<Exception>[] exceptionHandlerRef;
     private final PendingAsyncResponses pendingAsyncResponses;
+    private final StubTimeoutScheduler stubTimeoutScheduler;
 
     @SuppressWarnings("unchecked")
-    TestLuxis(final StubRouter router, final APP applicationState, final Consumer<Exception>[] exceptionHandlerRef, final PendingAsyncResponses pendingAsyncResponses) {
+    TestLuxis(final StubRouter router, final APP applicationState, final Consumer<Exception>[] exceptionHandlerRef, final PendingAsyncResponses pendingAsyncResponses, final StubTimeoutScheduler stubTimeoutScheduler) {
         this.router = router;
         this.applicationState = applicationState;
         this.exceptionHandlerRef = exceptionHandlerRef;
         this.pendingAsyncResponses = pendingAsyncResponses;
+        this.stubTimeoutScheduler = stubTimeoutScheduler;
     }
 
 
@@ -31,6 +34,10 @@ public class TestLuxis<APP> implements Luxis<APP> {
 
     public StubRouter getRouter() {
         return router;
+    }
+
+    public void advanceTimeBy(final long millis) {
+        stubTimeoutScheduler.advanceBy(millis);
     }
 
     @Override
