@@ -1,6 +1,7 @@
 package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.VertxJsonRoute;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
@@ -10,19 +11,22 @@ import static io.kiw.luxis.web.http.HttpResult.success;
 
 public class CorrelatedAsyncBlockingMapTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
-    private final MyApplicationState state;
-
-    public CorrelatedAsyncBlockingMapTestHandler(final MyApplicationState state) {
-        this.state = state;
+    private Luxis<?> luxis;
+    
+    public CorrelatedAsyncBlockingMapTestHandler() {
     }
 
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .correlatedAsyncBlockingMap(Integer.class, ctx -> {
-                    state.getLuxis().handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 20));
+                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 20));
                 })
                 .map(ctx -> new AsyncMapResponse(ctx.in()))
                 .complete(ctx -> success(ctx.in()));
+    }
+
+    public void evillyReferenceLuxis(Luxis<?> luxis) {
+        this.luxis = luxis;
     }
 }

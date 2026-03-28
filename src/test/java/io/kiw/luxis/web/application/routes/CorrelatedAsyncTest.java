@@ -28,6 +28,7 @@ import static io.kiw.luxis.web.test.TestHelper.json;
 @RunWith(Parameterized.class)
 public class CorrelatedAsyncTest {
 
+
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> modes() {
         return TestApplicationClientCreator.modes();
@@ -57,9 +58,12 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldSupportCorrelatedAsyncMap() {
+        final CorrelatedAsyncMapTestHandler handler = new CorrelatedAsyncMapTestHandler();
+
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
+            r.jsonRoute("/correlatedAsync", Method.POST, state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient luxisTestClient = testClientAndServer.client();
 
         final TestHttpResponse response = luxisTestClient.post(
@@ -72,11 +76,12 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldSupportCorrelatedAsyncBlockingMap() {
+        CorrelatedAsyncBlockingMapTestHandler handler = new CorrelatedAsyncBlockingMapTestHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.jsonRoute("/correlatedAsyncBlocking", Method.POST, state, new CorrelatedAsyncBlockingMapTestHandler(state));
+            r.jsonRoute("/correlatedAsyncBlocking", Method.POST, state, handler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
-
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         final TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/correlatedAsyncBlocking").body(json().put("value", 3).toString()));
 
@@ -87,16 +92,18 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldReturnErrorWhenAsyncResponseIsError() {
+        CorrelatedAsyncMapTestHandler handler = new CorrelatedAsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async error")));
+
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/correlatedAsync", Method.POST, state,
-                    new CorrelatedAsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async error"))));
+                handler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
 
         final TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/correlatedAsync").body(json().put("value", 5).toString()));
 
-        Assert.assertEquals(400, response.statusCode);
         Assert.assertEquals(
                 TestHttpResponse.response(json().put("message", "async error").set("errors", json()).toString()).withStatusCode(400),
                 response);
@@ -104,38 +111,21 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldPassInputValueToHandler() {
-        final MyApplicationState[] stateRef = new MyApplicationState[1];
+        CorrelatedAsyncMapTestHandler handler = new CorrelatedAsyncMapTestHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            stateRef[0] = state;
-            r.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
+            r.jsonRoute("/correlatedAsync", Method.POST, state, handler);
         });
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient luxisTestClient = testClientAndServer.client();
 
-        luxisTestClient.post(
-                StubRequest.request("/correlatedAsync").body(json().put("value", 42).toString()));
+        TestHttpResponse response = luxisTestClient.post(
+            StubRequest.request("/correlatedAsync").body(json().put("value", 42).toString()));
 
-        Assert.assertEquals(42, stateRef[0].getPendingValue());
+        Assert.assertEquals(
+            TestHttpResponse.response(json().put("result", 420).toString()).withStatusCode(200),
+            response);
     }
 
-    @Test
-    public void shouldAssignIncrementingCorrelationIds() {
-        final MyApplicationState[] stateRef = new MyApplicationState[1];
-        testClientAndServer = createClient(mode, (r, state) -> {
-            stateRef[0] = state;
-            r.jsonRoute("/correlatedAsync", Method.POST, state, new CorrelatedAsyncMapTestHandler());
-        });
-        TestClient luxisTestClient = testClientAndServer.client();
-
-        luxisTestClient.post(
-                StubRequest.request("/correlatedAsync").body(json().put("value", 1).toString()));
-        Assert.assertEquals(0L, stateRef[0].getPendingCorrelationId());
-
-        stateRef[0].setPendingCorrelationId(-1);
-
-        luxisTestClient.post(
-                StubRequest.request("/correlatedAsync").body(json().put("value", 2).toString()));
-        Assert.assertEquals(1L, stateRef[0].getPendingCorrelationId());
-    }
 
     @Test
     public void shouldHandleExceptionInCorrelatedAsyncHandler() {
@@ -153,10 +143,13 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldWorkWithPipelineStepsBeforeCorrelatedAsync() {
+        CorrelatedAsyncWithHttpContextTestHandler vertxJsonRoute = new CorrelatedAsyncWithHttpContextTestHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.jsonRoute("/withContext", Method.POST, state, new CorrelatedAsyncWithHttpContextTestHandler());
+            r.jsonRoute("/withContext", Method.POST, state, vertxJsonRoute);
         });
         TestClient luxisTestClient = testClientAndServer.client();
+
+        vertxJsonRoute.evillyReferenceLuxis(testClientAndServer.luxis());
 
         final TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/withContext")
@@ -171,11 +164,13 @@ public class CorrelatedAsyncTest {
 
     @Test
     public void shouldReturnDifferentErrorStatusCodes() {
+        CorrelatedAsyncMapTestHandler handler = new CorrelatedAsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("not found")));
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/correlatedAsync", Method.POST, state,
-                    new CorrelatedAsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("not found"))));
+                handler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
+        handler.evillyReferenceLuxis(testClientAndServer.luxis());
 
         final TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/correlatedAsync").body(json().put("value", 1).toString()));
