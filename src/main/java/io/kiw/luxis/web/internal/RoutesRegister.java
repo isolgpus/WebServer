@@ -139,7 +139,7 @@ public class RoutesRegister {
     }
 
     public <SPLIT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP> route, final WebSocketRouteConfig config) {
-        final WebSocketRouteHandler<APP> handler = new WebSocketRouteHandler<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
+        final HttpWebSocketRouteHandlerImpl<APP> handler = new HttpWebSocketRouteHandlerImpl<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
         router.webSocketRoute(path, handler);
     }
 

@@ -11,7 +11,7 @@ import tools.jackson.databind.ObjectMapper;
 import java.util.LinkedHashMap;
 import java.util.function.Consumer;
 
-public class WebSocketRouteHandler<APP> implements WebSocketHandler {
+public class HttpWebSocketRouteHandlerImpl<APP> implements HttpWebSocketRouteHandler {
 
     private final WebSocketRoutes<APP> route;
     private final ObjectMapper objectMapper;
@@ -21,7 +21,7 @@ public class WebSocketRouteHandler<APP> implements WebSocketHandler {
     private final WebSocketRoutesRegister<APP> routesRegister;
     private final LinkedHashMap<String, WebSocketRoute<?>> routes;
 
-    public WebSocketRouteHandler(final WebSocketRoutes<APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
+    public HttpWebSocketRouteHandlerImpl(final WebSocketRoutes<APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
