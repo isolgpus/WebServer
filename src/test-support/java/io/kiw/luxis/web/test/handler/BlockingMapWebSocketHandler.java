@@ -5,10 +5,10 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class BlockingMapWebSocketHandler extends WebSocketRoute<WebSocketNumberRequest, MyApplicationState> {
+public class BlockingMapWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketNumberRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("number", WebSocketNumberRequest.class, s ->
                 s.map(ctx -> ctx.in().value)

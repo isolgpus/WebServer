@@ -6,7 +6,7 @@ import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 
-public class OnCloseTrackingSplitWebSocketHandler extends WebSocketRoute<SplitWebSocketMessage, MyApplicationState> {
+public class OnCloseTrackingSplitWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     @Override
     public void onOpen(final WebSocketSession session, final MyApplicationState appState) {
@@ -14,7 +14,7 @@ public class OnCloseTrackingSplitWebSocketHandler extends WebSocketRoute<SplitWe
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<SplitWebSocketMessage, MyApplicationState> splitStream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> splitStream) {
         return splitStream
             .on("echo", WebSocketEchoRequest.class, stream ->
                 stream.map(ctx -> new WebSocketEchoResponse("echo: " + ctx.in().message))

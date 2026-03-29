@@ -8,12 +8,12 @@ import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
-public class ThrowWebSocketHandler extends WebSocketRoute<WebSocketThrowRequest, MyApplicationState> {
+public class ThrowWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     private Luxis<?> luxis;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketThrowRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("throw", WebSocketThrowRequest.class, s ->
                 s.map(ctx -> ctx.in().where)

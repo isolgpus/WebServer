@@ -8,7 +8,7 @@ import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, MyApplicationState> {
+public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     private final ContextAsserter asserter;
     private Luxis<?> luxis;
@@ -18,7 +18,7 @@ public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoute<WebSoc
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("echo", WebSocketEchoRequest.class, s ->
                 s.blockingMap(ctx -> {

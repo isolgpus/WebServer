@@ -7,10 +7,10 @@ import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
-public class FlatMapFailWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, MyApplicationState> {
+public class FlatMapFailWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("echo", WebSocketEchoRequest.class, s ->
                 s.<WebSocketEchoResponse>flatMap(ctx -> WebSocketResult.error(new ErrorMessageResponse("flatMap failed")))

@@ -7,12 +7,12 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class AsyncMapWebSocketHandler extends WebSocketRoute<WebSocketNumberRequest, MyApplicationState> {
+public class AsyncMapWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     private Luxis<?> luxis;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketNumberRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("number", WebSocketNumberRequest.class, s ->
                 s.<Integer>asyncMap(ctx -> {

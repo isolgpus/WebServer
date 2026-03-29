@@ -5,10 +5,10 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class EchoWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, MyApplicationState> {
+public class EchoWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("echo", WebSocketEchoRequest.class, s ->
                 s.map(ctx -> "echo: " + ctx.in().message)

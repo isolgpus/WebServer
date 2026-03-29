@@ -9,12 +9,12 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class AsyncFlatMapFailWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, MyApplicationState> {
+public class AsyncFlatMapFailWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     private Luxis<?> luxis;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("echo", WebSocketEchoRequest.class, s ->
                 s.<WebSocketEchoResponse>asyncMap(ctx -> {

@@ -6,7 +6,7 @@ import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 
-public class OnCloseTrackingWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, MyApplicationState> {
+public class OnCloseTrackingWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     public volatile boolean onCloseCalled = false;
     public volatile boolean onOpenCalled = false;
@@ -17,7 +17,7 @@ public class OnCloseTrackingWebSocketHandler extends WebSocketRoute<WebSocketEch
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("echo", WebSocketEchoRequest.class, s ->
                 s.map(ctx -> new WebSocketEchoResponse("echo: " + ctx.in().message))

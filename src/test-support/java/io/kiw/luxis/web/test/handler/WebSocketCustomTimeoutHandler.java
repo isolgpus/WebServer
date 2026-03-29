@@ -6,7 +6,7 @@ import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class WebSocketCustomTimeoutHandler extends WebSocketRoute<WebSocketNumberRequest, MyApplicationState> {
+public class WebSocketCustomTimeoutHandler extends WebSocketRoute<MyApplicationState> {
 
     private Runnable onRegistered = () -> {};
 
@@ -18,7 +18,7 @@ public class WebSocketCustomTimeoutHandler extends WebSocketRoute<WebSocketNumbe
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketNumberRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("number", WebSocketNumberRequest.class, s ->
                 s.<Integer>asyncMap(ctx -> {

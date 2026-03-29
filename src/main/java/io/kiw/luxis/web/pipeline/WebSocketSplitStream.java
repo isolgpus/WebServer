@@ -10,7 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-public class WebSocketSplitStream<SPLIT, APP> {
+public class WebSocketSplitStream<APP> {
     private final Map<String, SplitBranch<?>> branches = new LinkedHashMap<>();
     private final APP applicationState;
     private final PendingAsyncResponses pendingAsyncResponses;
@@ -20,7 +20,7 @@ public class WebSocketSplitStream<SPLIT, APP> {
         this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
-    public <IN extends SPLIT> WebSocketSplitStream<SPLIT, APP> on(final String typeKey, final Class<IN> messageType, final Function<WebSocketStream<IN, APP>, IndividualMessageWebSocketPipeline<?>> pipelineBuilder) {
+    public <IN> WebSocketSplitStream<APP> on(final String typeKey, final Class<IN> messageType, final Function<WebSocketStream<IN, APP>, IndividualMessageWebSocketPipeline<?>> pipelineBuilder) {
         if (branches.containsKey(typeKey)) {
             throw new IllegalArgumentException("Duplicate type key: " + typeKey);
         }

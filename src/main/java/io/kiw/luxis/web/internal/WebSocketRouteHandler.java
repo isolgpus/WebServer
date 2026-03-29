@@ -12,14 +12,14 @@ import java.util.function.Consumer;
 
 public class WebSocketRouteHandler<SPLIT, APP> implements WebSocketHandler {
 
-    private final WebSocketRoute<SPLIT, APP> route;
+    private final WebSocketRoute<APP> route;
     private final ObjectMapper objectMapper;
     private final APP appState;
     private final Consumer<Exception> exceptionHandler;
     private final WebSocketPipeline splitPipeline;
     private final WebSocketPipelineExecutor executor;
 
-    public WebSocketRouteHandler(final WebSocketRoute<SPLIT, APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
+    public WebSocketRouteHandler(final WebSocketRoute<APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;

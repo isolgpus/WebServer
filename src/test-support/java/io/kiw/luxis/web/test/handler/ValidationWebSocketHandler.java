@@ -5,10 +5,10 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class ValidationWebSocketHandler extends WebSocketRoute<ValidationRequest, MyApplicationState> {
+public class ValidationWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<ValidationRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("validate", ValidationRequest.class, s ->
                 s.validate(v -> {

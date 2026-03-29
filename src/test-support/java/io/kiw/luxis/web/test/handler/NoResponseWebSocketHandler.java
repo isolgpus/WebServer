@@ -5,12 +5,12 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class NoResponseWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, MyApplicationState> {
+public class NoResponseWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     public boolean messageReceived = false;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("echo", WebSocketEchoRequest.class, s ->
                 s.map(ctx -> {

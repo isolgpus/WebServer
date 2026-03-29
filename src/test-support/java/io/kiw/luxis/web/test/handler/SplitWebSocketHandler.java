@@ -7,7 +7,7 @@ import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.pipeline.WebSocketStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class SplitWebSocketHandler extends WebSocketRoute<SplitWebSocketMessage, MyApplicationState> {
+public class SplitWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     private static IndividualMessageWebSocketPipeline<WebSocketEchoResponse> handleEcho(WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
         return stream.map(ctx -> new WebSocketEchoResponse("echo: " + ctx.in().message))
@@ -20,7 +20,7 @@ public class SplitWebSocketHandler extends WebSocketRoute<SplitWebSocketMessage,
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<SplitWebSocketMessage, MyApplicationState> splitStream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> splitStream) {
         return splitStream
             .on("echo", WebSocketEchoRequest.class, SplitWebSocketHandler::handleEcho)
             .on("number", WebSocketNumberRequest.class, SplitWebSocketHandler::handleNumber)

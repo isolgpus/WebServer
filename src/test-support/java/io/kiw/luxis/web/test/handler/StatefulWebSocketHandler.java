@@ -6,7 +6,7 @@ import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 
-public class StatefulWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, MyApplicationState> {
+public class StatefulWebSocketHandler extends WebSocketRoute<MyApplicationState> {
 
     @Override
     public void onOpen(final WebSocketSession session, final MyApplicationState appState) {
@@ -14,7 +14,7 @@ public class StatefulWebSocketHandler extends WebSocketRoute<WebSocketEchoReques
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
         return stream
             .on("echo", WebSocketEchoRequest.class, s ->
                 s.map(ctx -> new WebSocketEchoResponse(ctx.in().message))
