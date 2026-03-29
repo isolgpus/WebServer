@@ -75,7 +75,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
-        ws.send("{\"message\":\"hello\"}");
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -93,8 +93,8 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/echo"));
-        ws.send("{\"message\":\"first\"}");
-        ws.send("{\"message\":\"second\"}");
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"first\"}}");
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"second\"}}");
 
         ws.onResponses((received -> {
             Assert.assertEquals(2, received.size());
@@ -185,7 +185,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/blocking"));
-        ws.send("{\"value\":22}");
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":22}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -205,7 +205,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/asyncMap"));
-        ws.send("{\"value\":5}");
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":5}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -225,7 +225,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/asyncBlockingMap"));
-        ws.send("{\"value\":3}");
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":3}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -244,7 +244,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/flatMapFail"));
-        ws.send("{\"message\":\"hello\"}");
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -265,7 +265,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/blockingFlatMapFail"));
-        ws.send("{\"message\":\"hello\"}");
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -288,7 +288,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/asyncFlatMapFail"));
-        ws.send("{\"message\":\"hello\"}");
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -310,7 +310,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
-        ws.send("{\"where\":\"map\"}");
+        ws.send("{\"type\":\"throw\",\"payload\":{\"where\":\"map\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(0, received.size());
@@ -330,7 +330,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
-        ws.send("{\"where\":\"blocking\"}");
+        ws.send("{\"type\":\"throw\",\"payload\":{\"where\":\"blocking\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(0, received.size());
@@ -350,7 +350,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
-        ws.send("{\"where\":\"asyncMap\"}");
+        ws.send("{\"type\":\"throw\",\"payload\":{\"where\":\"asyncMap\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(0, received.size());
@@ -370,7 +370,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
-        ws.send("{\"where\":\"asyncBlockingMap\"}");
+        ws.send("{\"type\":\"throw\",\"payload\":{\"where\":\"asyncBlockingMap\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(0, received.size());
@@ -390,7 +390,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
-        ws.send("{\"where\":\"complete\"}");
+        ws.send("{\"type\":\"throw\",\"payload\":{\"where\":\"complete\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(0, received.size());
@@ -409,7 +409,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/noresponse"));
-        ws.send("{\"message\":\"hello\"}");
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(0, received.size());
@@ -429,7 +429,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/throw"));
-        ws.send("{\"where\":\"none\"}");
+        ws.send("{\"type\":\"throw\",\"payload\":{\"where\":\"none\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -448,14 +448,14 @@ public class WebSocketTest {
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
-        String body = json()
+        String payload = json()
             .put("name", "Alice")
             .put("email", "alice@example.com")
             .put("age", 25)
             .set("address", json().put("city", "NYC").put("zip", "10001"))
             .toString();
 
-        ws.send(body);
+        ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -481,14 +481,14 @@ public class WebSocketTest {
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
-        String body = json()
+        String payload = json()
             .putNull("name")
             .put("email", "alice@example.com")
             .put("age", 25)
             .set("address", json().put("city", "NYC").put("zip", "10001"))
             .toString();
 
-        ws.send(body);
+        ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -513,14 +513,14 @@ public class WebSocketTest {
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
-        String body = json()
+        String payload = json()
             .put("name", "Alice")
             .put("email", "not-an-email")
             .put("age", 25)
             .set("address", json().put("city", "NYC").put("zip", "10001"))
             .toString();
 
-        ws.send(body);
+        ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -545,14 +545,14 @@ public class WebSocketTest {
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
-        String body = json()
+        String payload = json()
             .put("name", "Alice")
             .put("email", "alice@example.com")
             .put("age", 25)
             .set("address", json().put("city", "NYC").put("zip", "bad"))
             .toString();
 
-        ws.send(body);
+        ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -577,14 +577,14 @@ public class WebSocketTest {
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
-        String body = json()
+        String payload = json()
             .putNull("name")
             .put("email", "not-an-email")
             .put("age", 25)
             .set("address", json().put("city", "NYC").put("zip", "10001"))
             .toString();
 
-        ws.send(body);
+        ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -613,14 +613,14 @@ public class WebSocketTest {
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
-        String body = json()
+        String payload = json()
             .putNull("name")
             .put("email", "alice@example.com")
             .put("age", 25)
             .set("address", json().put("city", "NYC").put("zip", "10001"))
             .toString();
 
-        ws.send(body);
+        ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -649,14 +649,14 @@ public class WebSocketTest {
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
-        String body = json()
+        String payload = json()
             .putNull("name")
             .put("email", "alice@example.com")
             .put("age", 25)
             .set("address", json().put("city", "NYC").put("zip", "10001"))
             .toString();
 
-        ws.send(body);
+        ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(0, received.size());
@@ -677,14 +677,14 @@ public class WebSocketTest {
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
-        String body = json()
+        String payload = json()
             .putNull("name")
             .put("email", "alice@example.com")
             .put("age", 25)
             .set("address", json().put("city", "NYC").put("zip", "10001"))
             .toString();
 
-        ws.send(body);
+        ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -710,7 +710,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/context"));
-        ws.send("{\"message\":\"hello\"}");
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -731,7 +731,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/context-async"));
-        ws.send("{\"message\":\"hello\"}");
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
@@ -815,7 +815,7 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/customTimeout"));
-        ws.send("{\"value\":1}");
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":1}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());

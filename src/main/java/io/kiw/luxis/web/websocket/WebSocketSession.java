@@ -2,7 +2,7 @@ package io.kiw.luxis.web.websocket;
 
 import tools.jackson.databind.ObjectMapper;
 
-public class WebSocketSession<OUT> {
+public class WebSocketSession {
 
     private final WebSocketConnection connection;
     private final ObjectMapper objectMapper;
@@ -16,7 +16,7 @@ public class WebSocketSession<OUT> {
         return connection;
     }
 
-    public void send(final OUT message) {
+    public void send(final Object message) {
         connection.sendText(objectMapper.writeValueAsString(message));
     }
 

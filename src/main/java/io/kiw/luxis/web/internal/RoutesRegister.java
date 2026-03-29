@@ -7,7 +7,6 @@ import io.kiw.luxis.web.handler.VertxFileUploadRoute;
 import io.kiw.luxis.web.handler.VertxJsonFilter;
 import io.kiw.luxis.web.handler.VertxJsonRoute;
 import io.kiw.luxis.web.handler.WebSocketRoute;
-import io.kiw.luxis.web.handler.WebSocketSplitRoute;
 import io.kiw.luxis.web.http.DownloadFileResponse;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
@@ -142,31 +141,12 @@ public class RoutesRegister {
         router.route(path, method, "multipart/form-data", "application/json", flow, new RouteConfigBuilder().build());
     }
 
-    public <IN, OUT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoute<IN, OUT, APP> webSocketRoute) {
-        webSocketRoute(path, applicationState, webSocketRoute, new WebSocketRouteConfigBuilder().build());
+    public <SPLIT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoute<SPLIT, APP> route) {
+        webSocketRoute(path, applicationState, route, new WebSocketRouteConfigBuilder().build());
     }
 
-    public <IN, OUT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoute<IN, OUT, APP> webSocketRoute, final WebSocketRouteConfig config) {
-        final Type[] typeArgs = TypeResolver.resolveTypeArguments(webSocketRoute.getClass(), WebSocketRoute.class);
-        openApiCollector.addRoute(new RouteDescriptor(
-            path, null,
-            typeArgs != null ? typeArgs[0] : null,
-            typeArgs != null ? typeArgs[1] : null,
-            null, null,
-            RouteDescriptor.RouteKind.WEBSOCKET,
-            null
-        ));
-
-        final WebSocketRouteHandler<IN, OUT, APP> handler = new WebSocketRouteHandler<>(webSocketRoute, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
-        router.webSocketRoute(path, handler);
-    }
-
-    public <SPLIT, APP> void webSocketSplitRoute(final String path, final APP applicationState, final WebSocketSplitRoute<SPLIT, APP> route) {
-        webSocketSplitRoute(path, applicationState, route, new WebSocketRouteConfigBuilder().build());
-    }
-
-    public <SPLIT, APP> void webSocketSplitRoute(final String path, final APP applicationState, final WebSocketSplitRoute<SPLIT, APP> route, final WebSocketRouteConfig config) {
-        final WebSocketSplitRouteHandler<SPLIT, APP> handler = new WebSocketSplitRouteHandler<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
+    public <SPLIT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoute<SPLIT, APP> route, final WebSocketRouteConfig config) {
+        final WebSocketRouteHandler<SPLIT, APP> handler = new WebSocketRouteHandler<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
         router.webSocketRoute(path, handler);
     }
 

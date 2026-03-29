@@ -47,7 +47,7 @@ public class WebSocketSplitTest {
     @Test
     public void shouldRouteDifferentMessageTypes() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketSplitRoute("/ws/split", state, new SplitWebSocketHandler());
+            r.webSocketRoute("/ws/split", state, new SplitWebSocketHandler());
         });
         TestClient client = testClientAndServer.client();
 
@@ -70,7 +70,7 @@ public class WebSocketSplitTest {
     @Test
     public void shouldHandleMultipleMessagesOfDifferentTypes() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketSplitRoute("/ws/split", state, new SplitWebSocketHandler());
+            r.webSocketRoute("/ws/split", state, new SplitWebSocketHandler());
         });
         TestClient client = testClientAndServer.client();
 
@@ -90,7 +90,7 @@ public class WebSocketSplitTest {
     @Test
     public void shouldDisconnectOnUnknownType() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketSplitRoute("/ws/split", state, new SplitWebSocketHandler());
+            r.webSocketRoute("/ws/split", state, new SplitWebSocketHandler());
         });
         TestClient client = testClientAndServer.client();
 
@@ -103,7 +103,7 @@ public class WebSocketSplitTest {
     @Test
     public void shouldDisconnectOnInvalidJson() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketSplitRoute("/ws/split", state, new SplitWebSocketHandler());
+            r.webSocketRoute("/ws/split", state, new SplitWebSocketHandler());
         });
         TestClient client = testClientAndServer.client();
 
@@ -116,7 +116,7 @@ public class WebSocketSplitTest {
     @Test
     public void shouldDisconnectOnBadPayload() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketSplitRoute("/ws/split", state, new SplitWebSocketHandler());
+            r.webSocketRoute("/ws/split", state, new SplitWebSocketHandler());
         });
         TestClient client = testClientAndServer.client();
 
@@ -129,7 +129,7 @@ public class WebSocketSplitTest {
     @Test
     public void shouldSendErrorResponseOnUnknownTypeWhenConfigured() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketSplitRoute("/ws/split", state, new SplitWebSocketHandler(),
+            r.webSocketRoute("/ws/split", state, new SplitWebSocketHandler(),
                 new WebSocketRouteConfigBuilder()
                     .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad input\"}"))
                     .build());
@@ -150,7 +150,7 @@ public class WebSocketSplitTest {
     @Test
     public void shouldSendErrorResponseOnInvalidJsonWhenConfigured() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketSplitRoute("/ws/split", state, new SplitWebSocketHandler(),
+            r.webSocketRoute("/ws/split", state, new SplitWebSocketHandler(),
                 new WebSocketRouteConfigBuilder()
                     .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad json\"}"))
                     .build());
@@ -172,7 +172,7 @@ public class WebSocketSplitTest {
     public void shouldCallOnOpenAndOnClose() {
         final OnCloseTrackingSplitWebSocketHandler handler = new OnCloseTrackingSplitWebSocketHandler();
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketSplitRoute("/ws/split", state, handler);
+            r.webSocketRoute("/ws/split", state, handler);
         });
         TestClient client = testClientAndServer.client();
 
@@ -188,7 +188,7 @@ public class WebSocketSplitTest {
     @Test
     public void shouldDisconnectOnMissingType() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketSplitRoute("/ws/split", state, new SplitWebSocketHandler());
+            r.webSocketRoute("/ws/split", state, new SplitWebSocketHandler());
         });
         TestClient client = testClientAndServer.client();
 

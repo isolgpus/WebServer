@@ -61,7 +61,7 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
             ctx.request().toWebSocket()
                     .onSuccess(ws -> {
                         final VertxWebSocketConnection connection = new VertxWebSocketConnection(ws);
-                        final WebSocketSession<?> session = handler.createSession(connection);
+                        final WebSocketSession session = handler.createSession(connection);
                         handler.onOpen(session);
                         ws.textMessageHandler(msg -> handler.onMessage(msg, session));
                         ws.closeHandler(v -> handler.onClose(session));

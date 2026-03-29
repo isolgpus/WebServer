@@ -32,12 +32,12 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    public void execute(final WebSocketSession<?> session, final WebSocketPipeline<?> pipeline, final Object message) {
+    public void execute(final WebSocketSession session, final IndividualMessageWebSocketPipeline<?> pipeline, final Object message) {
         final WebSocketMapInstruction webSocketMapInstruction = pipeline.getApplicationInstructions().getFirst();
         executeInstruction(session, pipeline, webSocketMapInstruction, message, ThreadContext.APPLICATION_CONTEXT);
     }
 
-    public void handleCorruptInput(final WebSocketSession<?> session) {
+    public void handleCorruptInput(final WebSocketSession session) {
         switch (config.corruptInputStrategy()) {
             case DisconnectSession ignored -> session.close();
             case SendErrorResponse sendErrorResponse -> session.connection().sendText(sendErrorResponse.message());
@@ -45,7 +45,7 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private <IN, OUT, APP> void executeInstruction(final WebSocketSession<?> session, final WebSocketPipeline<?> pipeline, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message, final ThreadContext currentThread) {
+    private <IN, OUT, APP> void executeInstruction(final WebSocketSession session, final IndividualMessageWebSocketPipeline<?> pipeline, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message, final ThreadContext currentThread) {
         final ThreadContext requiredThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.APPLICATION_CONTEXT;
 
         runOnThread(requiredThread, currentThread, () -> {
@@ -54,7 +54,7 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings({"unchecked", "checkstyle:FinalLocalVariable"})
-    private <IN, OUT, APP> void handleAndContinue(final WebSocketSession<?> session, final WebSocketPipeline<?> pipeline, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message) {
+    private <IN, OUT, APP> void handleAndContinue(final WebSocketSession session, final IndividualMessageWebSocketPipeline<?> pipeline, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message) {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future;
             try {
@@ -95,7 +95,7 @@ public class WebSocketPipelineExecutor {
         }
     }
 
-    private void handleFailure(final WebSocketSession<?> session, final WebSocketMapInstruction<?, ?, ?> instruction, final ErrorMessageResponse error) {
+    private void handleFailure(final WebSocketSession session, final WebSocketMapInstruction<?, ?, ?> instruction, final ErrorMessageResponse error) {
         if (instruction.isValidation()) {
             switch (config.failedValidationStrategy()) {
                 case JustSendValidationError ignored -> sendFinalResponse(session, error);
@@ -112,7 +112,7 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private <OUT> void continueChain(final WebSocketSession<?> session, final WebSocketPipeline<?> pipeline, final WebSocketMapInstruction<?, OUT, ?> instruction, final OUT result, final ThreadContext currentThread) {
+    private <OUT> void continueChain(final WebSocketSession session, final IndividualMessageWebSocketPipeline<?> pipeline, final WebSocketMapInstruction<?, OUT, ?> instruction, final OUT result, final ThreadContext currentThread) {
         if (instruction.next().isPresent()) {
             final WebSocketMapInstruction next = instruction.next().get();
             executeInstruction(session, pipeline, next, result, currentThread);
@@ -133,7 +133,7 @@ public class WebSocketPipelineExecutor {
         }
     }
 
-    private <OUT> CompletableFuture<Void> sendFinalResponse(final WebSocketSession<?> session, final OUT result) {
+    private <OUT> CompletableFuture<Void> sendFinalResponse(final WebSocketSession session, final OUT result) {
         return session.connection().sendText(objectMapper.writeValueAsString(result));
     }
 }

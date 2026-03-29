@@ -2,9 +2,9 @@ package io.kiw.luxis.web.internal;
 
 public class SplitBranch<IN> {
     private final Class<IN> messageType;
-    private final WebSocketPipeline<?> pipeline;
+    private final IndividualMessageWebSocketPipeline<?> pipeline;
 
-    public SplitBranch(final Class<IN> messageType, final WebSocketPipeline<?> pipeline) {
+    public SplitBranch(final Class<IN> messageType, final IndividualMessageWebSocketPipeline<?> pipeline) {
         this.messageType = messageType;
         this.pipeline = pipeline;
     }
@@ -13,7 +13,7 @@ public class SplitBranch<IN> {
         return messageType;
     }
 
-    public WebSocketPipeline<?> pipeline() {
+    public IndividualMessageWebSocketPipeline<?> pipeline() {
         return pipeline;
     }
 }

@@ -6,20 +6,22 @@ import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
-import io.kiw.luxis.web.pipeline.WebSocketStream;
+import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class AsyncFlatMapFailWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, WebSocketEchoResponse, MyApplicationState> {
+public class AsyncFlatMapFailWebSocketHandler extends WebSocketRoute<WebSocketEchoRequest, MyApplicationState> {
 
     private Luxis<?> luxis;
 
     @Override
-    public WebSocketPipeline<WebSocketEchoResponse> onMessage(final WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketEchoRequest, MyApplicationState> stream) {
         return stream
-            .<WebSocketEchoResponse>correlatedAsyncMap(ctx -> {
-                luxis.handleAsyncResponse(ctx.correlationId(), HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async flatMap failed")));
-            })
-            .complete();
+            .on("echo", WebSocketEchoRequest.class, s ->
+                s.<WebSocketEchoResponse>correlatedAsyncMap(ctx -> {
+                    luxis.handleAsyncResponse(ctx.correlationId(), HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async flatMap failed")));
+                })
+                .complete())
+            .build();
     }
 
     public void evillyReferenceLuxis(Luxis<?> luxis) {

@@ -2,8 +2,8 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.SplitBranch;
+import io.kiw.luxis.web.internal.IndividualMessageWebSocketPipeline;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
-import io.kiw.luxis.web.internal.WebSocketSplitPipeline;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -20,20 +20,20 @@ public class WebSocketSplitStream<SPLIT, APP> {
         this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
-    public <IN extends SPLIT> WebSocketSplitStream<SPLIT, APP> on(final String typeKey, final Class<IN> messageType, final Function<WebSocketStream<IN, APP>, WebSocketPipeline<?>> pipelineBuilder) {
+    public <IN extends SPLIT> WebSocketSplitStream<SPLIT, APP> on(final String typeKey, final Class<IN> messageType, final Function<WebSocketStream<IN, APP>, IndividualMessageWebSocketPipeline<?>> pipelineBuilder) {
         if (branches.containsKey(typeKey)) {
             throw new IllegalArgumentException("Duplicate type key: " + typeKey);
         }
         final WebSocketStream<IN, APP> stream = new WebSocketStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses);
-        final WebSocketPipeline<?> pipeline = pipelineBuilder.apply(stream);
+        final IndividualMessageWebSocketPipeline<?> pipeline = pipelineBuilder.apply(stream);
         branches.put(typeKey, new SplitBranch<>(messageType, pipeline));
         return this;
     }
 
-    public WebSocketSplitPipeline build() {
+    public WebSocketPipeline build() {
         if (branches.isEmpty()) {
             throw new IllegalStateException("At least one branch must be registered");
         }
-        return new WebSocketSplitPipeline(branches);
+        return new WebSocketPipeline(branches);
     }
 }
