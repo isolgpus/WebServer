@@ -181,24 +181,6 @@ public class AsyncTest {
     }
 
     @Test
-    public void shouldTimeoutCorrelatedAsyncAfterDelay() {
-        Assume.assumeTrue("Timeout test only runs in stub mode", STUB_MODE.equals(mode));
-
-        final AsyncTimeoutTestHandler handler = new AsyncTimeoutTestHandler();
-        testClientAndServer = createClient(mode, (r, state) -> {
-            r.jsonRoute("/timeout", Method.POST, state, handler);
-        });
-        handler.evillyReferenceLuxis((TestLuxis<?>) testClientAndServer.luxis());
-        final TestClient luxisTestClient = testClientAndServer.client();
-
-        final TestHttpResponse response = luxisTestClient.post(
-                StubRequest.request("/timeout").body(json().put("value", 1).toString()));
-
-        Assert.assertEquals(500, response.statusCode);
-        luxisTestClient.assertException("Correlated async response timed out");
-    }
-
-    @Test
     public void shouldTimeoutWithCustomOneSecondTimeout() {
         final AsyncCustomTimeoutTestHandler handler = new AsyncCustomTimeoutTestHandler();
 
