@@ -11,7 +11,7 @@ public final class JsonEnder implements Ender {
     }
 
     @Override
-    public <T> void end(final RequestContext requestContext, final T input) {
+    public void end(final RequestContext requestContext, final Object input) {
         requestContext.end(this.objectMapper.writeValueAsString(input));
     }
 }

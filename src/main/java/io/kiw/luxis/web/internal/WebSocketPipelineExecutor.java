@@ -57,7 +57,7 @@ public class WebSocketPipelineExecutor {
         });
     }
 
-    @SuppressWarnings({"unchecked", "checkstyle:FinalLocalVariable"})
+    @SuppressWarnings("unchecked")
     private <IN, OUT, APP, RESP> void handleAndContinue(final WebSocketSession<RESP> session, final WebSocketPipeline<?> pipeline, final WebSocketMapInstruction<IN, OUT, APP, RESP> instruction, final IN message) {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future;
@@ -73,7 +73,7 @@ public class WebSocketPipelineExecutor {
                     r.consume(e -> {
                         handleFailure(session, instruction, e);
                     }, q -> {
-                        continueChain(session, pipeline, instruction, (OUT) q, ThreadContext.APPLICATION_CONTEXT);
+                        continueChain(session, pipeline, instruction, q, ThreadContext.APPLICATION_CONTEXT);
                     });
                 } catch (final Exception e) {
                     exceptionHandler.accept(e);
@@ -82,7 +82,7 @@ public class WebSocketPipelineExecutor {
 
         } else {
             final ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.APPLICATION_CONTEXT;
-            final Result<ErrorMessageResponse, ?> result;
+            final Result<ErrorMessageResponse, OUT> result;
             try {
                 result = instruction.handle(message, session, (APP) appState);
             } catch (final Exception e) {
@@ -94,7 +94,7 @@ public class WebSocketPipelineExecutor {
                     handleFailure(session, instruction, e);
                 });
             }, q -> {
-                continueChain(session, pipeline, instruction, (OUT) q, afterThread);
+                continueChain(session, pipeline, instruction, q, afterThread);
             });
         }
     }
@@ -116,7 +116,7 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private <OUT> void continueChain(final WebSocketSession<?> session, final WebSocketPipeline<?> pipeline, final WebSocketMapInstruction<?, OUT, ?, ?> instruction, final OUT result, final ThreadContext currentThread) {
+    private void continueChain(final WebSocketSession<?> session, final WebSocketPipeline<?> pipeline, final WebSocketMapInstruction<?, ?, ?, ?> instruction, final Object result, final ThreadContext currentThread) {
         if (instruction.next().isPresent()) {
             final WebSocketMapInstruction next = instruction.next().get();
             executeInstruction(session, pipeline, next, result, currentThread);
@@ -137,7 +137,7 @@ public class WebSocketPipelineExecutor {
         }
     }
 
-    private <OUT> void sendFinalResponse(final WebSocketSession<?> session, final OUT result) {
+    private void sendFinalResponse(final WebSocketSession<?> session, final Object result) {
         final String typeKey = responseTypeRegistry.get(result.getClass());
         if (typeKey == null) {
             throw new IllegalArgumentException("Unregistered response type: " + result.getClass().getName());

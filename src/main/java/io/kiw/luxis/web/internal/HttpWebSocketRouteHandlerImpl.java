@@ -42,6 +42,7 @@ public class HttpWebSocketRouteHandlerImpl<APP, RESP> implements HttpWebSocketRo
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void onOpen(final WebSocketSession<?> session) {
         try {
             route.onOpen((WebSocketSession<RESP>) session, appState);

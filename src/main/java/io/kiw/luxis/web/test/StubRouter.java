@@ -36,12 +36,12 @@ public class StubRouter extends RouterWrapper {
     }
 
     @Override
-    public void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig) {
+    public void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline<?> flow, final RouteConfig routeConfig) {
         routes.putRoute(path, method, flow);
     }
 
     @Override
-    public void route(final String path, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig) {
+    public void route(final String path, final String consumes, final String provides, final RequestPipeline<?> flow, final RouteConfig routeConfig) {
         routes.putAllMethodRoute(path, flow);
     }
 
@@ -74,9 +74,8 @@ public class StubRouter extends RouterWrapper {
         final PathMatcher.MatchResult matchResult = this.routes.get(stubRequest.path, method);
         context.setPathParams(matchResult.getPathParams());
 
-        for (final RequestPipeline flow : matchResult.getFlows()) {
-            for (final Object what : flow.getApplicationInstructions()) {
-                final MapInstruction applicationInstruction = (MapInstruction) what;
+        for (final RequestPipeline<?> flow : matchResult.getFlows()) {
+            for (final MapInstruction applicationInstruction : flow.getApplicationInstructions()) {
                 if (applicationInstruction.isBlocking) {
                     Thread.currentThread().setName("Worker");
                 } else {

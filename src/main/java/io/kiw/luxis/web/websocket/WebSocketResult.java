@@ -3,7 +3,7 @@ package io.kiw.luxis.web.websocket;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 
-public abstract class WebSocketResult<S> {
+public abstract class WebSocketResult {
 
     public static <S> Result<ErrorMessageResponse, S> from(final Result<String, S> result) {
         return result.fold(

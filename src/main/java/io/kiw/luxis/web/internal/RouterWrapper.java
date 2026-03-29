@@ -28,9 +28,9 @@ public abstract class RouterWrapper {
 
     private final ObjectMapper objectMapper = JacksonUtil.createMapper();
 
-    protected abstract void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig);
+    protected abstract void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline<?> flow, final RouteConfig routeConfig);
 
-    protected abstract void route(final String path, final String consumes, final String provides, final RequestPipeline flow, final RouteConfig routeConfig);
+    protected abstract void route(final String path, final String consumes, final String provides, final RequestPipeline<?> flow, final RouteConfig routeConfig);
 
     public abstract void configureCors(final CorsConfig corsConfig);
 

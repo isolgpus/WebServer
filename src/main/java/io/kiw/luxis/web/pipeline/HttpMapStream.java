@@ -84,7 +84,7 @@ public class HttpMapStream<IN, APP> {
         return new RequestPipeline<>(instructionChain, applicationState, ender);
     }
 
-    public <OUT> RequestPipeline<OUT> complete() {
+    public RequestPipeline<Void> complete() {
         return complete(a -> HttpResult.success());
     }
 

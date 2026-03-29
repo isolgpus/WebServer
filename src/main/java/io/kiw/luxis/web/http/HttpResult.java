@@ -2,7 +2,7 @@ package io.kiw.luxis.web.http;
 
 import io.kiw.luxis.result.Result;
 
-public abstract class HttpResult<S> {
+public abstract class HttpResult {
 
 
     public static <S> Result<HttpErrorResponse, S> from(final Result<String, S> result, final ErrorStatusCode statusCodeOnFailure) {

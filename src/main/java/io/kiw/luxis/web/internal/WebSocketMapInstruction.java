@@ -22,7 +22,7 @@ public class WebSocketMapInstruction<IN, OUT, APP, RESP> {
     private final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer;
     public final boolean lastStep;
     private boolean isValidation;
-    private Optional<WebSocketMapInstruction> next = Optional.empty();
+    private Optional<WebSocketMapInstruction<?, ?, ?, ?>> next = Optional.empty();
 
     public WebSocketMapInstruction(final boolean isBlocking, final WebSocketStreamFlatMapper<IN, OUT, APP, RESP> consumer, final boolean lastStep) {
         this.isBlocking = isBlocking;
@@ -72,11 +72,11 @@ public class WebSocketMapInstruction<IN, OUT, APP, RESP> {
         return isValidation;
     }
 
-    public void setNext(final WebSocketMapInstruction next) {
+    public void setNext(final WebSocketMapInstruction<?, ?, ?, ?> next) {
         this.next = Optional.of(next);
     }
 
-    public Optional<WebSocketMapInstruction> next() {
+    public Optional<WebSocketMapInstruction<?, ?, ?, ?>> next() {
         return next;
     }
 

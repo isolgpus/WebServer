@@ -76,7 +76,7 @@ public class RoutesRegister {
                 }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
         final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses);
-        final RequestPipeline flow = jsonHandler.handle(httpStream);
+        final RequestPipeline<?> flow = jsonHandler.handle(httpStream);
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(jsonHandler.getClass(), JsonHandler.class);
         openApiCollector.addRoute(new RouteDescriptor(
@@ -151,7 +151,7 @@ public class RoutesRegister {
             ctx.http().addResponseHeader(TRANSFER_ENCODING, "chunked");
             return HttpResult.success(ctx.in());
         });
-        final RequestPipeline flow = fileDownloadHandler.handle(fileDownloadStream);
+        final RequestPipeline<?> flow = fileDownloadHandler.handle(fileDownloadStream);
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(fileDownloadHandler.getClass(), VertxFileDownloadRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(

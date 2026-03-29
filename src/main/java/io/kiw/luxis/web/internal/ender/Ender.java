@@ -4,5 +4,5 @@ import io.kiw.luxis.web.http.RequestContext;
 
 public sealed interface Ender permits FileEnder, JsonEnder {
 
-    <T> void end(final RequestContext requestContext, final T value);
+    void end(final RequestContext requestContext, final Object value);
 }
