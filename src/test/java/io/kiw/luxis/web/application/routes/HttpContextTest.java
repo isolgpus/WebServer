@@ -90,7 +90,7 @@ public class HttpContextTest {
     @Test
     public void shouldRunCorrelatedAsyncOnCorrectContext() {
         final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
-        final ContextAssertingCorrelatedAsyncHttpHandler handler = new ContextAssertingCorrelatedAsyncHttpHandler(asserter);
+        final ContextAssertingAsyncHttpHandler handler = new ContextAssertingAsyncHttpHandler(asserter);
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/context-correlated", Method.POST, state, handler);
         });
@@ -104,7 +104,7 @@ public class HttpContextTest {
         TestHttpResponse response = client.post(StubRequest.request("/context-correlated").body(requestBody));
 
         final String expectedResponse = json()
-                .put("result", "hello correlatedAsync blocking correlatedAsyncBlocking map")
+                .put("result", "hello async blocking asyncBlocking map")
                 .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expectedResponse), response);

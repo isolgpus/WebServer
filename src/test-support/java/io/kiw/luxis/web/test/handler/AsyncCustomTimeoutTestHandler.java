@@ -3,16 +3,15 @@ package io.kiw.luxis.web.test.handler;
 import io.kiw.luxis.web.handler.VertxJsonRoute;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.RequestPipeline;
-import io.kiw.luxis.web.pipeline.AsyncMapConfig;
 import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class CorrelatedAsyncCustomTimeoutTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncCustomTimeoutTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private Runnable onRegistered = () -> {};
 
-    public CorrelatedAsyncCustomTimeoutTestHandler() {
+    public AsyncCustomTimeoutTestHandler() {
     }
 
     public void setOnRegistered(final Runnable onRegistered) {
@@ -22,7 +21,7 @@ public class CorrelatedAsyncCustomTimeoutTestHandler extends VertxJsonRoute<Asyn
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
-                .<Integer>correlatedAsyncMap(ctx -> {
+                .<Integer>asyncMap(ctx -> {
                     // Deliberately do NOT call handleAsyncResponse — simulates missing response
                     onRegistered.run();
                 }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())

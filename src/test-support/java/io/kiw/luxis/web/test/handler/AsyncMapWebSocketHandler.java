@@ -15,7 +15,7 @@ public class AsyncMapWebSocketHandler extends WebSocketRoute<WebSocketNumberRequ
     public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketNumberRequest, MyApplicationState> stream) {
         return stream
             .on("number", WebSocketNumberRequest.class, s ->
-                s.<Integer>correlatedAsyncMap(ctx -> {
+                s.<Integer>asyncMap(ctx -> {
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 10));
                 })
                 .map(ctx -> new WebSocketNumberResponse(ctx.in()))

@@ -25,7 +25,7 @@ public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoute<WebSoc
                     asserter.assertInWorkerContext();
                     return ctx.in().message;
                 })
-                .<String>correlatedAsyncMap(ctx -> {
+                .<String>asyncMap(ctx -> {
                     asserter.assertInApplicationContext();
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async"));
                 })
@@ -33,11 +33,11 @@ public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoute<WebSoc
                     asserter.assertInApplicationContext();
                     return ctx.in() + "map";
                 })
-                .<String>correlatedAsyncMap(ctx -> {
+                .<String>asyncMap(ctx -> {
                     asserter.assertInApplicationContext();
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async2"));
                 })
-                .<String>correlatedAsyncBlockingMap(ctx -> {
+                .<String>asyncBlockingMap(ctx -> {
                     asserter.assertInWorkerContext();
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async3"));
                 })

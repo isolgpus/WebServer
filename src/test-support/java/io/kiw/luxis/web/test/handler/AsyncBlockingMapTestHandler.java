@@ -9,17 +9,17 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class CorrelatedAsyncBlockingMapTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncBlockingMapTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private Luxis<?> luxis;
     
-    public CorrelatedAsyncBlockingMapTestHandler() {
+    public AsyncBlockingMapTestHandler() {
     }
 
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
-                .<Integer>correlatedAsyncBlockingMap(ctx -> {
+                .<Integer>asyncBlockingMap(ctx -> {
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 20));
                 })
                 .map(ctx -> new AsyncMapResponse(ctx.in()))

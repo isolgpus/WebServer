@@ -21,7 +21,7 @@ public class WebSocketCustomTimeoutHandler extends WebSocketRoute<WebSocketNumbe
     public WebSocketPipeline onMessage(final WebSocketSplitStream<WebSocketNumberRequest, MyApplicationState> stream) {
         return stream
             .on("number", WebSocketNumberRequest.class, s ->
-                s.<Integer>correlatedAsyncMap(ctx -> {
+                s.<Integer>asyncMap(ctx -> {
                     // Deliberately do NOT call handleAsyncResponse — simulates missing response
                     onRegistered.run();
                 }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())

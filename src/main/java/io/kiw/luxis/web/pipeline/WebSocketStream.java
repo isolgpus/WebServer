@@ -67,11 +67,11 @@ public class WebSocketStream<IN, APP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncMap(final WebSocketStreamCorrelatedAsyncHandler<IN, APP> handler) {
-        return correlatedAsyncMap(handler, AsyncMapConfig.defaultConfig());
+    public <OUT> WebSocketStream<OUT, APP> asyncMap(final WebSocketStreamCorrelatedAsyncHandler<IN, APP> handler) {
+        return asyncMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncMap(final WebSocketStreamCorrelatedAsyncHandler<IN, APP> handler, final AsyncMapConfig config) {
+    public <OUT> WebSocketStream<OUT, APP> asyncMap(final WebSocketStreamCorrelatedAsyncHandler<IN, APP> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
             final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
@@ -86,11 +86,11 @@ public class WebSocketStream<IN, APP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncBlockingMap(final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler) {
-        return correlatedAsyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
+    public <OUT> WebSocketStream<OUT, APP> asyncBlockingMap(final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler) {
+        return asyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> WebSocketStream<OUT, APP> correlatedAsyncBlockingMap(final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler, final AsyncMapConfig config) {
+    public <OUT> WebSocketStream<OUT, APP> asyncBlockingMap(final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
             final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);

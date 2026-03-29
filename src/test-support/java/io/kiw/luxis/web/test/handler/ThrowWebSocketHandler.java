@@ -29,13 +29,13 @@ public class ThrowWebSocketHandler extends WebSocketRoute<WebSocketThrowRequest,
                     }
                     return ctx.in();
                 })
-                .<String>correlatedAsyncMap(ctx -> {
+                .<String>asyncMap(ctx -> {
                     if ("asyncMap".equals(ctx.in())) {
                         throw new RuntimeException("app error in asyncMap");
                     }
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in()));
                 })
-                .<String>correlatedAsyncBlockingMap(ctx -> {
+                .<String>asyncBlockingMap(ctx -> {
                     if ("asyncBlockingMap".equals(ctx.in())) {
                         throw new RuntimeException("app error in asyncBlockingMap");
                     }

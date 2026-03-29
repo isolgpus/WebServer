@@ -10,12 +10,12 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class ContextAssertingCorrelatedAsyncHttpHandler extends VertxJsonRoute<ContextRequest, ContextResponse, MyApplicationState> {
+public class ContextAssertingAsyncHttpHandler extends VertxJsonRoute<ContextRequest, ContextResponse, MyApplicationState> {
 
     private final ContextAsserter asserter;
     private Luxis<?> luxis;
 
-    public   ContextAssertingCorrelatedAsyncHttpHandler(final ContextAsserter asserter) {
+    public ContextAssertingAsyncHttpHandler(final ContextAsserter asserter) {
         this.asserter = asserter;
     }
 
@@ -26,17 +26,17 @@ public class ContextAssertingCorrelatedAsyncHttpHandler extends VertxJsonRoute<C
                 asserter.assertInApplicationContext();
                 return ctx.in().message;
             })
-            .<String>correlatedAsyncMap(ctx -> {
+            .<String>asyncMap(ctx -> {
                 asserter.assertInApplicationContext();
-                luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " correlatedAsync"));
+                luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async"));
             })
             .blockingMap(ctx -> {
                 asserter.assertInWorkerContext();
                 return ctx.in() + " blocking";
             })
-            .<String>correlatedAsyncBlockingMap(ctx -> {
+            .<String>asyncBlockingMap(ctx -> {
                 asserter.assertInWorkerContext();
-                luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " correlatedAsyncBlocking"));
+                luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " asyncBlocking"));
             })
             .map(ctx -> {
                 asserter.assertInApplicationContext();

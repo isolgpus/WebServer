@@ -12,23 +12,23 @@ import java.util.function.Function;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class CorrelatedAsyncMapTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncMapTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private final Function<Integer, Result<HttpErrorResponse, Integer>> responder;
     private Luxis<?> luxis;
 
-    public CorrelatedAsyncMapTestHandler() {
+    public AsyncMapTestHandler() {
         this(value -> Result.success(value * 10));
     }
 
-    public CorrelatedAsyncMapTestHandler(final Function<Integer, Result<HttpErrorResponse, Integer>> responder) {
+    public AsyncMapTestHandler(final Function<Integer, Result<HttpErrorResponse, Integer>> responder) {
         this.responder = responder;
     }
 
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
-                .<Integer>correlatedAsyncMap(ctx -> {
+                .<Integer>asyncMap(ctx -> {
                     luxis.handleAsyncResponse(ctx.correlationId(), responder.apply(ctx.in().value));
                 })
                 .map(ctx -> new AsyncMapResponse(ctx.in()))

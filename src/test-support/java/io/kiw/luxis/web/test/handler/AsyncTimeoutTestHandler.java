@@ -7,14 +7,14 @@ import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class CorrelatedAsyncTimeoutTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncTimeoutTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private TestLuxis<?> testLuxis;
 
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
-                .<Integer>correlatedAsyncMap(ctx -> {
+                .<Integer>asyncMap(ctx -> {
                     // Deliberately do NOT call handleAsyncResponse — simulate missing response
                     // Advance time past the 30s timeout to trigger the timeout handler
                     testLuxis.advanceTimeBy(30_001);

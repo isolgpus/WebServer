@@ -2,7 +2,7 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpResult;
-import io.kiw.luxis.web.http.CorrelatedBlockingContext;
+import io.kiw.luxis.web.http.AsyncBlockingContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.internal.CorrelatedRouteContext;
 import io.kiw.luxis.web.internal.MapInstruction;
@@ -49,11 +49,11 @@ public class HttpMapStream<IN, APP> {
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncMap(final HttpControlStreamCorrelatedAsyncHandler<IN, APP> handler) {
-        return correlatedAsyncMap(handler, AsyncMapConfig.defaultConfig());
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncHandler<IN, APP> handler) {
+        return asyncMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncMap(final HttpControlStreamCorrelatedAsyncHandler<IN, APP> handler, final AsyncMapConfig config) {
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncHandler<IN, APP> handler, final AsyncMapConfig config) {
         final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
             final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
@@ -64,15 +64,15 @@ public class HttpMapStream<IN, APP> {
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncBlockingMap(final HttpControlStreamCorrelatedAsyncBlockingHandler<IN> handler) {
-        return correlatedAsyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
+    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingHandler<IN> handler) {
+        return asyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> HttpMapStream<OUT, APP> correlatedAsyncBlockingMap(final HttpControlStreamCorrelatedAsyncBlockingHandler<IN> handler, final AsyncMapConfig config) {
+    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingHandler<IN> handler, final AsyncMapConfig config) {
         final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
             final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
-            handler.handle(new CorrelatedBlockingContext<>(correlationId, ctx.in(), ctx.http()));
+            handler.handle(new AsyncBlockingContext<>(correlationId, ctx.in(), ctx.http()));
             return future;
         };
         instructionChain.add(new MapInstruction<>(wrapper, false));

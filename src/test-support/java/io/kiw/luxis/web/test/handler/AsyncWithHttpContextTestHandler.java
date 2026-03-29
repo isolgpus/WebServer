@@ -9,7 +9,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class CorrelatedAsyncWithHttpContextTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncWithHttpContextTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
 
     private Luxis<?> luxis;
@@ -20,7 +20,7 @@ public class CorrelatedAsyncWithHttpContextTestHandler extends VertxJsonRoute<As
                     final String multiplier = ctx.http().getQueryParam("multiplier");
                     return multiplier != null ? Integer.parseInt(multiplier) : 1;
                 })
-                .<Integer>correlatedAsyncMap(ctx -> {
+                .<Integer>asyncMap(ctx -> {
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() * 7));
                 })
                 .map(ctx -> new AsyncMapResponse(ctx.in()))
