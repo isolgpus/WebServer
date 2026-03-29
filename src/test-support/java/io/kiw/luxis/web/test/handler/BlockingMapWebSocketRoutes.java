@@ -8,10 +8,10 @@ public class BlockingMapWebSocketRoutes extends WebSocketRoutes<MyApplicationSta
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("numberResponse", WebSocketNumberResponse.class);
+        routesRegister.registerOutbound("numberResponse", WebSocketNumberResponse.class);
 
         routesRegister
-                .route("number", WebSocketNumberRequest.class, s ->
+                .registerInbound("number", WebSocketNumberRequest.class, s ->
                         s.map(ctx -> ctx.in().value)
                                 .blockingMap(ctx -> ctx.in() * 2)
                                 .map(ctx -> new WebSocketNumberResponse(ctx.in()))

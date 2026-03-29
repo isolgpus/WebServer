@@ -11,7 +11,7 @@ public class NoResponseWebSocketRoutes extends WebSocketRoutes<MyApplicationStat
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
         routesRegister
-                .route("echo", WebSocketEchoRequest.class, s ->
+                .registerInbound("echo", WebSocketEchoRequest.class, s ->
                         s.map(ctx -> {
                                     messageReceived = true;
                                     return ctx.in().message;

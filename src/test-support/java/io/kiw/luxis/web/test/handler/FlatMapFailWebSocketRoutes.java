@@ -10,10 +10,10 @@ public class FlatMapFailWebSocketRoutes extends WebSocketRoutes<MyApplicationSta
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
 
         routesRegister
-                .route("echo", WebSocketEchoRequest.class, s ->
+                .registerInbound("echo", WebSocketEchoRequest.class, s ->
                         s.<WebSocketEchoResponse>flatMap(ctx -> WebSocketResult.error(new ErrorMessageResponse("flatMap failed")))
                                 .complete());
 

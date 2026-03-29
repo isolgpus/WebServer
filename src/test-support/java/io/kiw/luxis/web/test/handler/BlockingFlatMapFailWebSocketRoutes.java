@@ -10,10 +10,10 @@ public class BlockingFlatMapFailWebSocketRoutes extends WebSocketRoutes<MyApplic
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
 
         routesRegister
-                .route("echo", WebSocketEchoRequest.class, s ->
+                .registerInbound("echo", WebSocketEchoRequest.class, s ->
                         s.<WebSocketEchoResponse>blockingFlatMap(ctx -> WebSocketResult.error(new ErrorMessageResponse("blocking flatMap failed")))
                                 .complete());
     }

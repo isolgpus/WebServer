@@ -14,12 +14,11 @@ public class StatefulWebSocketRoutes extends WebSocketRoutes<MyApplicationState,
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
 
-        routesRegister
-                .route("echo", WebSocketEchoRequest.class, s ->
-                        s.map(ctx -> new WebSocketEchoResponse(ctx.in().message))
-                                .complete());
+        routesRegister.registerInbound("echo", WebSocketEchoRequest.class, s ->
+                s.map(ctx -> new WebSocketEchoResponse(ctx.in().message))
+                        .complete());
 
     }
 

@@ -13,10 +13,10 @@ public class ThrowWebSocketRoutes extends WebSocketRoutes<MyApplicationState, Te
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
 
         routesRegister
-                .route("throw", WebSocketThrowRequest.class, s ->
+                .registerInbound("throw", WebSocketThrowRequest.class, s ->
                         s.map(ctx -> ctx.in().where)
                                 .map(ctx -> {
                                     if ("map".equals(ctx.in())) {

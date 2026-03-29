@@ -21,11 +21,11 @@ public class SplitWebSocketRoutes extends WebSocketRoutes<MyApplicationState, Te
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
-        routesRegister.responseType("numberResponse", WebSocketNumberResponse.class);
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
+        routesRegister.registerOutbound("numberResponse", WebSocketNumberResponse.class);
 
-        routesRegister.route("echo", WebSocketEchoRequest.class, SplitWebSocketRoutes::handleEcho);
-        routesRegister.route("number", WebSocketNumberRequest.class, SplitWebSocketRoutes::handleNumber);
+        routesRegister.registerInbound("echo", WebSocketEchoRequest.class, SplitWebSocketRoutes::handleEcho);
+        routesRegister.registerInbound("number", WebSocketNumberRequest.class, SplitWebSocketRoutes::handleNumber);
 
     }
 }

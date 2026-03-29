@@ -8,10 +8,10 @@ public class ValidationWebSocketRoutes extends WebSocketRoutes<MyApplicationStat
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("validationResponse", WebSocketValidationResponse.class);
+        routesRegister.registerOutbound("validationResponse", WebSocketValidationResponse.class);
 
         routesRegister
-                .route("validate", ValidationRequest.class, s ->
+                .registerInbound("validate", ValidationRequest.class, s ->
                         s.validate(v -> {
                                     v.field("name", r -> r.name).required().minLength(2);
                                     v.field("email", r -> r.email).required().email();

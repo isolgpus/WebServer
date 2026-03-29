@@ -21,14 +21,14 @@ public class WebSocketRoutesRegister<APP, RESP> {
         this.responseTypeRegistry = responseTypeRegistry;
     }
 
-    public <T extends RESP> void responseType(final String typeKey, final Class<T> responseClass) {
+    public <T extends RESP> void registerOutbound(final String typeKey, final Class<T> responseClass) {
         if (responseTypeRegistry.containsValue(typeKey)) {
             throw new IllegalArgumentException("Duplicate response type key: " + typeKey);
         }
         responseTypeRegistry.put(responseClass, typeKey);
     }
 
-    public <IN, OUT> void route(final String typeKey, final Class<IN> messageType, final WebSocketHandler<IN, OUT, APP, RESP> webSocketHandler) {
+    public <IN, OUT> void registerInbound(final String typeKey, final Class<IN> messageType, final WebSocketHandler<IN, OUT, APP, RESP> webSocketHandler) {
         if (routes.containsKey(typeKey)) {
             throw new IllegalArgumentException("Duplicate type key: " + typeKey);
         }

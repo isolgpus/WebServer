@@ -18,10 +18,10 @@ public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyAppl
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
 
         routesRegister
-                .route("echo", WebSocketEchoRequest.class, s ->
+                .registerInbound("echo", WebSocketEchoRequest.class, s ->
                         s.blockingMap(ctx -> {
                                     asserter.assertInWorkerContext();
                                     return ctx.in().message;

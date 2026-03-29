@@ -14,10 +14,10 @@ public class AsyncFlatMapFailWebSocketRoutes extends WebSocketRoutes<MyApplicati
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
 
         routesRegister
-                .route("echo", WebSocketEchoRequest.class, s ->
+                .registerInbound("echo", WebSocketEchoRequest.class, s ->
                         s.<WebSocketEchoResponse>asyncMap(ctx -> {
                                     luxis.handleAsyncResponse(ctx.correlationId(), HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async flatMap failed")));
                                 })

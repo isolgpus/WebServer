@@ -8,10 +8,10 @@ public class EchoWebSocketRoutes extends WebSocketRoutes<MyApplicationState, Tes
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
 
         routesRegister
-                .route("echo", WebSocketEchoRequest.class, stream ->
+                .registerInbound("echo", WebSocketEchoRequest.class, stream ->
                         stream.map(ctx -> "echo: " + ctx.in().message)
                                 .map(ctx -> new WebSocketEchoResponse(ctx.in()))
                                 .complete());

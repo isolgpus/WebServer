@@ -17,10 +17,10 @@ public class OnCloseTrackingWebSocketRoutes extends WebSocketRoutes<MyApplicatio
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
 
         routesRegister
-                .route("echo", WebSocketEchoRequest.class, s ->
+                .registerInbound("echo", WebSocketEchoRequest.class, s ->
                         s.map(ctx -> new WebSocketEchoResponse("echo: " + ctx.in().message))
                                 .complete());
 

@@ -12,10 +12,10 @@ public class AsyncMapWebSocketRoutes extends WebSocketRoutes<MyApplicationState,
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        routesRegister.responseType("numberResponse", WebSocketNumberResponse.class);
+        routesRegister.registerOutbound("numberResponse", WebSocketNumberResponse.class);
 
         routesRegister
-                .route("number", WebSocketNumberRequest.class, s ->
+                .registerInbound("number", WebSocketNumberRequest.class, s ->
                         s.<Integer>asyncMap(ctx -> {
                                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 10));
                                 })
