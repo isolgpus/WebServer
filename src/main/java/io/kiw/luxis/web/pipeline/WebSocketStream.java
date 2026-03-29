@@ -2,7 +2,7 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpErrorResponse;
-import io.kiw.luxis.web.internal.IndividualMessageWebSocketPipeline;
+import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.WebSocketMapInstruction;
 import io.kiw.luxis.web.validation.WebSocketValidator;
@@ -105,35 +105,35 @@ public class WebSocketStream<IN, APP, RESP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public <OUT> IndividualMessageWebSocketPipeline<OUT> complete(final WebSocketStreamFlatMapper<IN, OUT, APP, RESP> mapper) {
+    public <OUT> WebSocketPipeline<OUT> complete(final WebSocketStreamFlatMapper<IN, OUT, APP, RESP> mapper) {
         final WebSocketMapInstruction<IN, OUT, APP, RESP> e = new WebSocketMapInstruction<>(false, mapper, true);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new IndividualMessageWebSocketPipeline<>(instructionChain, applicationState);
+        return new WebSocketPipeline<>(instructionChain, applicationState);
     }
 
-    public IndividualMessageWebSocketPipeline<IN> complete() {
+    public WebSocketPipeline<IN> complete() {
         final WebSocketMapInstruction<IN, IN, APP, RESP> e = new WebSocketMapInstruction<>(false,
                 (WebSocketStreamFlatMapper<IN, IN, APP, RESP>) ctx -> WebSocketResult.success(ctx.in()), true);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new IndividualMessageWebSocketPipeline<>(instructionChain, applicationState);
+        return new WebSocketPipeline<>(instructionChain, applicationState);
     }
 
-    public IndividualMessageWebSocketPipeline<Void> completeWithNoResponse() {
-        return new IndividualMessageWebSocketPipeline<>(instructionChain, applicationState, false);
+    public WebSocketPipeline<Void> completeWithNoResponse() {
+        return new WebSocketPipeline<>(instructionChain, applicationState, false);
     }
 
-    public <OUT> IndividualMessageWebSocketPipeline<OUT> blockingComplete(final WebSocketStreamBlockingFlatMapper<IN, OUT> mapper) {
+    public <OUT> WebSocketPipeline<OUT> blockingComplete(final WebSocketStreamBlockingFlatMapper<IN, OUT> mapper) {
         final WebSocketMapInstruction<IN, OUT, Object, RESP> e = new WebSocketMapInstruction<>(true, mapper, true);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new IndividualMessageWebSocketPipeline<>(instructionChain, applicationState);
+        return new WebSocketPipeline<>(instructionChain, applicationState);
     }
 }

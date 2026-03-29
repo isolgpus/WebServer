@@ -2,9 +2,9 @@ package io.kiw.luxis.web.internal;
 
 public class WebSocketRoute<IN> {
     private final Class<IN> messageType;
-    private final IndividualMessageWebSocketPipeline<?> pipeline;
+    private final WebSocketPipeline<?> pipeline;
 
-    public WebSocketRoute(final Class<IN> messageType, final IndividualMessageWebSocketPipeline<?> pipeline) {
+    public WebSocketRoute(final Class<IN> messageType, final WebSocketPipeline<?> pipeline) {
         this.messageType = messageType;
         this.pipeline = pipeline;
     }
@@ -13,7 +13,7 @@ public class WebSocketRoute<IN> {
         return messageType;
     }
 
-    public IndividualMessageWebSocketPipeline<?> pipeline() {
+    public WebSocketPipeline<?> pipeline() {
         return pipeline;
     }
 }
