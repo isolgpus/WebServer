@@ -7,24 +7,24 @@ import io.kiw.luxis.web.pipeline.WebSocketStreamAsyncFlatMapper;
 import io.kiw.luxis.web.pipeline.WebSocketStreamBlockingFlatMapper;
 import io.kiw.luxis.web.pipeline.WebSocketStreamFlatMapper;
 import io.kiw.luxis.web.websocket.WebSocketBlockingContext;
-import io.kiw.luxis.web.websocket.WebSocketConnection;
 import io.kiw.luxis.web.websocket.WebSocketContext;
+import io.kiw.luxis.web.websocket.WebSocketSession;
 
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class WebSocketMapInstruction<IN, OUT, APP> {
+public class WebSocketMapInstruction<IN, OUT, APP, RESP> {
     public final boolean isBlocking;
     public final boolean isAsync;
-    private final WebSocketStreamFlatMapper<IN, OUT, APP> consumer;
+    private final WebSocketStreamFlatMapper<IN, OUT, APP, RESP> consumer;
     private final WebSocketStreamBlockingFlatMapper<IN, OUT> blockingConsumer;
-    private final WebSocketStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer;
+    private final WebSocketStreamAsyncFlatMapper<IN, OUT, APP, RESP> asyncConsumer;
     private final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer;
     public final boolean lastStep;
     private boolean isValidation;
     private Optional<WebSocketMapInstruction> next = Optional.empty();
 
-    public WebSocketMapInstruction(final boolean isBlocking, final WebSocketStreamFlatMapper<IN, OUT, APP> consumer, final boolean lastStep) {
+    public WebSocketMapInstruction(final boolean isBlocking, final WebSocketStreamFlatMapper<IN, OUT, APP, RESP> consumer, final boolean lastStep) {
         this.isBlocking = isBlocking;
         this.isAsync = false;
         this.consumer = consumer;
@@ -44,7 +44,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         this.lastStep = lastStep;
     }
 
-    public WebSocketMapInstruction(final WebSocketStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer, final boolean lastStep) {
+    public WebSocketMapInstruction(final WebSocketStreamAsyncFlatMapper<IN, OUT, APP, RESP> asyncConsumer, final boolean lastStep) {
         this.isBlocking = false;
         this.isAsync = true;
         this.consumer = null;
@@ -80,7 +80,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         return next;
     }
 
-    public Result<ErrorMessageResponse, OUT> handle(final IN state, final WebSocketConnection connection, final APP applicationState) {
+    public Result<ErrorMessageResponse, OUT> handle(final IN state, final WebSocketSession<RESP> connection, final APP applicationState) {
         if (consumer != null) {
             return consumer.handle(new WebSocketContext<>(state, connection, applicationState));
         } else if (blockingConsumer != null) {
@@ -90,7 +90,7 @@ public class WebSocketMapInstruction<IN, OUT, APP> {
         throw new UnsupportedOperationException("Unknown consumer");
     }
 
-    public CompletableFuture<Result<ErrorMessageResponse, OUT>> handleAsync(final IN state, final WebSocketConnection connection, final APP applicationState) {
+    public CompletableFuture<Result<ErrorMessageResponse, OUT>> handleAsync(final IN state, final WebSocketSession<RESP> connection, final APP applicationState) {
         if (asyncConsumer != null) {
             return asyncConsumer.handle(new WebSocketContext<>(state, connection, applicationState));
         } else if (asyncBlockingConsumer != null) {

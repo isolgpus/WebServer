@@ -60,32 +60,32 @@ public class RoutesRegister {
 
         final ArrayList<MapInstruction> chain = new ArrayList<>();
         new HttpMapStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses)
-            .flatMap(ctx -> {
-                ctx.http().addResponseHeader("Content-Type", "application/json");
+                .flatMap(ctx -> {
+                    ctx.http().addResponseHeader("Content-Type", "application/json");
 
-                if (method.canHaveABody() && ctx.http().ctx.getRequestBody() == null) {
-                    return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
-                }
+                    if (method.canHaveABody() && ctx.http().ctx.getRequestBody() == null) {
+                        return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
+                    }
 
-                try {
-                    final IN jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.http().ctx.getRequestBody(), jsonHandler) : null;
-                    return HttpResult.success(jsonRequest);
-                } catch (final Exception e) {
-                    return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
-                }
-            }).flatMap(ctx -> HttpResult.success(ctx.in()));
+                    try {
+                        final IN jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.http().ctx.getRequestBody(), jsonHandler) : null;
+                        return HttpResult.success(jsonRequest);
+                    } catch (final Exception e) {
+                        return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
+                    }
+                }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
         final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses);
         final RequestPipeline flow = jsonHandler.handle(httpStream);
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(jsonHandler.getClass(), JsonHandler.class);
         openApiCollector.addRoute(new RouteDescriptor(
-            path, method,
-            typeArgs != null ? typeArgs[0] : null,
-            typeArgs != null ? typeArgs[1] : null,
-            "application/json", "application/json",
-            RouteDescriptor.RouteKind.JSON,
-            routeConfig.openApiMetadata().orElse(null)
+                path, method,
+                typeArgs != null ? typeArgs[0] : null,
+                typeArgs != null ? typeArgs[1] : null,
+                "application/json", "application/json",
+                RouteDescriptor.RouteKind.JSON,
+                routeConfig.openApiMetadata().orElse(null)
         ));
 
         router.route(path, method, "*", "application/json", flow, routeConfig);
@@ -98,10 +98,10 @@ public class RoutesRegister {
     public <APP> void jsonFilter(final String path, final APP applicationState, final VertxJsonFilter<APP> jsonFilter, final RouteConfig routeConfig) {
         final ArrayList<MapInstruction> chain = new ArrayList<>();
         new HttpMapStream<>(chain, false, applicationState, null, pendingAsyncResponses)
-            .map(ctx -> {
-                ctx.http().addResponseHeader("Content-Type", "application/json");
-                return null;
-            });
+                .map(ctx -> {
+                    ctx.http().addResponseHeader("Content-Type", "application/json");
+                    return null;
+                });
         final HttpStream<Void, APP> httpStream = new HttpStream<>(chain, false, applicationState, null, pendingAsyncResponses);
         final RequestPipeline<Void> flow = jsonFilter.handle(httpStream);
 
@@ -123,23 +123,23 @@ public class RoutesRegister {
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(fileUploaderHandler.getClass(), VertxFileUploadRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(
-            path, method,
-            null,
-            typeArgs != null ? typeArgs[0] : null,
-            "multipart/form-data", "application/json",
-            RouteDescriptor.RouteKind.UPLOAD,
-            null
+                path, method,
+                null,
+                typeArgs != null ? typeArgs[0] : null,
+                "multipart/form-data", "application/json",
+                RouteDescriptor.RouteKind.UPLOAD,
+                null
         ));
 
         router.route(path, method, "multipart/form-data", "application/json", flow, new RouteConfigBuilder().build());
     }
 
-    public <APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP> route) {
+    public <APP, RESP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP, RESP> route) {
         webSocketRoute(path, applicationState, route, new WebSocketRouteConfigBuilder().build());
     }
 
-    public <APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP> route, final WebSocketRouteConfig config) {
-        final HttpWebSocketRouteHandlerImpl<APP> handler = new HttpWebSocketRouteHandlerImpl<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
+    public <APP, RESP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP, RESP> route, final WebSocketRouteConfig config) {
+        final HttpWebSocketRouteHandlerImpl<APP, RESP> handler = new HttpWebSocketRouteHandlerImpl<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
         router.webSocketRoute(path, handler);
     }
 
@@ -155,12 +155,12 @@ public class RoutesRegister {
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(fileDownloadHandler.getClass(), VertxFileDownloadRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(
-            path, method,
-            typeArgs != null ? typeArgs[0] : null,
-            DownloadFileResponse.class,
-            "*", contentType,
-            RouteDescriptor.RouteKind.DOWNLOAD,
-            null
+                path, method,
+                typeArgs != null ? typeArgs[0] : null,
+                DownloadFileResponse.class,
+                "*", contentType,
+                RouteDescriptor.RouteKind.DOWNLOAD,
+                null
         ));
 
         router.route(path, method, "*", contentType, flow, new RouteConfigBuilder().build());

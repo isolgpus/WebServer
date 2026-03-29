@@ -5,24 +5,26 @@ import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 
-public class OnCloseTrackingSplitWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
+public class OnCloseTrackingSplitWebSocketRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {
 
     @Override
-    public void onOpen(final WebSocketSession session, final MyApplicationState appState) {
+    public void onOpen(final WebSocketSession<TestWebSocketResponse> session, final MyApplicationState appState) {
 
     }
 
     @Override
-    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
+        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+
         routesRegister
-            .route("echo", WebSocketEchoRequest.class, stream ->
-                stream.map(ctx -> new WebSocketEchoResponse("echo: " + ctx.in().message))
-                      .complete());
-            
+                .route("echo", WebSocketEchoRequest.class, stream ->
+                        stream.map(ctx -> new WebSocketEchoResponse("echo: " + ctx.in().message))
+                                .complete());
+
     }
 
     @Override
-    public void onClose(final WebSocketSession session, final MyApplicationState appState) {
+    public void onClose(final WebSocketSession<TestWebSocketResponse> session, final MyApplicationState appState) {
 
     }
 }

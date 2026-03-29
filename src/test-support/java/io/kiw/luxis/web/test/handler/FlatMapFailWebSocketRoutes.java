@@ -6,14 +6,16 @@ import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
-public class FlatMapFailWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
+public class FlatMapFailWebSocketRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {
 
     @Override
-    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
+        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+
         routesRegister
-            .route("echo", WebSocketEchoRequest.class, s ->
-                s.<WebSocketEchoResponse>flatMap(ctx -> WebSocketResult.error(new ErrorMessageResponse("flatMap failed")))
-                 .complete());
-            
+                .route("echo", WebSocketEchoRequest.class, s ->
+                        s.<WebSocketEchoResponse>flatMap(ctx -> WebSocketResult.error(new ErrorMessageResponse("flatMap failed")))
+                                .complete());
+
     }
 }

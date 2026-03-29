@@ -1,4 +1,5 @@
 package io.kiw.luxis.web.websocket;
 
-public record CorrelatedWebSocketContext<IN, APP>(long correlationId, IN in, WebSocketConnection connection, APP app) {
+public record CorrelatedWebSocketContext<IN, APP, RESP>(long correlationId, IN in, WebSocketSession<RESP> connection,
+                                                        APP app) {
 }

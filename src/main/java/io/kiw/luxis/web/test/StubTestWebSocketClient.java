@@ -11,7 +11,7 @@ public class StubTestWebSocketClient implements TestWebSocketClient {
 
     private final List<String> receivedMessages = new ArrayList<>();
     private final HttpWebSocketRouteHandler handler;
-    private final WebSocketSession session;
+    private final WebSocketSession<?> session;
     private final StubWebSocketConnection connection;
 
     StubTestWebSocketClient(final HttpWebSocketRouteHandler handler) {

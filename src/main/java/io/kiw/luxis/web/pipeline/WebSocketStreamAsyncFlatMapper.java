@@ -6,6 +6,6 @@ import io.kiw.luxis.web.websocket.WebSocketContext;
 
 import java.util.concurrent.CompletableFuture;
 
-public interface WebSocketStreamAsyncFlatMapper<REQ, RES, APP> {
-    CompletableFuture<Result<ErrorMessageResponse, RES>> handle(WebSocketContext<REQ, APP> ctx);
+public interface WebSocketStreamAsyncFlatMapper<REQ, RES, APP, RESP> {
+    CompletableFuture<Result<ErrorMessageResponse, RES>> handle(WebSocketContext<REQ, APP, RESP> ctx);
 }

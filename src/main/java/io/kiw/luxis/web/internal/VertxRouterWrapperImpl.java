@@ -1,8 +1,8 @@
 package io.kiw.luxis.web.internal;
 
+import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.http.Method;
-import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.ext.web.Route;
@@ -61,7 +61,7 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
             ctx.request().toWebSocket()
                     .onSuccess(ws -> {
                         final VertxWebSocketConnection connection = new VertxWebSocketConnection(ws);
-                        final WebSocketSession session = handler.createSession(connection);
+                        final WebSocketSession<?> session = handler.createSession(connection);
                         handler.onOpen(session);
                         ws.textMessageHandler(msg -> handler.onMessage(msg, session));
                         ws.closeHandler(v -> handler.onClose(session));

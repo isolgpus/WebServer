@@ -5,7 +5,7 @@ import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class ContextAssertingWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
+public class ContextAssertingWebSocketRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {
 
     private final ContextAsserter asserter;
 
@@ -14,22 +14,24 @@ public class ContextAssertingWebSocketRoutes extends WebSocketRoutes<MyApplicati
     }
 
     @Override
-    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
+        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+
         routesRegister
-            .route("echo", WebSocketEchoRequest.class, s ->
-                s.map(ctx -> {
-                    asserter.assertInApplicationContext();
-                    return ctx.in().message;
-                })
-                .blockingMap(ctx -> {
-                    asserter.assertInWorkerContext();
-                    return ctx.in() + " blocked";
-                })
-                .map(ctx -> {
-                    asserter.assertInApplicationContext();
-                    return new WebSocketEchoResponse(ctx.in());
-                })
-                .complete());
-            
+                .route("echo", WebSocketEchoRequest.class, s ->
+                        s.map(ctx -> {
+                                    asserter.assertInApplicationContext();
+                                    return ctx.in().message;
+                                })
+                                .blockingMap(ctx -> {
+                                    asserter.assertInWorkerContext();
+                                    return ctx.in() + " blocked";
+                                })
+                                .map(ctx -> {
+                                    asserter.assertInApplicationContext();
+                                    return new WebSocketEchoResponse(ctx.in());
+                                })
+                                .complete());
+
     }
 }

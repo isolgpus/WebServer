@@ -7,7 +7,7 @@ import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
+public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {
 
     private final ContextAsserter asserter;
     private Luxis<?> luxis;
@@ -17,35 +17,37 @@ public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyAppl
     }
 
     @Override
-    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
+        routesRegister.responseType("echoResponse", WebSocketEchoResponse.class);
+
         routesRegister
-            .route("echo", WebSocketEchoRequest.class, s ->
-                s.blockingMap(ctx -> {
-                    asserter.assertInWorkerContext();
-                    return ctx.in().message;
-                })
-                .<String>asyncMap(ctx -> {
-                    asserter.assertInApplicationContext();
-                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async"));
-                })
-                .map(ctx -> {
-                    asserter.assertInApplicationContext();
-                    return ctx.in() + "map";
-                })
-                .<String>asyncMap(ctx -> {
-                    asserter.assertInApplicationContext();
-                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async2"));
-                })
-                .<String>asyncBlockingMap(ctx -> {
-                    asserter.assertInWorkerContext();
-                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async3"));
-                })
-                .blockingMap(ctx -> {
-                    asserter.assertInWorkerContext();
-                    return new WebSocketEchoResponse(ctx.in() + " blocking");
-                })
-                .complete());
-            
+                .route("echo", WebSocketEchoRequest.class, s ->
+                        s.blockingMap(ctx -> {
+                                    asserter.assertInWorkerContext();
+                                    return ctx.in().message;
+                                })
+                                .<String>asyncMap(ctx -> {
+                                    asserter.assertInApplicationContext();
+                                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async"));
+                                })
+                                .map(ctx -> {
+                                    asserter.assertInApplicationContext();
+                                    return ctx.in() + "map";
+                                })
+                                .<String>asyncMap(ctx -> {
+                                    asserter.assertInApplicationContext();
+                                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async2"));
+                                })
+                                .<String>asyncBlockingMap(ctx -> {
+                                    asserter.assertInWorkerContext();
+                                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async3"));
+                                })
+                                .blockingMap(ctx -> {
+                                    asserter.assertInWorkerContext();
+                                    return new WebSocketEchoResponse(ctx.in() + " blocking");
+                                })
+                                .complete());
+
     }
 
     public void evillyReferenceLuxis(Luxis<?> luxis) {

@@ -8,39 +8,43 @@ import io.kiw.luxis.web.websocket.WebSocketMessage;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
-public class HttpWebSocketRouteHandlerImpl<APP> implements HttpWebSocketRouteHandler {
+public class HttpWebSocketRouteHandlerImpl<APP, RESP> implements HttpWebSocketRouteHandler {
 
-    private final WebSocketRoutes<APP> route;
+    private final WebSocketRoutes<APP, RESP> route;
     private final ObjectMapper objectMapper;
     private final APP appState;
     private final Consumer<Exception> exceptionHandler;
     private final WebSocketPipelineExecutor executor;
-    private final WebSocketRoutesRegister<APP> routesRegister;
+    private final WebSocketRoutesRegister<APP, RESP> routesRegister;
     private final LinkedHashMap<String, WebSocketRoute<?>> routes;
+    private final Map<Class<?>, String> responseTypeRegistry;
 
-    public HttpWebSocketRouteHandlerImpl(final WebSocketRoutes<APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
+    public HttpWebSocketRouteHandlerImpl(final WebSocketRoutes<APP, RESP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
+        this.responseTypeRegistry = new HashMap<>();
         routes = new LinkedHashMap<>();
-        routesRegister = new WebSocketRoutesRegister<>(appState, pendingAsyncResponses, routes);
+        routesRegister = new WebSocketRoutesRegister<>(appState, pendingAsyncResponses, routes, responseTypeRegistry);
         route.registerRoutes(routesRegister);
-        this.executor = new WebSocketPipelineExecutor(objectMapper, appState, exceptionHandler, executionDispatcher, config);
+        this.executor = new WebSocketPipelineExecutor(objectMapper, appState, exceptionHandler, executionDispatcher, config, responseTypeRegistry);
     }
 
     @Override
-    public WebSocketSession createSession(final WebSocketConnection connection) {
-        return new WebSocketSession(connection, objectMapper);
+    public WebSocketSession<?> createSession(final WebSocketConnection connection) {
+        return new WebSocketSession<>(connection, objectMapper, responseTypeRegistry);
     }
 
     @Override
-    public void onOpen(final WebSocketSession session) {
+    public void onOpen(final WebSocketSession<?> session) {
         try {
-            route.onOpen(session, appState);
+            route.onOpen((WebSocketSession<RESP>) session, appState);
         } catch (final Exception e) {
             exceptionHandler.accept(e);
         }
@@ -48,7 +52,7 @@ public class HttpWebSocketRouteHandlerImpl<APP> implements HttpWebSocketRouteHan
 
     @Override
     @SuppressWarnings("unchecked")
-    public void onMessage(final String rawMessage, final WebSocketSession session) {
+    public void onMessage(final String rawMessage, final WebSocketSession<?> session) {
         try {
             final WebSocketMessage envelope = objectMapper.readValue(rawMessage, WebSocketMessage.class);
 
@@ -73,9 +77,10 @@ public class HttpWebSocketRouteHandlerImpl<APP> implements HttpWebSocketRouteHan
     }
 
     @Override
-    public void onClose(final WebSocketSession session) {
+    @SuppressWarnings("unchecked")
+    public void onClose(final WebSocketSession<?> session) {
         try {
-            route.onClose(session, appState);
+            route.onClose((WebSocketSession<RESP>) session, appState);
         } catch (final Exception e) {
             exceptionHandler.accept(e);
         }

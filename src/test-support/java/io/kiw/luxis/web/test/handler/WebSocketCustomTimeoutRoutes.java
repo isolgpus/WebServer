@@ -5,9 +5,10 @@ import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class WebSocketCustomTimeoutRoutes extends WebSocketRoutes<MyApplicationState> {
+public class WebSocketCustomTimeoutRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {
 
-    private Runnable onRegistered = () -> {};
+    private Runnable onRegistered = () -> {
+    };
 
     public WebSocketCustomTimeoutRoutes() {
     }
@@ -17,15 +18,17 @@ public class WebSocketCustomTimeoutRoutes extends WebSocketRoutes<MyApplicationS
     }
 
     @Override
-    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
+        routesRegister.responseType("numberResponse", WebSocketNumberResponse.class);
+
         routesRegister
-            .route("number", WebSocketNumberRequest.class, s ->
-                s.<Integer>asyncMap(ctx -> {
-                    // Deliberately do NOT call handleAsyncResponse — simulates missing response
-                    onRegistered.run();
-                }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())
-                .map(ctx -> new WebSocketNumberResponse(ctx.in()))
-                .complete());
-            
+                .route("number", WebSocketNumberRequest.class, s ->
+                        s.<Integer>asyncMap(ctx -> {
+                                    // Deliberately do NOT call handleAsyncResponse — simulates missing response
+                                    onRegistered.run();
+                                }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())
+                                .map(ctx -> new WebSocketNumberResponse(ctx.in()))
+                                .complete());
+
     }
 }

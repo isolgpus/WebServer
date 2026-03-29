@@ -20,6 +20,7 @@ import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.R
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.awaitTrue;
+import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
 public class WebSocketSplitTest {
@@ -56,14 +57,18 @@ public class WebSocketSplitTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"echo: hello\"}", received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "echo: hello")).toString(),
+                    received.get(0));
         });
 
         ws.send("{\"type\":\"number\",\"payload\":{\"value\":21}}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"result\":42}", received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 42)).toString(),
+                    received.get(0));
         });
     }
 
@@ -81,9 +86,15 @@ public class WebSocketSplitTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(3, received.size());
-            Assert.assertEquals("{\"echo\":\"echo: first\"}", received.get(0));
-            Assert.assertEquals("{\"result\":10}", received.get(1));
-            Assert.assertEquals("{\"echo\":\"echo: second\"}", received.get(2));
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "echo: first")).toString(),
+                    received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 10)).toString(),
+                    received.get(1));
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "echo: second")).toString(),
+                    received.get(2));
         });
     }
 
@@ -130,9 +141,9 @@ public class WebSocketSplitTest {
     public void shouldSendErrorResponseOnUnknownTypeWhenConfigured() {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/split", state, new SplitWebSocketRoutes(),
-                new WebSocketRouteConfigBuilder()
-                    .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad input\"}"))
-                    .build());
+                    new WebSocketRouteConfigBuilder()
+                            .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad input\"}"))
+                            .build());
         });
         TestClient client = testClientAndServer.client();
 
@@ -151,9 +162,9 @@ public class WebSocketSplitTest {
     public void shouldSendErrorResponseOnInvalidJsonWhenConfigured() {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/split", state, new SplitWebSocketRoutes(),
-                new WebSocketRouteConfigBuilder()
-                    .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad json\"}"))
-                    .build());
+                    new WebSocketRouteConfigBuilder()
+                            .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad json\"}"))
+                            .build());
         });
         TestClient client = testClientAndServer.client();
 

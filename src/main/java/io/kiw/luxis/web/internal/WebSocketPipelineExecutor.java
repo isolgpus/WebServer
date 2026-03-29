@@ -7,9 +7,11 @@ import io.kiw.luxis.web.pipeline.DisconnectSession;
 import io.kiw.luxis.web.pipeline.JustSendValidationError;
 import io.kiw.luxis.web.pipeline.SendErrorResponse;
 import io.kiw.luxis.web.pipeline.SendValidationErrorsAndDisconnectSession;
+import io.kiw.luxis.web.websocket.WebSocketResponseMessage;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
@@ -22,30 +24,32 @@ public class WebSocketPipelineExecutor {
     private final Consumer<Exception> exceptionHandler;
     private final ExecutionDispatcher executionDispatcher;
     private final WebSocketRouteConfig config;
+    private final Map<Class<?>, String> responseTypeRegistry;
 
-    public WebSocketPipelineExecutor(final ObjectMapper objectMapper, final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config) {
+    public WebSocketPipelineExecutor(final ObjectMapper objectMapper, final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final Map<Class<?>, String> responseTypeRegistry) {
         this.objectMapper = objectMapper;
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
         this.executionDispatcher = executionDispatcher;
         this.config = config;
+        this.responseTypeRegistry = responseTypeRegistry;
     }
 
     @SuppressWarnings("unchecked")
-    public void execute(final WebSocketSession session, final IndividualMessageWebSocketPipeline<?> pipeline, final Object message) {
+    public void execute(final WebSocketSession<?> session, final IndividualMessageWebSocketPipeline<?> pipeline, final Object message) {
         final WebSocketMapInstruction webSocketMapInstruction = pipeline.getApplicationInstructions().getFirst();
         executeInstruction(session, pipeline, webSocketMapInstruction, message, ThreadContext.APPLICATION_CONTEXT);
     }
 
-    public void handleCorruptInput(final WebSocketSession session) {
+    public void handleCorruptInput(final WebSocketSession<?> session) {
         switch (config.corruptInputStrategy()) {
             case DisconnectSession ignored -> session.close();
-            case SendErrorResponse sendErrorResponse -> session.connection().sendText(sendErrorResponse.message());
+            case SendErrorResponse sendErrorResponse -> session.sendRaw(sendErrorResponse.message());
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <IN, OUT, APP> void executeInstruction(final WebSocketSession session, final IndividualMessageWebSocketPipeline<?> pipeline, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message, final ThreadContext currentThread) {
+    private <IN, OUT, APP, RESP> void executeInstruction(final WebSocketSession<RESP> session, final IndividualMessageWebSocketPipeline<?> pipeline, final WebSocketMapInstruction<IN, OUT, APP, RESP> instruction, final IN message, final ThreadContext currentThread) {
         final ThreadContext requiredThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.APPLICATION_CONTEXT;
 
         runOnThread(requiredThread, currentThread, () -> {
@@ -54,11 +58,11 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings({"unchecked", "checkstyle:FinalLocalVariable"})
-    private <IN, OUT, APP> void handleAndContinue(final WebSocketSession session, final IndividualMessageWebSocketPipeline<?> pipeline, final WebSocketMapInstruction<IN, OUT, APP> instruction, final IN message) {
+    private <IN, OUT, APP, RESP> void handleAndContinue(final WebSocketSession<RESP> session, final IndividualMessageWebSocketPipeline<?> pipeline, final WebSocketMapInstruction<IN, OUT, APP, RESP> instruction, final IN message) {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future;
             try {
-                future = instruction.handleAsync(message, session.connection(), (APP) appState);
+                future = instruction.handleAsync(message, session, (APP) appState);
             } catch (final Exception e) {
                 exceptionHandler.accept(e);
                 return;
@@ -80,7 +84,7 @@ public class WebSocketPipelineExecutor {
             final ThreadContext afterThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.APPLICATION_CONTEXT;
             final Result<ErrorMessageResponse, ?> result;
             try {
-                result = instruction.handle(message, session.connection(), (APP) appState);
+                result = instruction.handle(message, session, (APP) appState);
             } catch (final Exception e) {
                 exceptionHandler.accept(e);
                 return;
@@ -95,24 +99,24 @@ public class WebSocketPipelineExecutor {
         }
     }
 
-    private void handleFailure(final WebSocketSession session, final WebSocketMapInstruction<?, ?, ?> instruction, final ErrorMessageResponse error) {
+    private void handleFailure(final WebSocketSession<?> session, final WebSocketMapInstruction<?, ?, ?, ?> instruction, final ErrorMessageResponse error) {
         if (instruction.isValidation()) {
             switch (config.failedValidationStrategy()) {
-                case JustSendValidationError ignored -> sendFinalResponse(session, error);
+                case JustSendValidationError ignored -> sendErrorResponse(session, error);
                 case SendValidationErrorsAndDisconnectSession ignored -> {
-                    sendFinalResponse(session, error).thenAccept(result -> {
+                    sendErrorResponse(session, error).thenAccept(result -> {
                         session.close();
                     });
                 }
                 case DisconnectSession ignored -> session.close();
             }
         } else {
-            sendFinalResponse(session, error);
+            sendErrorResponse(session, error);
         }
     }
 
     @SuppressWarnings("unchecked")
-    private <OUT> void continueChain(final WebSocketSession session, final IndividualMessageWebSocketPipeline<?> pipeline, final WebSocketMapInstruction<?, OUT, ?> instruction, final OUT result, final ThreadContext currentThread) {
+    private <OUT> void continueChain(final WebSocketSession<?> session, final IndividualMessageWebSocketPipeline<?> pipeline, final WebSocketMapInstruction<?, OUT, ?, ?> instruction, final OUT result, final ThreadContext currentThread) {
         if (instruction.next().isPresent()) {
             final WebSocketMapInstruction next = instruction.next().get();
             executeInstruction(session, pipeline, next, result, currentThread);
@@ -133,7 +137,17 @@ public class WebSocketPipelineExecutor {
         }
     }
 
-    private <OUT> CompletableFuture<Void> sendFinalResponse(final WebSocketSession session, final OUT result) {
-        return session.connection().sendText(objectMapper.writeValueAsString(result));
+    private <OUT> void sendFinalResponse(final WebSocketSession<?> session, final OUT result) {
+        final String typeKey = responseTypeRegistry.get(result.getClass());
+        if (typeKey == null) {
+            throw new IllegalArgumentException("Unregistered response type: " + result.getClass().getName());
+        }
+        final WebSocketResponseMessage envelope = new WebSocketResponseMessage(typeKey, result);
+        session.sendRaw(objectMapper.writeValueAsString(envelope));
+    }
+
+    private CompletableFuture<Void> sendErrorResponse(final WebSocketSession<?> session, final ErrorMessageResponse error) {
+        final WebSocketResponseMessage envelope = new WebSocketResponseMessage("error", error);
+        return session.sendRaw(objectMapper.writeValueAsString(envelope));
     }
 }

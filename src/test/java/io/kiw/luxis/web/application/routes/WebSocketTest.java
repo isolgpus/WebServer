@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.application.routes;
 
+import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
 import io.kiw.luxis.web.pipeline.DisconnectSession;
 import io.kiw.luxis.web.pipeline.JustSendValidationError;
@@ -10,11 +11,9 @@ import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHelper;
 import io.kiw.luxis.web.test.TestWebSocketClient;
-import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.test.handler.AsyncBlockingMapWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.AsyncFlatMapFailWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.AsyncMapWebSocketRoutes;
-import io.kiw.luxis.web.test.handler.WebSocketCustomTimeoutRoutes;
 import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.BlockingMapWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ContextAssertingAsyncWebSocketRoutes;
@@ -26,10 +25,10 @@ import io.kiw.luxis.web.test.handler.OnCloseTrackingWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.StatefulWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ThrowWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ValidationWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.WebSocketCustomTimeoutRoutes;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
@@ -78,7 +77,9 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"echo: hello\"}", received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "echo: hello")).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -97,8 +98,12 @@ public class WebSocketTest {
 
         ws.onResponses((received -> {
             Assert.assertEquals(2, received.size());
-            Assert.assertEquals("{\"echo\":\"echo: first\"}", received.get(0));
-            Assert.assertEquals("{\"echo\":\"echo: second\"}", received.get(1));
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "echo: first")).toString(),
+                    received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "echo: second")).toString(),
+                    received.get(1));
 
             client.assertNoMoreExceptions();
         }));
@@ -115,7 +120,7 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
+            Assert.assertEquals(json().put("type", "echoResponse").set("payload", json().put("echo", "connected")).toString(), received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -131,7 +136,7 @@ public class WebSocketTest {
         ws = client.webSocket(StubRequest.request("/ws/chat/general"));
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"connected\"}", received.get(0));
+            Assert.assertEquals(json().put("type", "echoResponse").set("payload", json().put("echo", "connected")).toString(), received.get(0));
         });
         Assert.assertFalse(ws.isClosed());
         ws.close();
@@ -153,8 +158,7 @@ public class WebSocketTest {
             fail("Expected IllegalArgumentException");
         } catch (IllegalArgumentException e) {
             Assert.assertEquals("No WebSocket route registered for path: /ws/nonexistent", e.getMessage());
-        }
-        catch (RuntimeException e) {
+        } catch (RuntimeException e) {
             Assert.assertEquals("WebSocket connection failed", e.getMessage());
         }
     }
@@ -188,7 +192,9 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"result\":44}", received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 44)).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -208,7 +214,9 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"result\":50}", received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 50)).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -228,7 +236,9 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"result\":60}", received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 60)).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -247,8 +257,8 @@ public class WebSocketTest {
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json().put("message", "flatMap failed").set("errors", json()).toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload", json().put("message", "flatMap failed").set("errors", json())).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -267,8 +277,8 @@ public class WebSocketTest {
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json().put("message", "blocking flatMap failed").set("errors", json()).toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload", json().put("message", "blocking flatMap failed").set("errors", json())).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -289,8 +299,8 @@ public class WebSocketTest {
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json().put("message", "async flatMap failed").set("errors", json()).toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload", json().put("message", "async flatMap failed").set("errors", json())).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -429,7 +439,9 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"ok\"}", received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "ok")).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -445,24 +457,25 @@ public class WebSocketTest {
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
         String payload = json()
-            .put("name", "Alice")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .put("name", "Alice")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json()
-                    .put("name", "Alice")
-                    .put("email", "alice@example.com")
-                    .put("age", 25)
-                    .put("city", "NYC")
-                    .toString(),
-                received.get(0));
+                    json().put("type", "validationResponse").set("payload",
+                                    json()
+                                            .put("name", "Alice")
+                                            .put("email", "alice@example.com")
+                                            .put("age", 25)
+                                            .put("city", "NYC"))
+                            .toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -478,23 +491,24 @@ public class WebSocketTest {
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
         String payload = json()
-            .putNull("name")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .putNull("name")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json()
-                    .put("message", "Validation failed")
-                    .set("errors", json()
-                        .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
-                    .toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload",
+                                    json()
+                                            .put("message", "Validation failed")
+                                            .set("errors", json()
+                                                    .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank"))))
+                            .toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -510,23 +524,24 @@ public class WebSocketTest {
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
         String payload = json()
-            .put("name", "Alice")
-            .put("email", "not-an-email")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .put("name", "Alice")
+                .put("email", "not-an-email")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json()
-                    .put("message", "Validation failed")
-                    .set("errors", json()
-                        .set("email", TestHelper.MAPPER.createArrayNode().add("must be a valid email address")))
-                    .toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload",
+                                    json()
+                                            .put("message", "Validation failed")
+                                            .set("errors", json()
+                                                    .set("email", TestHelper.MAPPER.createArrayNode().add("must be a valid email address"))))
+                            .toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -542,23 +557,24 @@ public class WebSocketTest {
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
         String payload = json()
-            .put("name", "Alice")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "bad"))
-            .toString();
+                .put("name", "Alice")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "bad"))
+                .toString();
 
         ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json()
-                    .put("message", "Validation failed")
-                    .set("errors", json()
-                        .set("address.zip", TestHelper.MAPPER.createArrayNode().add("must match pattern: [0-9]{5}")))
-                    .toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload",
+                                    json()
+                                            .put("message", "Validation failed")
+                                            .set("errors", json()
+                                                    .set("address.zip", TestHelper.MAPPER.createArrayNode().add("must match pattern: [0-9]{5}"))))
+                            .toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -574,24 +590,25 @@ public class WebSocketTest {
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
         String payload = json()
-            .putNull("name")
-            .put("email", "not-an-email")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .putNull("name")
+                .put("email", "not-an-email")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json()
-                    .put("message", "Validation failed")
-                    .set("errors", json()
-                        .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank"))
-                        .set("email", TestHelper.MAPPER.createArrayNode().add("must be a valid email address")))
-                    .toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload",
+                                    json()
+                                            .put("message", "Validation failed")
+                                            .set("errors", json()
+                                                    .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank"))
+                                                    .set("email", TestHelper.MAPPER.createArrayNode().add("must be a valid email address"))))
+                            .toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -601,32 +618,33 @@ public class WebSocketTest {
     public void shouldJustSendValidationErrorByDefault() {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes(),
-                new WebSocketRouteConfigBuilder()
-                    .failedValidationStrategy(JustSendValidationError.INSTANCE)
-                    .build());
+                    new WebSocketRouteConfigBuilder()
+                            .failedValidationStrategy(JustSendValidationError.INSTANCE)
+                            .build());
         });
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
         String payload = json()
-            .putNull("name")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .putNull("name")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json()
-                    .put("message", "Validation failed")
-                    .set("errors", json()
-                        .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
-                    .toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload",
+                                    json()
+                                            .put("message", "Validation failed")
+                                            .set("errors", json()
+                                                    .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank"))))
+                            .toString(),
+                    received.get(0));
 
             Assert.assertFalse(ws.isClosed());
             client.assertNoMoreExceptions();
@@ -637,20 +655,20 @@ public class WebSocketTest {
     public void shouldDisconnectSessionOnValidationFailure() {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes(),
-                new WebSocketRouteConfigBuilder()
-                    .failedValidationStrategy(DisconnectSession.INSTANCE)
-                    .build());
+                    new WebSocketRouteConfigBuilder()
+                            .failedValidationStrategy(DisconnectSession.INSTANCE)
+                            .build());
         });
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
         String payload = json()
-            .putNull("name")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .putNull("name")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
@@ -665,32 +683,33 @@ public class WebSocketTest {
     public void shouldSendValidationErrorsAndDisconnectSession() {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes(),
-                new WebSocketRouteConfigBuilder()
-                    .failedValidationStrategy(SendValidationErrorsAndDisconnectSession.INSTANCE)
-                    .build());
+                    new WebSocketRouteConfigBuilder()
+                            .failedValidationStrategy(SendValidationErrorsAndDisconnectSession.INSTANCE)
+                            .build());
         });
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/validate"));
 
         String payload = json()
-            .putNull("name")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .putNull("name")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         ws.send("{\"type\":\"validate\",\"payload\":" + payload + "}");
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json()
-                    .put("message", "Validation failed")
-                    .set("errors", json()
-                        .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
-                    .toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload",
+                                    json()
+                                            .put("message", "Validation failed")
+                                            .set("errors", json()
+                                                    .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank"))))
+                            .toString(),
+                    received.get(0));
 
             Assert.assertTrue(ws.isClosed());
             client.assertNoMoreExceptions();
@@ -710,7 +729,9 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"hello blocked\"}", received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "hello blocked")).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -731,7 +752,9 @@ public class WebSocketTest {
 
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
-            Assert.assertEquals("{\"echo\":\"hello asyncmap async2 async3 blocking\"}", received.get(0));
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "hello asyncmap async2 async3 blocking")).toString(),
+                    received.get(0));
 
             client.assertNoMoreExceptions();
         });
@@ -761,9 +784,9 @@ public class WebSocketTest {
     public void shouldSendErrorResponseOnCorruptInputWhenConfigured() {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes(),
-                new WebSocketRouteConfigBuilder()
-                    .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad json\"}"))
-                    .build());
+                    new WebSocketRouteConfigBuilder()
+                            .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad json\"}"))
+                            .build());
         });
         TestClient client = testClientAndServer.client();
 
@@ -816,8 +839,8 @@ public class WebSocketTest {
         ws.onResponses(received -> {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
-                json().put("message", "Something went wrong").set("errors", json()).toString(),
-                received.get(0));
+                    json().put("type", "error").set("payload", json().put("message", "Something went wrong").set("errors", json())).toString(),
+                    received.get(0));
 
             client.assertException("Correlated async response timed out");
         });

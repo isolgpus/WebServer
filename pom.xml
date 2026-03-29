@@ -59,7 +59,6 @@
                     <configLocation>checkstyle.xml</configLocation>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
-                    <includeTestSourceRoots>true</includeTestSourceRoots>
                 </configuration>
                 <executions>
                     <execution>

@@ -8,22 +8,31 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class WebSocketRoutesRegister<APP> {
+public class WebSocketRoutesRegister<APP, RESP> {
     private final Map<String, WebSocketRoute<?>> routes;
     private final APP applicationState;
     private final PendingAsyncResponses pendingAsyncResponses;
+    private final Map<Class<?>, String> responseTypeRegistry;
 
-    public WebSocketRoutesRegister(final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final LinkedHashMap<String, WebSocketRoute<?>> routes) {
+    public WebSocketRoutesRegister(final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final LinkedHashMap<String, WebSocketRoute<?>> routes, final Map<Class<?>, String> responseTypeRegistry) {
         this.applicationState = applicationState;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.routes = routes;
+        this.responseTypeRegistry = responseTypeRegistry;
     }
 
-    public <IN, OUT> void route(final String typeKey, final Class<IN> messageType, final WebSocketHandler<IN, OUT, APP> webSocketHandler) {
+    public <T extends RESP> void responseType(final String typeKey, final Class<T> responseClass) {
+        if (responseTypeRegistry.containsValue(typeKey)) {
+            throw new IllegalArgumentException("Duplicate response type key: " + typeKey);
+        }
+        responseTypeRegistry.put(responseClass, typeKey);
+    }
+
+    public <IN, OUT> void route(final String typeKey, final Class<IN> messageType, final WebSocketHandler<IN, OUT, APP, RESP> webSocketHandler) {
         if (routes.containsKey(typeKey)) {
             throw new IllegalArgumentException("Duplicate type key: " + typeKey);
         }
-        final WebSocketStream<IN, APP> stream = new WebSocketStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses);
+        final WebSocketStream<IN, APP, RESP> stream = new WebSocketStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses);
         final IndividualMessageWebSocketPipeline<?> pipeline = webSocketHandler.handle(stream);
         routes.put(typeKey, new WebSocketRoute<>(messageType, pipeline));
     }
