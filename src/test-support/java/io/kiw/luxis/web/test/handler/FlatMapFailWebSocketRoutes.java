@@ -7,7 +7,7 @@ import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
-public class FlatMapFailWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
+public class FlatMapFailWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {

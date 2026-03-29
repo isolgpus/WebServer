@@ -8,7 +8,7 @@ import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
-public class ThrowWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
+public class ThrowWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
 
     private Luxis<?> luxis;
 

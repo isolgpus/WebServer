@@ -5,7 +5,7 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class ValidationWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
+public class ValidationWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {

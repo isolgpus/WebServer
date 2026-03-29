@@ -7,7 +7,7 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class AsyncMapWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
+public class AsyncMapWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
 
     private Luxis<?> luxis;
 

@@ -7,7 +7,7 @@ import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.pipeline.WebSocketStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class SplitWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
+public class SplitWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
 
     private static IndividualMessageWebSocketPipeline<WebSocketEchoResponse> handleEcho(WebSocketStream<WebSocketEchoRequest, MyApplicationState> stream) {
         return stream
@@ -22,8 +22,8 @@ public class SplitWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
-        routesRegister.route("echo", WebSocketEchoRequest.class, SplitWebSocketHandler::handleEcho);
-        routesRegister.route("number", WebSocketNumberRequest.class, SplitWebSocketHandler::handleNumber);
+        routesRegister.route("echo", WebSocketEchoRequest.class, SplitWebSocketRoutes::handleEcho);
+        routesRegister.route("number", WebSocketNumberRequest.class, SplitWebSocketRoutes::handleNumber);
 
     }
 }

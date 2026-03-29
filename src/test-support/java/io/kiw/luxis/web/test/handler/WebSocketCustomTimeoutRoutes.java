@@ -6,11 +6,11 @@ import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class WebSocketCustomTimeoutHandler extends WebSocketRoutes<MyApplicationState> {
+public class WebSocketCustomTimeoutRoutes extends WebSocketRoutes<MyApplicationState> {
 
     private Runnable onRegistered = () -> {};
 
-    public WebSocketCustomTimeoutHandler() {
+    public WebSocketCustomTimeoutRoutes() {
     }
 
     public void setOnRegistered(final Runnable onRegistered) {

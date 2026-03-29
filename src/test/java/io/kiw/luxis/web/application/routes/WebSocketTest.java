@@ -11,21 +11,21 @@ import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHelper;
 import io.kiw.luxis.web.test.TestWebSocketClient;
 import io.kiw.luxis.web.TestLuxis;
-import io.kiw.luxis.web.test.handler.AsyncBlockingMapWebSocketHandler;
-import io.kiw.luxis.web.test.handler.AsyncFlatMapFailWebSocketHandler;
-import io.kiw.luxis.web.test.handler.AsyncMapWebSocketHandler;
-import io.kiw.luxis.web.test.handler.WebSocketCustomTimeoutHandler;
-import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketHandler;
-import io.kiw.luxis.web.test.handler.BlockingMapWebSocketHandler;
-import io.kiw.luxis.web.test.handler.ContextAssertingAsyncWebSocketHandler;
-import io.kiw.luxis.web.test.handler.ContextAssertingWebSocketHandler;
+import io.kiw.luxis.web.test.handler.AsyncBlockingMapWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.AsyncFlatMapFailWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.AsyncMapWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.WebSocketCustomTimeoutRoutes;
+import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.BlockingMapWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.ContextAssertingAsyncWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.ContextAssertingWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.EchoWebSocketRoutes;
-import io.kiw.luxis.web.test.handler.FlatMapFailWebSocketHandler;
-import io.kiw.luxis.web.test.handler.NoResponseWebSocketHandler;
-import io.kiw.luxis.web.test.handler.OnCloseTrackingWebSocketHandler;
-import io.kiw.luxis.web.test.handler.StatefulWebSocketHandler;
-import io.kiw.luxis.web.test.handler.ThrowWebSocketHandler;
-import io.kiw.luxis.web.test.handler.ValidationWebSocketHandler;
+import io.kiw.luxis.web.test.handler.FlatMapFailWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.NoResponseWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.OnCloseTrackingWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.StatefulWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.ThrowWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.ValidationWebSocketRoutes;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -107,7 +107,7 @@ public class WebSocketTest {
     @Test
     public void shouldSendMessageOnConnect() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
+            r.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -124,7 +124,7 @@ public class WebSocketTest {
     @Test
     public void shouldCloseWebSocket() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
+            r.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -179,7 +179,7 @@ public class WebSocketTest {
     @Test
     public void shouldMapThroughBlockingCall() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/blocking", state, new BlockingMapWebSocketHandler());
+            r.webSocketRoute("/ws/blocking", state, new BlockingMapWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -196,7 +196,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughAsyncMap() {
-        final AsyncMapWebSocketHandler handler = new AsyncMapWebSocketHandler();
+        final AsyncMapWebSocketRoutes handler = new AsyncMapWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/asyncMap", state, handler);
         });
@@ -216,7 +216,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldMapThroughAsyncBlockingMap() {
-        final AsyncBlockingMapWebSocketHandler handler = new AsyncBlockingMapWebSocketHandler();
+        final AsyncBlockingMapWebSocketRoutes handler = new AsyncBlockingMapWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/asyncBlockingMap", state, handler);
         });
@@ -238,7 +238,7 @@ public class WebSocketTest {
     @Ignore
     public void shouldReturnErrorOnFlatMapFailure() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/flatMapFail", state, new FlatMapFailWebSocketHandler());
+            r.webSocketRoute("/ws/flatMapFail", state, new FlatMapFailWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -259,7 +259,7 @@ public class WebSocketTest {
     @Ignore
     public void shouldReturnErrorOnBlockingFlatMapFailure() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/blockingFlatMapFail", state, new BlockingFlatMapFailWebSocketHandler());
+            r.webSocketRoute("/ws/blockingFlatMapFail", state, new BlockingFlatMapFailWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -279,7 +279,7 @@ public class WebSocketTest {
     @Test
     @Ignore
     public void shouldReturnErrorOnAsyncFlatMapFailure() {
-        final AsyncFlatMapFailWebSocketHandler handler = new AsyncFlatMapFailWebSocketHandler();
+        final AsyncFlatMapFailWebSocketRoutes handler = new AsyncFlatMapFailWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/asyncFlatMapFail", state, handler);
         });
@@ -301,7 +301,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInMapHandler() {
-        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
+        final ThrowWebSocketRoutes handler = new ThrowWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, handler);
         });
@@ -321,7 +321,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInBlockingHandler() {
-        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
+        final ThrowWebSocketRoutes handler = new ThrowWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, handler);
         });
@@ -341,7 +341,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInAsyncMapHandler() {
-        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
+        final ThrowWebSocketRoutes handler = new ThrowWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, handler);
         });
@@ -361,7 +361,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInAsyncBlockingMapHandler() {
-        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
+        final ThrowWebSocketRoutes handler = new ThrowWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, handler);
         });
@@ -381,7 +381,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldHandleExceptionInCompleteHandler() {
-        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
+        final ThrowWebSocketRoutes handler = new ThrowWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, handler);
         });
@@ -401,7 +401,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldNotSendResponseWhenCompleteWithNoResponse() {
-        final NoResponseWebSocketHandler handler = new NoResponseWebSocketHandler();
+        final NoResponseWebSocketRoutes handler = new NoResponseWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/noresponse", state, handler);
         });
@@ -420,7 +420,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldPassThroughAllStagesWhenNoException() {
-        final ThrowWebSocketHandler handler = new ThrowWebSocketHandler();
+        final ThrowWebSocketRoutes handler = new ThrowWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/throw", state, handler);
         });
@@ -441,7 +441,7 @@ public class WebSocketTest {
     @Test
     public void shouldPassValidationAndReturnResponse() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -474,7 +474,7 @@ public class WebSocketTest {
     @Test
     public void shouldReturnValidationErrorForInvalidBodyField() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -506,7 +506,7 @@ public class WebSocketTest {
     @Test
     public void shouldReturnValidationErrorForInvalidEmail() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -538,7 +538,7 @@ public class WebSocketTest {
     @Test
     public void shouldReturnValidationErrorForNestedField() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -570,7 +570,7 @@ public class WebSocketTest {
     @Test
     public void shouldReturnValidationErrorForMultipleFields() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler());
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -603,7 +603,7 @@ public class WebSocketTest {
     @Test
     public void shouldJustSendValidationErrorByDefault() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler(),
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes(),
                 new WebSocketRouteConfigBuilder()
                     .failedValidationStrategy(JustSendValidationError.INSTANCE)
                     .build());
@@ -639,7 +639,7 @@ public class WebSocketTest {
     @Test
     public void shouldDisconnectSessionOnValidationFailure() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler(),
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes(),
                 new WebSocketRouteConfigBuilder()
                     .failedValidationStrategy(DisconnectSession.INSTANCE)
                     .build());
@@ -667,7 +667,7 @@ public class WebSocketTest {
     @Test
     public void shouldSendValidationErrorsAndDisconnectSession() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketHandler(),
+            r.webSocketRoute("/ws/validate", state, new ValidationWebSocketRoutes(),
                 new WebSocketRouteConfigBuilder()
                     .failedValidationStrategy(SendValidationErrorsAndDisconnectSession.INSTANCE)
                     .build());
@@ -704,7 +704,7 @@ public class WebSocketTest {
     public void shouldRunMapAndBlockingMapOnCorrectContext() {
         final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/context", state, new ContextAssertingWebSocketHandler(asserter));
+            r.webSocketRoute("/ws/context", state, new ContextAssertingWebSocketRoutes(asserter));
         });
         TestClient client = testClientAndServer.client();
 
@@ -722,7 +722,7 @@ public class WebSocketTest {
     @Test
     public void shouldRunAsyncMapOnCorrectContext() {
         final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
-        final ContextAssertingAsyncWebSocketHandler handler = new ContextAssertingAsyncWebSocketHandler(asserter);
+        final ContextAssertingAsyncWebSocketRoutes handler = new ContextAssertingAsyncWebSocketRoutes(asserter);
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/context-async", state, handler);
         });
@@ -742,7 +742,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldTriggerOnCloseWhenClientDisconnects() {
-        final OnCloseTrackingWebSocketHandler handler = new OnCloseTrackingWebSocketHandler();
+        final OnCloseTrackingWebSocketRoutes handler = new OnCloseTrackingWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/lifecycle", state, handler);
         });
@@ -801,7 +801,7 @@ public class WebSocketTest {
 
     @Test
     public void shouldTimeoutWebSocketWithCustomOneSecondTimeout() {
-        final WebSocketCustomTimeoutHandler handler = new WebSocketCustomTimeoutHandler();
+        final WebSocketCustomTimeoutRoutes handler = new WebSocketCustomTimeoutRoutes();
 
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/customTimeout", state, handler);

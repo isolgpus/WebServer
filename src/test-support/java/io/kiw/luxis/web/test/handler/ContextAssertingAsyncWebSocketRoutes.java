@@ -8,12 +8,12 @@ import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
+public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
 
     private final ContextAsserter asserter;
     private Luxis<?> luxis;
 
-    public ContextAssertingAsyncWebSocketHandler(final ContextAsserter asserter) {
+    public ContextAssertingAsyncWebSocketRoutes(final ContextAsserter asserter) {
         this.asserter = asserter;
     }
 

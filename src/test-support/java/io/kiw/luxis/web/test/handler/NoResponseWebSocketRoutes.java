@@ -5,16 +5,19 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class BlockingMapWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
+public class NoResponseWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
+
+    public boolean messageReceived = false;
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
         routesRegister
-            .route("number", WebSocketNumberRequest.class, s ->
-                s.map(ctx -> ctx.in().value)
-                 .blockingMap(ctx -> ctx.in() * 2)
-                 .map(ctx -> new WebSocketNumberResponse(ctx.in()))
-                 .complete());
+            .route("echo", WebSocketEchoRequest.class, s ->
+                s.map(ctx -> {
+                    messageReceived = true;
+                    return ctx.in().message;
+                })
+                .completeWithNoResponse());
             
     }
 }

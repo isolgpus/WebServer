@@ -6,7 +6,7 @@ import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 
-public class OnCloseTrackingWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
+public class OnCloseTrackingWebSocketRoutes extends WebSocketRoutes<MyApplicationState> {
 
     public volatile boolean onCloseCalled = false;
     public volatile boolean onOpenCalled = false;
