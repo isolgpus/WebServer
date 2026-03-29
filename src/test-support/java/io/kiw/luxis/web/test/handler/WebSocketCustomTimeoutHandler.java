@@ -18,15 +18,15 @@ public class WebSocketCustomTimeoutHandler extends WebSocketRoutes<MyApplication
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("number", WebSocketNumberRequest.class, s ->
                 s.<Integer>asyncMap(ctx -> {
                     // Deliberately do NOT call handleAsyncResponse — simulates missing response
                     onRegistered.run();
                 }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())
                 .map(ctx -> new WebSocketNumberResponse(ctx.in()))
-                .complete())
-            .build();
+                .complete());
+            
     }
 }

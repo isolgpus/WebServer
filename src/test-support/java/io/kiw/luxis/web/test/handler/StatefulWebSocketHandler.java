@@ -14,12 +14,12 @@ public class StatefulWebSocketHandler extends WebSocketRoutes<MyApplicationState
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("echo", WebSocketEchoRequest.class, s ->
                 s.map(ctx -> new WebSocketEchoResponse(ctx.in().message))
-                 .complete())
-            .build();
+                 .complete());
+            
     }
 
     @Override

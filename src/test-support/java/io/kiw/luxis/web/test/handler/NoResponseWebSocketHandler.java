@@ -10,14 +10,14 @@ public class NoResponseWebSocketHandler extends WebSocketRoutes<MyApplicationSta
     public boolean messageReceived = false;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("echo", WebSocketEchoRequest.class, s ->
                 s.map(ctx -> {
                     messageReceived = true;
                     return ctx.in().message;
                 })
-                .completeWithNoResponse())
-            .build();
+                .completeWithNoResponse());
+            
     }
 }

@@ -13,8 +13,8 @@ public class ThrowWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
     private Luxis<?> luxis;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("throw", WebSocketThrowRequest.class, s ->
                 s.map(ctx -> ctx.in().where)
                 .map(ctx -> {
@@ -47,8 +47,8 @@ public class ThrowWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
                     }
                     return WebSocketResult.success(new WebSocketEchoResponse("ok"));
                 })
-                .complete())
-            .build();
+                .complete());
+            
     }
 
     public void evillyReferenceLuxis(Luxis<?> luxis) {

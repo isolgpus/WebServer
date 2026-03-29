@@ -12,15 +12,15 @@ public class AsyncMapWebSocketHandler extends WebSocketRoutes<MyApplicationState
     private Luxis<?> luxis;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("number", WebSocketNumberRequest.class, s ->
                 s.<Integer>asyncMap(ctx -> {
                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 10));
                 })
                 .map(ctx -> new WebSocketNumberResponse(ctx.in()))
-                .complete())
-            .build();
+                .complete());
+            
     }
 
     public void evillyReferenceLuxis(Luxis<?> luxis) {

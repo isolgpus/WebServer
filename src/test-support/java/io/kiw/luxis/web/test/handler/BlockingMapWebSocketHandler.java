@@ -8,13 +8,13 @@ import io.kiw.luxis.web.test.MyApplicationState;
 public class BlockingMapWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("number", WebSocketNumberRequest.class, s ->
                 s.map(ctx -> ctx.in().value)
                  .blockingMap(ctx -> ctx.in() * 2)
                  .map(ctx -> new WebSocketNumberResponse(ctx.in()))
-                 .complete())
-            .build();
+                 .complete());
+            
     }
 }

@@ -10,11 +10,11 @@ import io.kiw.luxis.web.websocket.WebSocketResult;
 public class FlatMapFailWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("echo", WebSocketEchoRequest.class, s ->
                 s.<WebSocketEchoResponse>flatMap(ctx -> WebSocketResult.error(new ErrorMessageResponse("flatMap failed")))
-                 .complete())
-            .build();
+                 .complete());
+            
     }
 }

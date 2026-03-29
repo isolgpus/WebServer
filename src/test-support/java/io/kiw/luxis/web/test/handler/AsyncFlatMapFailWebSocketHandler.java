@@ -14,14 +14,13 @@ public class AsyncFlatMapFailWebSocketHandler extends WebSocketRoutes<MyApplicat
     private Luxis<?> luxis;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("echo", WebSocketEchoRequest.class, s ->
                 s.<WebSocketEchoResponse>asyncMap(ctx -> {
                     luxis.handleAsyncResponse(ctx.correlationId(), HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async flatMap failed")));
                 })
-                .complete())
-            .build();
+                .complete());
     }
 
     public void evillyReferenceLuxis(Luxis<?> luxis) {

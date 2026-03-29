@@ -8,23 +8,27 @@ import io.kiw.luxis.web.websocket.WebSocketMessage;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.LinkedHashMap;
 import java.util.function.Consumer;
 
-public class WebSocketRouteHandler<SPLIT, APP> implements WebSocketHandler {
+public class WebSocketRouteHandler<APP> implements WebSocketHandler {
 
     private final WebSocketRoutes<APP> route;
     private final ObjectMapper objectMapper;
     private final APP appState;
     private final Consumer<Exception> exceptionHandler;
-    private final WebSocketPipeline splitPipeline;
     private final WebSocketPipelineExecutor executor;
+    private final WebSocketRoutesRegister<APP> routesRegister;
+    private final LinkedHashMap<String, WebSocketRoute<?>> routes;
 
     public WebSocketRouteHandler(final WebSocketRoutes<APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
-        this.splitPipeline = route.onMessage(new WebSocketRoutesRegister<>(appState, pendingAsyncResponses));
+        routes = new LinkedHashMap<>();
+        routesRegister = new WebSocketRoutesRegister<>(appState, pendingAsyncResponses, routes);
+        route.registerRoutes(routesRegister);
         this.executor = new WebSocketPipelineExecutor(objectMapper, appState, exceptionHandler, executionDispatcher, config);
     }
 
@@ -53,7 +57,8 @@ public class WebSocketRouteHandler<SPLIT, APP> implements WebSocketHandler {
                 return;
             }
 
-            final SplitBranch<?> branch = splitPipeline.getBranch(envelope.type());
+
+            final WebSocketRoute<?> branch = routes.get(envelope.type());
             if (branch == null) {
                 executor.handleCorruptInput(session);
                 return;

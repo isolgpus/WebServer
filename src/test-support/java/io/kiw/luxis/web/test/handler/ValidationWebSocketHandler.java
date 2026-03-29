@@ -8,8 +8,8 @@ import io.kiw.luxis.web.test.MyApplicationState;
 public class ValidationWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("validate", ValidationRequest.class, s ->
                 s.validate(v -> {
                     v.field("name", r -> r.name).required().minLength(2);
@@ -24,7 +24,7 @@ public class ValidationWebSocketHandler extends WebSocketRoutes<MyApplicationSta
                     final ValidationRequest r = ctx.in();
                     return new WebSocketValidationResponse(r.name, r.email, r.age, r.address.city);
                 })
-                .complete())
-            .build();
+                .complete());
+            
     }
 }

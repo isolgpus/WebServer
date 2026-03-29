@@ -7,7 +7,7 @@ import io.kiw.luxis.web.test.handler.BlockingFlatMapFailHandler;
 import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketHandler;
 import io.kiw.luxis.web.test.handler.BlockingMapWebSocketHandler;
 import io.kiw.luxis.web.test.handler.BlockingTestHandler;
-import io.kiw.luxis.web.test.handler.EchoWebSocketHandler;
+import io.kiw.luxis.web.test.handler.EchoWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ErrorFilter;
 import io.kiw.luxis.web.test.handler.FailingTestHandler;
 import io.kiw.luxis.web.test.handler.FileDownloaderHandler;
@@ -66,7 +66,7 @@ public final class TestApplicationRoutes {
         routesRegister.jsonRoute("/blockingFailing", Method.POST, state, new BlockingFlatMapFailHandler());
         routesRegister.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler());
         routesRegister.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
-        routesRegister.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
+        routesRegister.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes());
         routesRegister.webSocketRoute("/ws/chat/:room", state, new StatefulWebSocketHandler());
         routesRegister.webSocketRoute("/ws/blocking", state, new BlockingMapWebSocketHandler());
         routesRegister.webSocketRoute("/ws/flatMapFail", state, new FlatMapFailWebSocketHandler());

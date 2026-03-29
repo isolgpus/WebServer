@@ -18,8 +18,8 @@ public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoutes<MyApp
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("echo", WebSocketEchoRequest.class, s ->
                 s.blockingMap(ctx -> {
                     asserter.assertInWorkerContext();
@@ -45,8 +45,8 @@ public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoutes<MyApp
                     asserter.assertInWorkerContext();
                     return new WebSocketEchoResponse(ctx.in() + " blocking");
                 })
-                .complete())
-            .build();
+                .complete());
+            
     }
 
     public void evillyReferenceLuxis(Luxis<?> luxis) {

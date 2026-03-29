@@ -11,7 +11,6 @@ import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHelper;
 import io.kiw.luxis.web.test.TestWebSocketClient;
 import io.kiw.luxis.web.TestLuxis;
-import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.test.handler.AsyncBlockingMapWebSocketHandler;
 import io.kiw.luxis.web.test.handler.AsyncFlatMapFailWebSocketHandler;
 import io.kiw.luxis.web.test.handler.AsyncMapWebSocketHandler;
@@ -20,7 +19,7 @@ import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketHandler;
 import io.kiw.luxis.web.test.handler.BlockingMapWebSocketHandler;
 import io.kiw.luxis.web.test.handler.ContextAssertingAsyncWebSocketHandler;
 import io.kiw.luxis.web.test.handler.ContextAssertingWebSocketHandler;
-import io.kiw.luxis.web.test.handler.EchoWebSocketHandler;
+import io.kiw.luxis.web.test.handler.EchoWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.FlatMapFailWebSocketHandler;
 import io.kiw.luxis.web.test.handler.NoResponseWebSocketHandler;
 import io.kiw.luxis.web.test.handler.OnCloseTrackingWebSocketHandler;
@@ -70,7 +69,7 @@ public class WebSocketTest {
     @Test
     public void shouldEchoWebSocketMessage() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
+            r.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -88,7 +87,7 @@ public class WebSocketTest {
     @Test
     public void shouldHandleMultipleMessages() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
+            r.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -145,7 +144,7 @@ public class WebSocketTest {
     @Test
     public void shouldThrowWhenNoWebSocketRouteMatches() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
+            r.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -163,7 +162,7 @@ public class WebSocketTest {
     @Test
     public void shouldHandleInvalidJsonGracefully() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
+            r.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 
@@ -764,7 +763,7 @@ public class WebSocketTest {
     @Test
     public void shouldSendErrorResponseOnCorruptInputWhenConfigured() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler(),
+            r.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes(),
                 new WebSocketRouteConfigBuilder()
                     .corruptInputStrategy(new SendErrorResponse("{\"error\":\"bad json\"}"))
                     .build());
@@ -786,7 +785,7 @@ public class WebSocketTest {
     @Test
     public void shouldDisconnectOnCorruptInputByDefault() {
         testClientAndServer = createClient(mode, (r, state) -> {
-            r.webSocketRoute("/ws/echo", state, new EchoWebSocketHandler());
+            r.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes());
         });
         TestClient client = testClientAndServer.client();
 

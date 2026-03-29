@@ -14,12 +14,12 @@ public class OnCloseTrackingSplitWebSocketHandler extends WebSocketRoutes<MyAppl
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> splitStream) {
-        return splitStream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("echo", WebSocketEchoRequest.class, stream ->
                 stream.map(ctx -> new WebSocketEchoResponse("echo: " + ctx.in().message))
-                      .complete())
-            .build();
+                      .complete());
+            
     }
 
     @Override

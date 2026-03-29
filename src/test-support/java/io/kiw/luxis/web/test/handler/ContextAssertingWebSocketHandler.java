@@ -15,8 +15,8 @@ public class ContextAssertingWebSocketHandler extends WebSocketRoutes<MyApplicat
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
-        return stream
+    public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState> routesRegister) {
+        routesRegister
             .route("echo", WebSocketEchoRequest.class, s ->
                 s.map(ctx -> {
                     asserter.assertInApplicationContext();
@@ -30,7 +30,7 @@ public class ContextAssertingWebSocketHandler extends WebSocketRoutes<MyApplicat
                     asserter.assertInApplicationContext();
                     return new WebSocketEchoResponse(ctx.in());
                 })
-                .complete())
-            .build();
+                .complete());
+            
     }
 }
