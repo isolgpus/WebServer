@@ -134,11 +134,11 @@ public class RoutesRegister {
         router.route(path, method, "multipart/form-data", "application/json", flow, new RouteConfigBuilder().build());
     }
 
-    public <SPLIT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP> route) {
+    public <APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP> route) {
         webSocketRoute(path, applicationState, route, new WebSocketRouteConfigBuilder().build());
     }
 
-    public <SPLIT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP> route, final WebSocketRouteConfig config) {
+    public <APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP> route, final WebSocketRouteConfig config) {
         final HttpWebSocketRouteHandlerImpl<APP> handler = new HttpWebSocketRouteHandlerImpl<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
         router.webSocketRoute(path, handler);
     }
