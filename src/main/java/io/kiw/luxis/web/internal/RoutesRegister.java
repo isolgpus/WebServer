@@ -5,8 +5,8 @@ import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.handler.VertxFileDownloadRoute;
 import io.kiw.luxis.web.handler.VertxFileUploadRoute;
 import io.kiw.luxis.web.handler.VertxJsonFilter;
-import io.kiw.luxis.web.handler.VertxJsonRoute;
-import io.kiw.luxis.web.handler.WebSocketRoute;
+import io.kiw.luxis.web.handler.JsonHandler;
+import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.http.DownloadFileResponse;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
@@ -16,7 +16,7 @@ import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.ender.FileEnder;
 import io.kiw.luxis.web.internal.ender.JsonEnder;
 import io.kiw.luxis.web.openapi.OpenApiCollector;
-import io.kiw.luxis.web.openapi.OpenApiRoute;
+import io.kiw.luxis.web.openapi.OpenApiHandler;
 import io.kiw.luxis.web.openapi.RouteDescriptor;
 import io.kiw.luxis.web.openapi.TypeResolver;
 import io.kiw.luxis.web.pipeline.HttpMapStream;
@@ -58,12 +58,12 @@ public class RoutesRegister {
         router.configureCors(corsConfig);
     }
 
-    public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final VertxJsonRoute<IN, OUT, APP> vertxJsonRoute) {
-        jsonRoute(path, method, applicationState, vertxJsonRoute, new RouteConfigBuilder().build());
+    public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final JsonHandler<IN, OUT, APP> jsonHandler) {
+        jsonRoute(path, method, applicationState, jsonHandler, new RouteConfigBuilder().build());
     }
 
 
-    public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final VertxJsonRoute<IN, OUT, APP> vertxJsonRoute, final RouteConfig routeConfig) {
+    public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final JsonHandler<IN, OUT, APP> jsonHandler, final RouteConfig routeConfig) {
 
         final ArrayList<MapInstruction> chain = new ArrayList<>();
         new HttpMapStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses)
@@ -75,7 +75,7 @@ public class RoutesRegister {
                 }
 
                 try {
-                    final IN jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.http().ctx.getRequestBody(), vertxJsonRoute) : null;
+                    final IN jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.http().ctx.getRequestBody(), jsonHandler) : null;
                     return HttpResult.success(jsonRequest);
                 } catch (final Exception e) {
                     return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
@@ -83,9 +83,9 @@ public class RoutesRegister {
             }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
         final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses);
-        final RequestPipeline flow = vertxJsonRoute.handle(httpStream);
+        final RequestPipeline flow = jsonHandler.handle(httpStream);
 
-        final Type[] typeArgs = TypeResolver.resolveTypeArguments(vertxJsonRoute.getClass(), VertxJsonRoute.class);
+        final Type[] typeArgs = TypeResolver.resolveTypeArguments(jsonHandler.getClass(), JsonHandler.class);
         openApiCollector.addRoute(new RouteDescriptor(
             path, method,
             typeArgs != null ? typeArgs[0] : null,
@@ -141,11 +141,11 @@ public class RoutesRegister {
         router.route(path, method, "multipart/form-data", "application/json", flow, new RouteConfigBuilder().build());
     }
 
-    public <SPLIT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoute<APP> route) {
+    public <SPLIT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP> route) {
         webSocketRoute(path, applicationState, route, new WebSocketRouteConfigBuilder().build());
     }
 
-    public <SPLIT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoute<APP> route, final WebSocketRouteConfig config) {
+    public <SPLIT, APP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP> route, final WebSocketRouteConfig config) {
         final WebSocketRouteHandler<SPLIT, APP> handler = new WebSocketRouteHandler<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
         router.webSocketRoute(path, handler);
     }
@@ -174,7 +174,7 @@ public class RoutesRegister {
     }
 
     public void serveOpenApiSpec(final String path, final String title, final String version, final String description) {
-        final OpenApiRoute openApiRoute = new OpenApiRoute(openApiCollector, objectMapper, title, version, description);
+        final OpenApiHandler openApiRoute = new OpenApiHandler(openApiCollector, objectMapper, title, version, description);
         final RouteConfig config = new RouteConfigBuilder().openApi().hidden().build();
         jsonRoute(path, Method.GET, null, openApiRoute, config);
     }

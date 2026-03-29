@@ -1,13 +1,13 @@
 package io.kiw.luxis.web.test.handler;
 
-import io.kiw.luxis.web.handler.VertxJsonRoute;
+import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class AsyncCustomTimeoutTestHandler extends VertxJsonRoute<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncCustomTimeoutTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private Runnable onRegistered = () -> {};
 

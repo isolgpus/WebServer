@@ -2,19 +2,19 @@ package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.Luxis;
-import io.kiw.luxis.web.handler.WebSocketRoute;
+import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
-import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
+import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class AsyncBlockingMapWebSocketHandler extends WebSocketRoute<MyApplicationState> {
+public class AsyncBlockingMapWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
 
     private Luxis<?> luxis;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
         return stream
-                .on("number", WebSocketNumberRequest.class, s ->
+                .route("number", WebSocketNumberRequest.class, s ->
                         s.<Integer>asyncBlockingMap(ctx -> {
                                     luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 20));
                                 })

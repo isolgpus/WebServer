@@ -1,8 +1,8 @@
 package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.WebSocketRouteConfig;
-import io.kiw.luxis.web.handler.WebSocketRoute;
-import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
+import io.kiw.luxis.web.handler.WebSocketRoutes;
+import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.websocket.WebSocketConnection;
 import io.kiw.luxis.web.websocket.WebSocketMessage;
 import io.kiw.luxis.web.websocket.WebSocketSession;
@@ -12,19 +12,19 @@ import java.util.function.Consumer;
 
 public class WebSocketRouteHandler<SPLIT, APP> implements WebSocketHandler {
 
-    private final WebSocketRoute<APP> route;
+    private final WebSocketRoutes<APP> route;
     private final ObjectMapper objectMapper;
     private final APP appState;
     private final Consumer<Exception> exceptionHandler;
     private final WebSocketPipeline splitPipeline;
     private final WebSocketPipelineExecutor executor;
 
-    public WebSocketRouteHandler(final WebSocketRoute<APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
+    public WebSocketRouteHandler(final WebSocketRoutes<APP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
-        this.splitPipeline = route.onMessage(new WebSocketSplitStream<>(appState, pendingAsyncResponses));
+        this.splitPipeline = route.onMessage(new WebSocketRoutesRegister<>(appState, pendingAsyncResponses));
         this.executor = new WebSocketPipelineExecutor(objectMapper, appState, exceptionHandler, executionDispatcher, config);
     }
 

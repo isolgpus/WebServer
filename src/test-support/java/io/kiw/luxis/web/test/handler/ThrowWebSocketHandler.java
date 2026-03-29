@@ -2,20 +2,20 @@ package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.Luxis;
-import io.kiw.luxis.web.handler.WebSocketRoute;
+import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
-import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
+import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
-public class ThrowWebSocketHandler extends WebSocketRoute<MyApplicationState> {
+public class ThrowWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
 
     private Luxis<?> luxis;
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
         return stream
-            .on("throw", WebSocketThrowRequest.class, s ->
+            .route("throw", WebSocketThrowRequest.class, s ->
                 s.map(ctx -> ctx.in().where)
                 .map(ctx -> {
                     if ("map".equals(ctx.in())) {

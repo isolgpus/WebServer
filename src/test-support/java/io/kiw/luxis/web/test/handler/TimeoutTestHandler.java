@@ -1,6 +1,6 @@
 package io.kiw.luxis.web.test.handler;
 
-import io.kiw.luxis.web.handler.VertxJsonRoute;
+import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpResult;
@@ -11,7 +11,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
-public class TimeoutTestHandler extends VertxJsonRoute<ThrowRequest, ThrowResponse, MyApplicationState> {
+public class TimeoutTestHandler extends JsonHandler<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
     public RequestPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
         return e

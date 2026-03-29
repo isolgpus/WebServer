@@ -2,13 +2,13 @@ package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.Luxis;
-import io.kiw.luxis.web.handler.WebSocketRoute;
+import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
-import io.kiw.luxis.web.pipeline.WebSocketSplitStream;
+import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoute<MyApplicationState> {
+public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoutes<MyApplicationState> {
 
     private final ContextAsserter asserter;
     private Luxis<?> luxis;
@@ -18,9 +18,9 @@ public class ContextAssertingAsyncWebSocketHandler extends WebSocketRoute<MyAppl
     }
 
     @Override
-    public WebSocketPipeline onMessage(final WebSocketSplitStream<MyApplicationState> stream) {
+    public WebSocketPipeline onMessage(final WebSocketRoutesRegister<MyApplicationState> stream) {
         return stream
-            .on("echo", WebSocketEchoRequest.class, s ->
+            .route("echo", WebSocketEchoRequest.class, s ->
                 s.blockingMap(ctx -> {
                     asserter.assertInWorkerContext();
                     return ctx.in().message;

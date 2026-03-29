@@ -1,6 +1,6 @@
 package io.kiw.luxis.web.test.handler;
 
-import io.kiw.luxis.web.handler.VertxJsonRoute;
+import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpResult;
@@ -11,7 +11,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 import static io.kiw.luxis.result.Result.success;
 
 
-public class FailingTestHandler extends VertxJsonRoute<BlockingRequest, BlockingTestResponse, MyApplicationState> {
+public class FailingTestHandler extends JsonHandler<BlockingRequest, BlockingTestResponse, MyApplicationState> {
 
     @Override
     public RequestPipeline<BlockingTestResponse> handle(final HttpStream<BlockingRequest, MyApplicationState> httpStream) {

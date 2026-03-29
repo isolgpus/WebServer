@@ -2,12 +2,12 @@ package io.kiw.luxis.web.openapi;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
-import io.kiw.luxis.web.handler.VertxJsonRoute;
+import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 
-public class OpenApiRoute extends VertxJsonRoute<Void, ObjectNode, Object> {
+public class OpenApiHandler extends JsonHandler<Void, ObjectNode, Object> {
     private final OpenApiCollector collector;
     private final ObjectMapper objectMapper;
     private final String title;
@@ -15,8 +15,8 @@ public class OpenApiRoute extends VertxJsonRoute<Void, ObjectNode, Object> {
     private final String description;
     private volatile ObjectNode cachedSpec;
 
-    public OpenApiRoute(final OpenApiCollector collector, final ObjectMapper objectMapper,
-                        final String title, final String version, final String description) {
+    public OpenApiHandler(final OpenApiCollector collector, final ObjectMapper objectMapper,
+                          final String title, final String version, final String description) {
         this.collector = collector;
         this.objectMapper = objectMapper;
         this.title = title;

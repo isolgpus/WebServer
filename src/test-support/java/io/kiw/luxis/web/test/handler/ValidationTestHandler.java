@@ -1,13 +1,13 @@
 package io.kiw.luxis.web.test.handler;
 
-import io.kiw.luxis.web.handler.VertxJsonRoute;
+import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class ValidationTestHandler extends VertxJsonRoute<ValidationRequest, ValidationResponse, MyApplicationState> {
+public class ValidationTestHandler extends JsonHandler<ValidationRequest, ValidationResponse, MyApplicationState> {
 
     @Override
     public RequestPipeline<ValidationResponse> handle(final HttpStream<ValidationRequest, MyApplicationState> httpStream) {
