@@ -1,11 +1,14 @@
 package io.kiw.luxis.web.internal;
 
-import tools.jackson.databind.ObjectMapper;
+import io.kiw.luxis.web.RouteConfig;
+import io.kiw.luxis.web.RouteConfigBuilder;
+import io.kiw.luxis.web.WebSocketRouteConfig;
+import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
 import io.kiw.luxis.web.cors.CorsConfig;
+import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.handler.VertxFileDownloadRoute;
 import io.kiw.luxis.web.handler.VertxFileUploadRoute;
 import io.kiw.luxis.web.handler.VertxJsonFilter;
-import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.http.DownloadFileResponse;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
@@ -21,10 +24,7 @@ import io.kiw.luxis.web.openapi.RouteDescriptor;
 import io.kiw.luxis.web.openapi.TypeResolver;
 import io.kiw.luxis.web.pipeline.HttpMapStream;
 import io.kiw.luxis.web.pipeline.HttpStream;
-import io.kiw.luxis.web.RouteConfig;
-import io.kiw.luxis.web.RouteConfigBuilder;
-import io.kiw.luxis.web.WebSocketRouteConfig;
-import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
+import tools.jackson.databind.ObjectMapper;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -46,13 +46,6 @@ public class RoutesRegister {
         this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
-    public OpenApiCollector getOpenApiCollector() {
-        return openApiCollector;
-    }
-
-    public ObjectMapper getObjectMapper() {
-        return objectMapper;
-    }
 
     public void cors(final CorsConfig corsConfig) {
         router.configureCors(corsConfig);
