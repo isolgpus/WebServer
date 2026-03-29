@@ -235,7 +235,6 @@ public class WebSocketTest {
     }
 
     @Test
-    @Ignore
     public void shouldReturnErrorOnFlatMapFailure() {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/flatMapFail", state, new FlatMapFailWebSocketRoutes());
@@ -256,7 +255,6 @@ public class WebSocketTest {
     }
 
     @Test
-    @Ignore
     public void shouldReturnErrorOnBlockingFlatMapFailure() {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/blockingFlatMapFail", state, new BlockingFlatMapFailWebSocketRoutes());
@@ -277,7 +275,6 @@ public class WebSocketTest {
     }
 
     @Test
-    @Ignore
     public void shouldReturnErrorOnAsyncFlatMapFailure() {
         final AsyncFlatMapFailWebSocketRoutes handler = new AsyncFlatMapFailWebSocketRoutes();
         testClientAndServer = createClient(mode, (r, state) -> {
