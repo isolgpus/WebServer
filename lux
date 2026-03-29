@@ -13,9 +13,6 @@ cmd_commit() {
     echo "Pulling with rebase..."
     git pull --rebase --autostash
 
-    echo "Compiling..."
-    mvn clean compile
-
     echo "Running tests..."
     TEST_MODE=VERTX mvn test
 
