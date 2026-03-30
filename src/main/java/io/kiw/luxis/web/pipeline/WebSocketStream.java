@@ -2,6 +2,7 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.WebSocketMapInstruction;
@@ -12,6 +13,7 @@ import io.kiw.luxis.web.websocket.WebSocketResult;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class WebSocketStream<IN, APP, RESP> {
@@ -60,6 +62,25 @@ public class WebSocketStream<IN, APP, RESP> {
 
     public <OUT> WebSocketStream<OUT, APP, RESP> blockingFlatMap(final WebSocketStreamBlockingFlatMapper<IN, OUT> mapper) {
         final WebSocketMapInstruction<IN, OUT, Object, RESP> e = new WebSocketMapInstruction<>(true, mapper, false);
+        if (!instructionChain.isEmpty()) {
+            instructionChain.getLast().setNext(e);
+        }
+        instructionChain.add(e);
+        return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
+    }
+
+    public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final WebSocketStreamAsyncMapper<IN, OUT, APP, RESP> handler) {
+        return asyncMap(handler, AsyncMapConfig.defaultConfig());
+    }
+
+    public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final WebSocketStreamAsyncMapper<IN, OUT, APP, RESP> handler, final AsyncMapConfig config) {
+        final WebSocketStreamAsyncFlatMapper<IN, OUT, APP, RESP> wrapper = ctx -> {
+            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+            return luxisAsync.toCompletableFuture()
+                .orTimeout(config.timeoutMillis, TimeUnit.MILLISECONDS)
+                .thenApply(value -> Result.success(value));
+        };
+        final WebSocketMapInstruction<IN, OUT, APP, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }

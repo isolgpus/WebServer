@@ -4,6 +4,7 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.AsyncBlockingContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.CorrelatedRouteContext;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
@@ -12,6 +13,7 @@ import io.kiw.luxis.web.internal.ender.Ender;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 public class HttpMapStream<IN, APP> {
     protected final List<MapInstruction> instructionChain;
@@ -59,6 +61,21 @@ public class HttpMapStream<IN, APP> {
             final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
             handler.handle(new CorrelatedRouteContext<>(correlationId, ctx.in(), ctx.http(), ctx.app()));
             return future;
+        };
+        instructionChain.add(new MapInstruction<>(wrapper, false));
+        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
+    }
+
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncMapper<IN, OUT, APP> handler) {
+        return asyncMap(handler, AsyncMapConfig.defaultConfig());
+    }
+
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncMapper<IN, OUT, APP> handler, final AsyncMapConfig config) {
+        final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
+            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+            return luxisAsync.toCompletableFuture()
+                .orTimeout(config.timeoutMillis, TimeUnit.MILLISECONDS)
+                .thenApply(Result::success);
         };
         instructionChain.add(new MapInstruction<>(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
