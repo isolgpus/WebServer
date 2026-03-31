@@ -81,7 +81,7 @@ public class WebSocketStream<IN, APP, RESP> {
                 .exceptionally(throwable -> {
                     final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
                     if (cause instanceof HttpErrorResponseException hre) {
-                        return Result.failure(hre.getErrorResponse().errorMessageValue());
+                        return Result.error(hre.getErrorResponse().errorMessageValue());
                     }
                     throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
                 });
@@ -107,7 +107,7 @@ public class WebSocketStream<IN, APP, RESP> {
                 .exceptionally(throwable -> {
                     final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
                     if (cause instanceof HttpErrorResponseException hre) {
-                        return Result.failure(hre.getErrorResponse().errorMessageValue());
+                        return Result.error(hre.getErrorResponse().errorMessageValue());
                     }
                     throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
                 });
