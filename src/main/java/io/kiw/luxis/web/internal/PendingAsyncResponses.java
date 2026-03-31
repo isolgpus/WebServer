@@ -48,6 +48,10 @@ public class PendingAsyncResponses {
         exceptionHandler.accept(new RuntimeException("Correlated async response timed out for correlationId: " + correlationId));
     }
 
+    public TimeoutScheduler.Cancellable scheduleTimeout(final long delayMillis, final Runnable action) {
+        return scheduler.schedule(delayMillis, action);
+    }
+
     private record PendingEntry(CompletableFuture<Result<HttpErrorResponse, ?>> future, TimeoutScheduler.Cancellable cancellable) {
     }
 }
