@@ -74,12 +74,19 @@ public class WebSocketStream<IN, APP, RESP> {
 
     public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final WebSocketStreamAsyncMapper<IN, OUT, APP, RESP> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncFlatMapper<IN, OUT, APP, RESP> wrapper = ctx -> {
-            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
-            final CompletableFuture<OUT> rawFuture = luxisAsync.toCompletableFuture();
+            final CompletableFuture<OUT> resultFuture = new CompletableFuture<>();
             pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
-                rawFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
+                resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
             });
-            return rawFuture
+            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+            luxisAsync.toCompletableFuture().whenComplete((value, throwable) -> {
+                if (throwable != null) {
+                    resultFuture.completeExceptionally(throwable);
+                } else {
+                    resultFuture.complete(value);
+                }
+            });
+            return resultFuture
                 .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
                 .exceptionally(throwable -> {
                     final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
@@ -103,12 +110,19 @@ public class WebSocketStream<IN, APP, RESP> {
 
     public <OUT> WebSocketStream<OUT, APP, RESP> asyncBlockingMap(final WebSocketStreamAsyncBlockingMapper<IN, OUT> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
-            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
-            final CompletableFuture<OUT> rawFuture = luxisAsync.toCompletableFuture();
+            final CompletableFuture<OUT> resultFuture = new CompletableFuture<>();
             pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
-                rawFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
+                resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
             });
-            return rawFuture
+            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+            luxisAsync.toCompletableFuture().whenComplete((value, throwable) -> {
+                if (throwable != null) {
+                    resultFuture.completeExceptionally(throwable);
+                } else {
+                    resultFuture.complete(value);
+                }
+            });
+            return resultFuture
                 .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
                 .exceptionally(throwable -> {
                     final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
