@@ -93,7 +93,9 @@ public class WebSocketStream<IN, APP, RESP> {
                     if (cause instanceof HttpErrorResponseException hre) {
                         return Result.error(hre.getErrorResponse().errorMessageValue());
                     }
-                    throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
+                    pendingAsyncResponses.reportException(
+                            cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
+                    return Result.error(new ErrorMessageResponse("Something went wrong"));
                 });
         };
         final WebSocketMapInstruction<IN, OUT, APP, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
@@ -129,7 +131,9 @@ public class WebSocketStream<IN, APP, RESP> {
                     if (cause instanceof HttpErrorResponseException hre) {
                         return Result.error(hre.getErrorResponse().errorMessageValue());
                     }
-                    throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
+                    pendingAsyncResponses.reportException(
+                            cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
+                    return Result.error(new ErrorMessageResponse("Something went wrong"));
                 });
         };
         final WebSocketMapInstruction<IN, OUT, Object, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
