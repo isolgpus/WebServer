@@ -52,6 +52,10 @@ public class PendingAsyncResponses {
         return scheduler.schedule(delayMillis, action);
     }
 
+    public void reportException(final Exception e) {
+        exceptionHandler.accept(e);
+    }
+
     private record PendingEntry(CompletableFuture<Result<HttpErrorResponse, ?>> future, TimeoutScheduler.Cancellable cancellable) {
     }
 }
