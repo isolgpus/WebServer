@@ -3,6 +3,7 @@ package io.kiw.luxis.web.test.handler;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
+import io.kiw.luxis.web.http.client.CorrelatedAsync;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -17,7 +18,9 @@ public class AsyncBlockingMapWebSocketRoutes extends WebSocketRoutes<MyApplicati
         routesRegister
                 .registerInbound("number", WebSocketNumberRequest.class, s ->
                         s.<Integer>asyncBlockingMap(ctx -> {
-                                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in().value * 20));
+                                    final CorrelatedAsync<Integer> correlated = luxis.createCorrelatedAsync();
+                                    luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in().value * 20));
+                                    return correlated.async();
                                 })
                                 .map(ctx -> new WebSocketNumberResponse(ctx.in()))
                                 .complete());

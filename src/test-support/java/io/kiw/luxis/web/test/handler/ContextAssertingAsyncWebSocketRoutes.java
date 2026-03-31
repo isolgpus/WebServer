@@ -3,6 +3,7 @@ package io.kiw.luxis.web.test.handler;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
+import io.kiw.luxis.web.http.client.CorrelatedAsync;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
@@ -28,7 +29,9 @@ public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyAppl
                                 })
                                 .<String>asyncMap(ctx -> {
                                     asserter.assertInApplicationContext();
-                                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async"));
+                                    final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
+                                    luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async"));
+                                    return correlated.async();
                                 })
                                 .map(ctx -> {
                                     asserter.assertInApplicationContext();
@@ -36,11 +39,15 @@ public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyAppl
                                 })
                                 .<String>asyncMap(ctx -> {
                                     asserter.assertInApplicationContext();
-                                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async2"));
+                                    final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
+                                    luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async2"));
+                                    return correlated.async();
                                 })
                                 .<String>asyncBlockingMap(ctx -> {
                                     asserter.assertInWorkerContext();
-                                    luxis.handleAsyncResponse(ctx.correlationId(), Result.success(ctx.in() + " async3"));
+                                    final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
+                                    luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async3"));
+                                    return correlated.async();
                                 })
                                 .blockingMap(ctx -> {
                                     asserter.assertInWorkerContext();

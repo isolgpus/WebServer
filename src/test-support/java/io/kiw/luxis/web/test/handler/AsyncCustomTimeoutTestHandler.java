@@ -2,10 +2,13 @@ package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.HttpResult;
+import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
+
+import java.util.concurrent.CompletableFuture;
 
 public class AsyncCustomTimeoutTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
@@ -22,8 +25,9 @@ public class AsyncCustomTimeoutTestHandler extends JsonHandler<AsyncMapRequest, 
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .<Integer>asyncMap(ctx -> {
-                    // Deliberately do NOT call handleAsyncResponse — simulates missing response
+                    // Deliberately do NOT complete — simulates missing response
                     onRegistered.run();
+                    return new LuxisAsync<>(new CompletableFuture<>());
                 }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())
                 .map(ctx -> new AsyncMapResponse(ctx.in()))
                 .complete(ctx -> HttpResult.success(ctx.in()));

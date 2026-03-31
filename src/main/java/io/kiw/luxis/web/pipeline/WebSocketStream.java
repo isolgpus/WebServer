@@ -1,18 +1,17 @@
 package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
-import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.ErrorMessageResponse;
+import io.kiw.luxis.web.http.HttpErrorResponseException;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.WebSocketMapInstruction;
 import io.kiw.luxis.web.validation.WebSocketValidator;
-import io.kiw.luxis.web.websocket.CorrelatedWebSocketBlockingContext;
-import io.kiw.luxis.web.websocket.CorrelatedWebSocketContext;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -78,7 +77,14 @@ public class WebSocketStream<IN, APP, RESP> {
             final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
             return luxisAsync.toCompletableFuture()
                 .orTimeout(config.timeoutMillis, TimeUnit.MILLISECONDS)
-                .thenApply(value -> Result.success(value));
+                .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
+                .exceptionally(throwable -> {
+                    final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                    if (cause instanceof HttpErrorResponseException hre) {
+                        return Result.failure(hre.getErrorResponse().errorMessageValue());
+                    }
+                    throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
+                });
         };
         final WebSocketMapInstruction<IN, OUT, APP, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
         if (!instructionChain.isEmpty()) {
@@ -88,35 +94,23 @@ public class WebSocketStream<IN, APP, RESP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final WebSocketStreamCorrelatedAsyncHandler<IN, APP, RESP> handler) {
-        return asyncMap(handler, AsyncMapConfig.defaultConfig());
-    }
-
-    public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final WebSocketStreamCorrelatedAsyncHandler<IN, APP, RESP> handler, final AsyncMapConfig config) {
-        final WebSocketStreamAsyncFlatMapper<IN, OUT, APP, RESP> wrapper = ctx -> {
-            final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
-            final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
-            handler.handle(new CorrelatedWebSocketContext<>(correlationId, ctx.in(), ctx.connection(), ctx.app()));
-            return future.thenApply(result -> result.mapError(HttpErrorResponse::errorMessageValue));
-        };
-        final WebSocketMapInstruction<IN, OUT, APP, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
-        if (!instructionChain.isEmpty()) {
-            instructionChain.getLast().setNext(e);
-        }
-        instructionChain.add(e);
-        return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
-    }
-
-    public <OUT> WebSocketStream<OUT, APP, RESP> asyncBlockingMap(final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler) {
+    public <OUT> WebSocketStream<OUT, APP, RESP> asyncBlockingMap(final WebSocketStreamAsyncBlockingMapper<IN, OUT> handler) {
         return asyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP> asyncBlockingMap(final WebSocketStreamCorrelatedAsyncBlockingHandler<IN> handler, final AsyncMapConfig config) {
+    public <OUT> WebSocketStream<OUT, APP, RESP> asyncBlockingMap(final WebSocketStreamAsyncBlockingMapper<IN, OUT> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
-            final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
-            final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
-            handler.handle(new CorrelatedWebSocketBlockingContext<>(correlationId, ctx.in()));
-            return future.thenApply(result -> result.mapError(HttpErrorResponse::errorMessageValue));
+            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+            return luxisAsync.toCompletableFuture()
+                .orTimeout(config.timeoutMillis, TimeUnit.MILLISECONDS)
+                .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
+                .exceptionally(throwable -> {
+                    final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                    if (cause instanceof HttpErrorResponseException hre) {
+                        return Result.failure(hre.getErrorResponse().errorMessageValue());
+                    }
+                    throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
+                });
         };
         final WebSocketMapInstruction<IN, OUT, Object, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
         if (!instructionChain.isEmpty()) {

@@ -2,17 +2,16 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpResult;
-import io.kiw.luxis.web.http.AsyncBlockingContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.HttpErrorResponseException;
 import io.kiw.luxis.web.http.client.LuxisAsync;
-import io.kiw.luxis.web.internal.CorrelatedRouteContext;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.internal.ender.Ender;
 
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.TimeUnit;
 
 public class HttpMapStream<IN, APP> {
@@ -51,21 +50,6 @@ public class HttpMapStream<IN, APP> {
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncHandler<IN, APP> handler) {
-        return asyncMap(handler, AsyncMapConfig.defaultConfig());
-    }
-
-    public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncHandler<IN, APP> handler, final AsyncMapConfig config) {
-        final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
-            final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
-            final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
-            handler.handle(new CorrelatedRouteContext<>(correlationId, ctx.in(), ctx.http(), ctx.app()));
-            return future;
-        };
-        instructionChain.add(new MapInstruction<>(wrapper, false));
-        return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
-    }
-
     public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncMapper<IN, OUT, APP> handler) {
         return asyncMap(handler, AsyncMapConfig.defaultConfig());
     }
@@ -75,22 +59,36 @@ public class HttpMapStream<IN, APP> {
             final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
             return luxisAsync.toCompletableFuture()
                 .orTimeout(config.timeoutMillis, TimeUnit.MILLISECONDS)
-                .thenApply(Result::success);
+                .thenApply(Result::<HttpErrorResponse, OUT>success)
+                .exceptionally(throwable -> {
+                    final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                    if (cause instanceof HttpErrorResponseException hre) {
+                        return Result.failure(hre.getErrorResponse());
+                    }
+                    throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
+                });
         };
         instructionChain.add(new MapInstruction<>(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingHandler<IN> handler) {
+    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingMapper<IN, OUT> handler) {
         return asyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingHandler<IN> handler, final AsyncMapConfig config) {
+    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingMapper<IN, OUT> handler, final AsyncMapConfig config) {
         final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
-            final CompletableFuture<Result<HttpErrorResponse, OUT>> future = new CompletableFuture<>();
-            final long correlationId = pendingAsyncResponses.register(future, config.timeoutMillis);
-            handler.handle(new AsyncBlockingContext<>(correlationId, ctx.in(), ctx.http()));
-            return future;
+            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+            return luxisAsync.toCompletableFuture()
+                .orTimeout(config.timeoutMillis, TimeUnit.MILLISECONDS)
+                .thenApply(Result::<HttpErrorResponse, OUT>success)
+                .exceptionally(throwable -> {
+                    final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                    if (cause instanceof HttpErrorResponseException hre) {
+                        return Result.failure(hre.getErrorResponse());
+                    }
+                    throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
+                });
         };
         instructionChain.add(new MapInstruction<>(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
