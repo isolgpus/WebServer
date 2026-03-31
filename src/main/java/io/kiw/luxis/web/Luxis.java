@@ -2,6 +2,7 @@ package io.kiw.luxis.web;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.client.CorrelatedAsync;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RoutesRegister;
 import io.kiw.luxis.web.internal.VertxExecutionDispatcher;
@@ -66,4 +67,8 @@ public interface Luxis<APP> extends AutoCloseable {
     <IN> void apply(final IN immutableState, final BiConsumer<IN, APP> applicationStateConsumer);
 
     <T> void handleAsyncResponse(long correlationId, Result<HttpErrorResponse, T> result);
+
+    <T> CorrelatedAsync<T> createCorrelatedAsync();
+
+    <T> CorrelatedAsync<T> createCorrelatedAsync(long timeoutMillis);
 }
