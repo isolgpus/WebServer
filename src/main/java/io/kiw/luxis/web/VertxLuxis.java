@@ -46,7 +46,9 @@ public class VertxLuxis<APP> implements Luxis<APP> {
         final CompletableFuture<Result<HttpErrorResponse, T>> future = new CompletableFuture<>();
         final long correlationId = pendingAsyncResponses.register(future, timeoutMillis);
         final LuxisAsync<T> luxisAsync = new LuxisAsync<>(future.thenApply(result -> result.fold(
-                error -> { throw new HttpErrorResponseException(error); },
+                error -> {
+                    throw new HttpErrorResponseException(error);
+                },
                 value -> value
         )));
         return new CorrelatedAsync<>(correlationId, luxisAsync);
