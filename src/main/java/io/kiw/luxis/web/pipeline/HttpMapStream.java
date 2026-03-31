@@ -63,7 +63,7 @@ public class HttpMapStream<IN, APP> {
                 .exceptionally(throwable -> {
                     final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
                     if (cause instanceof HttpErrorResponseException hre) {
-                        return Result.failure(hre.getErrorResponse());
+                        return Result.error(hre.getErrorResponse());
                     }
                     throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
                 });
@@ -85,7 +85,7 @@ public class HttpMapStream<IN, APP> {
                 .exceptionally(throwable -> {
                     final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
                     if (cause instanceof HttpErrorResponseException hre) {
-                        return Result.failure(hre.getErrorResponse());
+                        return Result.error(hre.getErrorResponse());
                     }
                     throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
                 });
