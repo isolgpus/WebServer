@@ -2,7 +2,7 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
-import io.kiw.luxis.web.http.HttpErrorResponseException;
+import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.WebSocketMapInstruction;
@@ -74,29 +74,24 @@ public class WebSocketStream<IN, APP, RESP> {
 
     public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final WebSocketStreamAsyncMapper<IN, OUT, APP, RESP> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncFlatMapper<IN, OUT, APP, RESP> wrapper = ctx -> {
-            final CompletableFuture<OUT> resultFuture = new CompletableFuture<>();
+            final CompletableFuture<Result<ErrorMessageResponse, OUT>> resultFuture = new CompletableFuture<>();
             pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
                 resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
             });
             final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
-            luxisAsync.toCompletableFuture().whenComplete((value, throwable) -> {
+            luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
                 if (throwable != null) {
                     resultFuture.completeExceptionally(throwable);
                 } else {
-                    resultFuture.complete(value);
+                    resultFuture.complete(result.mapError(HttpErrorResponse::errorMessageValue));
                 }
             });
-            return resultFuture
-                    .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
-                    .exceptionally(throwable -> {
-                        final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
-                        if (cause instanceof HttpErrorResponseException hre) {
-                            return Result.error(hre.getErrorResponse().errorMessageValue());
-                        }
-                        pendingAsyncResponses.reportException(
-                                cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
-                        return Result.error(new ErrorMessageResponse("Something went wrong"));
-                    });
+            return resultFuture.exceptionally(throwable -> {
+                final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                pendingAsyncResponses.reportException(
+                        cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
+                return Result.error(new ErrorMessageResponse("Something went wrong"));
+            });
         };
         final WebSocketMapInstruction<IN, OUT, APP, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
         if (!instructionChain.isEmpty()) {
@@ -112,29 +107,24 @@ public class WebSocketStream<IN, APP, RESP> {
 
     public <OUT> WebSocketStream<OUT, APP, RESP> asyncBlockingMap(final WebSocketStreamAsyncBlockingMapper<IN, OUT> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
-            final CompletableFuture<OUT> resultFuture = new CompletableFuture<>();
+            final CompletableFuture<Result<ErrorMessageResponse, OUT>> resultFuture = new CompletableFuture<>();
             pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
                 resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
             });
             final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
-            luxisAsync.toCompletableFuture().whenComplete((value, throwable) -> {
+            luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
                 if (throwable != null) {
                     resultFuture.completeExceptionally(throwable);
                 } else {
-                    resultFuture.complete(value);
+                    resultFuture.complete(result.mapError(HttpErrorResponse::errorMessageValue));
                 }
             });
-            return resultFuture
-                    .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
-                    .exceptionally(throwable -> {
-                        final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
-                        if (cause instanceof HttpErrorResponseException hre) {
-                            return Result.error(hre.getErrorResponse().errorMessageValue());
-                        }
-                        pendingAsyncResponses.reportException(
-                                cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
-                        return Result.error(new ErrorMessageResponse("Something went wrong"));
-                    });
+            return resultFuture.exceptionally(throwable -> {
+                final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                pendingAsyncResponses.reportException(
+                        cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
+                return Result.error(new ErrorMessageResponse("Something went wrong"));
+            });
         };
         final WebSocketMapInstruction<IN, OUT, Object, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
         if (!instructionChain.isEmpty()) {

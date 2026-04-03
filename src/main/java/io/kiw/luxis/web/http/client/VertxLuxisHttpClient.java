@@ -1,5 +1,7 @@
 package io.kiw.luxis.web.http.client;
 
+import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
@@ -44,7 +46,7 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
     }
 
     private LuxisAsync<HttpClientResponse> send(final HttpClientRequest request, final HttpMethod method) {
-        final CompletableFuture<HttpClientResponse> future = new CompletableFuture<>();
+        final CompletableFuture<Result<HttpErrorResponse, HttpClientResponse>> future = new CompletableFuture<>();
         final URI uri = URI.create(request.getUrl());
 
         final String host = uri.getHost();
@@ -76,14 +78,14 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
     }
 
     private static void handleResponse(final io.vertx.core.http.HttpClientResponse resp,
-                                       final CompletableFuture<HttpClientResponse> future) {
+                                       final CompletableFuture<Result<HttpErrorResponse, HttpClientResponse>> future) {
         resp.body()
                 .onSuccess(body -> {
                     final Map<String, String> headers = new LinkedHashMap<>();
                     for (final String name : resp.headers().names()) {
                         headers.put(name, resp.getHeader(name));
                     }
-                    future.complete(new HttpClientResponse(resp.statusCode(), body.toString(), headers));
+                    future.complete(Result.success(new HttpClientResponse(resp.statusCode(), body.toString(), headers)));
                 })
                 .onFailure(future::completeExceptionally);
     }

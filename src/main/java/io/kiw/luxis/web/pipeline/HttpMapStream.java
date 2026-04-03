@@ -2,7 +2,6 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpErrorResponse;
-import io.kiw.luxis.web.http.HttpErrorResponseException;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.MapInstruction;
@@ -12,7 +11,6 @@ import io.kiw.luxis.web.internal.ender.Ender;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 
 public class HttpMapStream<IN, APP> {
     protected final List<MapInstruction> instructionChain;
@@ -56,27 +54,19 @@ public class HttpMapStream<IN, APP> {
 
     public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncMapper<IN, OUT, APP> handler, final AsyncMapConfig config) {
         final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
-            final CompletableFuture<OUT> resultFuture = new CompletableFuture<>();
+            final CompletableFuture<Result<HttpErrorResponse, OUT>> resultFuture = new CompletableFuture<>();
             pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
                 resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
             });
             final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
-            luxisAsync.toCompletableFuture().whenComplete((value, throwable) -> {
+            luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
                 if (throwable != null) {
                     resultFuture.completeExceptionally(throwable);
                 } else {
-                    resultFuture.complete(value);
+                    resultFuture.complete(result);
                 }
             });
-            return resultFuture
-                    .thenApply(Result::<HttpErrorResponse, OUT>success)
-                    .exceptionally(throwable -> {
-                        final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
-                        if (cause instanceof HttpErrorResponseException hre) {
-                            return Result.error(hre.getErrorResponse());
-                        }
-                        throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
-                    });
+            return resultFuture;
         };
         instructionChain.add(new MapInstruction<>(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
@@ -88,27 +78,19 @@ public class HttpMapStream<IN, APP> {
 
     public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingMapper<IN, OUT> handler, final AsyncMapConfig config) {
         final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
-            final CompletableFuture<OUT> resultFuture = new CompletableFuture<>();
+            final CompletableFuture<Result<HttpErrorResponse, OUT>> resultFuture = new CompletableFuture<>();
             pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
                 resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
             });
             final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
-            luxisAsync.toCompletableFuture().whenComplete((value, throwable) -> {
+            luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
                 if (throwable != null) {
                     resultFuture.completeExceptionally(throwable);
                 } else {
-                    resultFuture.complete(value);
+                    resultFuture.complete(result);
                 }
             });
-            return resultFuture
-                    .thenApply(Result::<HttpErrorResponse, OUT>success)
-                    .exceptionally(throwable -> {
-                        final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
-                        if (cause instanceof HttpErrorResponseException hre) {
-                            return Result.error(hre.getErrorResponse());
-                        }
-                        throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
-                    });
+            return resultFuture;
         };
         instructionChain.add(new MapInstruction<>(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);

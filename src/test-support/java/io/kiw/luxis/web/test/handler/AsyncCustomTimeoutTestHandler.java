@@ -1,6 +1,8 @@
 package io.kiw.luxis.web.test.handler;
 
+import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.handler.JsonHandler;
+import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.RequestPipeline;
@@ -28,7 +30,7 @@ public class AsyncCustomTimeoutTestHandler extends JsonHandler<AsyncMapRequest, 
                 .<Integer>asyncMap(ctx -> {
                     // Deliberately do NOT complete — simulates missing response
                     onRegistered.run();
-                    return new LuxisAsync<>(new CompletableFuture<>());
+                    return new LuxisAsync<>(new CompletableFuture<Result<HttpErrorResponse, Integer>>());
                 }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())
                 .map(ctx -> new AsyncMapResponse(ctx.in()))
                 .complete(ctx -> HttpResult.success(ctx.in()));
