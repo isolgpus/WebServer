@@ -16,16 +16,16 @@ public class FailingTestHandler extends JsonHandler<BlockingRequest, BlockingTes
     @Override
     public RequestPipeline<BlockingTestResponse> handle(final HttpStream<BlockingRequest, MyApplicationState> httpStream) {
         return
-            httpStream
-                .map(ctx -> ctx.in().numberToMultiply)
-                .flatMap(ctx -> {
-                    if (2 * 2 == 4) {
-                        return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("intentionally failed"));
-                    } else {
-                        return success(4);
-                    }
-                })
-                // should never reach this
-                .complete(ctx -> success(new BlockingTestResponse(ctx.in())));
+                httpStream
+                        .map(ctx -> ctx.in().numberToMultiply)
+                        .flatMap(ctx -> {
+                            if (2 * 2 == 4) {
+                                return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("intentionally failed"));
+                            } else {
+                                return success(4);
+                            }
+                        })
+                        // should never reach this
+                        .complete(ctx -> success(new BlockingTestResponse(ctx.in())));
     }
 }

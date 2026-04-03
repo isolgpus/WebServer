@@ -2,8 +2,25 @@ package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.http.HttpCookie;
 import io.kiw.luxis.web.http.Method;
-import io.kiw.luxis.web.test.*;
-import io.kiw.luxis.web.test.handler.*;
+import io.kiw.luxis.web.test.StubRequest;
+import io.kiw.luxis.web.test.TestClient;
+import io.kiw.luxis.web.test.TestFilter;
+import io.kiw.luxis.web.test.TestHelper;
+import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.test.handler.BlockingCompleteTestHandler;
+import io.kiw.luxis.web.test.handler.BlockingFlatMapFailHandler;
+import io.kiw.luxis.web.test.handler.BlockingTestHandler;
+import io.kiw.luxis.web.test.handler.ErrorFilter;
+import io.kiw.luxis.web.test.handler.FailingTestHandler;
+import io.kiw.luxis.web.test.handler.FileDownloaderHandler;
+import io.kiw.luxis.web.test.handler.FileUploaderHandler;
+import io.kiw.luxis.web.test.handler.GetEchoHandler;
+import io.kiw.luxis.web.test.handler.GetTestFilterHandler;
+import io.kiw.luxis.web.test.handler.PostEchoHandler;
+import io.kiw.luxis.web.test.handler.StateTestHandler;
+import io.kiw.luxis.web.test.handler.TestFilterHandler;
+import io.kiw.luxis.web.test.handler.ThrowTestHandler;
+import io.kiw.luxis.web.test.handler.ValidationTestHandler;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -13,7 +30,9 @@ import org.junit.runners.Parameterized;
 
 import java.util.Collection;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -143,10 +162,10 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.put(
-            StubRequest.request("/echo")
-                .body("{}")
-                .queryParam("queryExample", "hi")
-                .headerParam("requestHeaderExample", "test"));
+                StubRequest.request("/echo")
+                        .body("{}")
+                        .queryParam("queryExample", "hi")
+                        .headerParam("requestHeaderExample", "test"));
 
         final String expectedResponse = json()
                 .put("intExample", 0)
@@ -158,8 +177,8 @@ public class JsonHttpInfrastructureTest {
                 .toString();
 
         Assert.assertEquals(
-            TestHttpResponse.response(expectedResponse),
-            response);
+                TestHttpResponse.response(expectedResponse),
+                response);
     }
 
     @Test
@@ -170,10 +189,10 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.delete(
-            StubRequest.request("/echo")
-                .body("{}")
-                .queryParam("queryExample", "hi")
-                .headerParam("requestHeaderExample", "test"));
+                StubRequest.request("/echo")
+                        .body("{}")
+                        .queryParam("queryExample", "hi")
+                        .headerParam("requestHeaderExample", "test"));
 
         final String expectedResponse = json()
                 .put("intExample", 0)
@@ -185,8 +204,8 @@ public class JsonHttpInfrastructureTest {
                 .toString();
 
         Assert.assertEquals(
-            TestHttpResponse.response(expectedResponse),
-            response);
+                TestHttpResponse.response(expectedResponse),
+                response);
     }
 
     @Test
@@ -197,10 +216,10 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.patch(
-            StubRequest.request("/echo")
-                .body("{}")
-                .queryParam("queryExample", "hi")
-                .headerParam("requestHeaderExample", "test"));
+                StubRequest.request("/echo")
+                        .body("{}")
+                        .queryParam("queryExample", "hi")
+                        .headerParam("requestHeaderExample", "test"));
 
         final String expectedResponse = json()
                 .put("intExample", 0)
@@ -212,8 +231,8 @@ public class JsonHttpInfrastructureTest {
                 .toString();
 
         Assert.assertEquals(
-            TestHttpResponse.response(expectedResponse),
-            response);
+                TestHttpResponse.response(expectedResponse),
+                response);
     }
 
     @Test
@@ -224,9 +243,9 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.get(
-            StubRequest.request("/echo")
-                .queryParam("queryExample", null)
-                .headerParam("requestHeaderExample", "test"));
+                StubRequest.request("/echo")
+                        .queryParam("queryExample", null)
+                        .headerParam("requestHeaderExample", "test"));
 
         final String expectedResponse = json()
                 .put("intExample", 188)
@@ -284,7 +303,7 @@ public class JsonHttpInfrastructureTest {
 
         TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/echo")
-                .body(requestBody));
+                        .body(requestBody));
 
         final String expectedResponse = json()
                 .put("intExample", 17)
@@ -401,8 +420,8 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/blocking")
-                .body(json().put("numberToMultiply", 22).toString()));
+                StubRequest.request("/blocking")
+                        .body(json().put("numberToMultiply", 22).toString()));
 
         Assert.assertEquals(TestHttpResponse.response(json().put("multipliedNumber", 44).toString()), response);
     }
@@ -429,8 +448,8 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/failing")
-                .body(json().put("numberToMultiply", 22).toString()));
+                StubRequest.request("/failing")
+                        .body(json().put("numberToMultiply", 22).toString()));
 
         Assert.assertEquals(TestHttpResponse.response(json()
                 .put("message", "intentionally failed")
@@ -449,27 +468,27 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         String requestBody = json()
-            .put("intExample", 42)
-            .put("stringExample", "through filter")
-            .toString();
+                .put("intExample", 42)
+                .put("stringExample", "through filter")
+                .toString();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/root/filter/echo").body(requestBody));
+                StubRequest.request("/root/filter/echo").body(requestBody));
 
         String expectedResponse = json()
-            .put("intExample", 42)
-            .put("stringExample", "through filter")
-            .putNull("pathExample")
-            .putNull("queryExample")
-            .putNull("requestHeaderExample")
-            .putNull("requestCookieExample")
-            .toString();
+                .put("intExample", 42)
+                .put("stringExample", "through filter")
+                .putNull("pathExample")
+                .putNull("queryExample")
+                .putNull("requestHeaderExample")
+                .putNull("requestCookieExample")
+                .toString();
 
         Assert.assertEquals(
-            TestHttpResponse.response(expectedResponse)
-                .withCookie(new HttpCookie("rootFilter", "hitfilter"))
-                .withCookie(new HttpCookie("pathFilter", "hitfilter")),
-            response);
+                TestHttpResponse.response(expectedResponse)
+                        .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+                        .withCookie(new HttpCookie("pathFilter", "hitfilter")),
+                response);
     }
 
     @Test
@@ -482,14 +501,14 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/root/filter/test")
-                .body(json().toString()));
+                StubRequest.request("/root/filter/test")
+                        .body(json().toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
-            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
-            response
+                TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
+                        .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+                        .withCookie(new HttpCookie("pathFilter", "hitfilter")),
+                response
         );
     }
 
@@ -503,13 +522,13 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.get(
-            StubRequest.request("/root/filter/test"));
+                StubRequest.request("/root/filter/test"));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
-            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
-            response
+                TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
+                        .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+                        .withCookie(new HttpCookie("pathFilter", "hitfilter")),
+                response
         );
     }
 
@@ -523,14 +542,14 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.put(
-            StubRequest.request("/root/filter/test")
-                .body(json().toString()));
+                StubRequest.request("/root/filter/test")
+                        .body(json().toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
-            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
-            response
+                TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
+                        .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+                        .withCookie(new HttpCookie("pathFilter", "hitfilter")),
+                response
         );
     }
 
@@ -544,14 +563,14 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.delete(
-            StubRequest.request("/root/filter/test")
-                .body(json().toString()));
+                StubRequest.request("/root/filter/test")
+                        .body(json().toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
-            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
-            response
+                TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
+                        .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+                        .withCookie(new HttpCookie("pathFilter", "hitfilter")),
+                response
         );
     }
 
@@ -565,14 +584,14 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.patch(
-            StubRequest.request("/root/filter/test")
-                .body(json().toString()));
+                StubRequest.request("/root/filter/test")
+                        .body(json().toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
-            .withCookie(new HttpCookie("rootFilter", "hitfilter"))
-            .withCookie(new HttpCookie("pathFilter", "hitfilter")),
-            response
+                TestHttpResponse.response(json().put("filterMessage", "hit handler").toString())
+                        .withCookie(new HttpCookie("rootFilter", "hitfilter"))
+                        .withCookie(new HttpCookie("pathFilter", "hitfilter")),
+                response
         );
     }
 
@@ -584,15 +603,15 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/throw")
-                .body("<not json at all>"));
+                StubRequest.request("/throw")
+                        .body("<not json at all>"));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Invalid json request")
-                .set("errors", json())
-                .toString()).withStatusCode(400),
-            response
+                TestHttpResponse.response(json()
+                        .put("message", "Invalid json request")
+                        .set("errors", json())
+                        .toString()).withStatusCode(400),
+                response
         );
     }
 
@@ -604,12 +623,12 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/throw")
-                .body(json().put("where", "complete").toString()));
+                StubRequest.request("/throw")
+                        .body(json().put("where", "complete").toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
-            response
+                TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
+                response
         );
 
         luxisTestClient.assertException("app error in complete");
@@ -623,12 +642,12 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/throw")
-                .body(json().put("where", "map").toString()));
+                StubRequest.request("/throw")
+                        .body(json().put("where", "map").toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
-            response
+                TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
+                response
         );
 
         luxisTestClient.assertException("app error in map");
@@ -642,12 +661,12 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/throw")
-                .body(json().put("where", "blocking").toString()));
+                StubRequest.request("/throw")
+                        .body(json().put("where", "blocking").toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
-            response
+                TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
+                response
         );
 
         luxisTestClient.assertException("app error in blocking");
@@ -661,15 +680,15 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/upload")
-                .fileUpload("file1", "some bytes")
-                .fileUpload("file2", "even more bytes"));
+                StubRequest.request("/upload")
+                        .fileUpload("file1", "some bytes")
+                        .fileUpload("file2", "even more bytes"));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json()
-                .set("results", json().put("file1", 10).put("file2", 15))
-                .toString()),
-            response
+                TestHttpResponse.response(json()
+                        .set("results", json().put("file1", 10).put("file2", 15))
+                        .toString()),
+                response
         );
     }
 
@@ -683,10 +702,10 @@ public class JsonHttpInfrastructureTest {
         TestHttpResponse response = luxisTestClient.get(StubRequest.request("/download"));
 
         Assert.assertEquals(
-            TestHttpResponse.response(TestHelper.file("file contents"), "text/html; charset=utf-8")
-                .withHeader("Transfer-Encoding", "chunked")
-                .withHeader("Content-Disposition", "data.txt"),
-            response
+                TestHttpResponse.response(TestHelper.file("file contents"), "text/html; charset=utf-8")
+                        .withHeader("Transfer-Encoding", "chunked")
+                        .withHeader("Content-Disposition", "data.txt"),
+                response
         );
     }
 
@@ -724,25 +743,25 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
-            .put("name", "Alice")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .put("name", "Alice")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/validate/42")
-                .body(body)
-                .queryParam("page", "1"));
+                StubRequest.request("/validate/42")
+                        .body(body)
+                        .queryParam("page", "1"));
 
         String expected = json()
-            .put("name", "Alice")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .put("city", "NYC")
-            .put("page", "1")
-            .put("userId", "42")
-            .toString();
+                .put("name", "Alice")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .put("city", "NYC")
+                .put("page", "1")
+                .put("userId", "42")
+                .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expected), response);
     }
@@ -755,22 +774,22 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
-            .putNull("name")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .putNull("name")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/validate/42")
-                .body(body)
-                .queryParam("page", "1"));
+                StubRequest.request("/validate/42")
+                        .body(body)
+                        .queryParam("page", "1"));
 
         String expected = json()
-            .put("message", "Validation failed")
-            .set("errors", json()
-                .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
-            .toString();
+                .put("message", "Validation failed")
+                .set("errors", json()
+                        .set("name", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
+                .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expected).withStatusCode(422), response);
     }
@@ -783,22 +802,22 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
-            .put("name", "Alice")
-            .put("email", "not-an-email")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .put("name", "Alice")
+                .put("email", "not-an-email")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/validate/42")
-                .body(body)
-                .queryParam("page", "1"));
+                StubRequest.request("/validate/42")
+                        .body(body)
+                        .queryParam("page", "1"));
 
         String expected = json()
-            .put("message", "Validation failed")
-            .set("errors", json()
-                .set("email", TestHelper.MAPPER.createArrayNode().add("must be a valid email address")))
-            .toString();
+                .put("message", "Validation failed")
+                .set("errors", json()
+                        .set("email", TestHelper.MAPPER.createArrayNode().add("must be a valid email address")))
+                .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expected).withStatusCode(422), response);
     }
@@ -811,22 +830,22 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
-            .put("name", "Alice")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "bad"))
-            .toString();
+                .put("name", "Alice")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "bad"))
+                .toString();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/validate/42")
-                .body(body)
-                .queryParam("page", "1"));
+                StubRequest.request("/validate/42")
+                        .body(body)
+                        .queryParam("page", "1"));
 
         String expected = json()
-            .put("message", "Validation failed")
-            .set("errors", json()
-                .set("address.zip", TestHelper.MAPPER.createArrayNode().add("must match pattern: [0-9]{5}")))
-            .toString();
+                .put("message", "Validation failed")
+                .set("errors", json()
+                        .set("address.zip", TestHelper.MAPPER.createArrayNode().add("must match pattern: [0-9]{5}")))
+                .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expected).withStatusCode(422), response);
     }
@@ -839,20 +858,20 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
-            .put("name", "Alice")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .put("name", "Alice")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/validate/42").body(body));
+                StubRequest.request("/validate/42").body(body));
 
         String expected = json()
-            .put("message", "Validation failed")
-            .set("errors", json()
-                .set("page", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
-            .toString();
+                .put("message", "Validation failed")
+                .set("errors", json()
+                        .set("page", TestHelper.MAPPER.createArrayNode().add("must not be blank")))
+                .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expected).withStatusCode(422), response);
     }
@@ -880,11 +899,11 @@ public class JsonHttpInfrastructureTest {
         TestHttpResponse response = luxisTestClient.get(StubRequest.request("/protected/resource"));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "filter blocked")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response
+                TestHttpResponse.response(json()
+                        .put("message", "filter blocked")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response
         );
     }
 
@@ -896,14 +915,14 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/blockingFailing").body(json().put("numberToMultiply", 5).toString()));
+                StubRequest.request("/blockingFailing").body(json().put("numberToMultiply", 5).toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "blocking flat map failed")
-                .set("errors", json())
-                .toString()).withStatusCode(400),
-            response
+                TestHttpResponse.response(json()
+                        .put("message", "blocking flat map failed")
+                        .set("errors", json())
+                        .toString()).withStatusCode(400),
+                response
         );
     }
 
@@ -915,22 +934,22 @@ public class JsonHttpInfrastructureTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         String body = json()
-            .put("name", "Alice")
-            .put("email", "alice@example.com")
-            .put("age", 25)
-            .set("address", json().put("city", "NYC").put("zip", "10001"))
-            .toString();
+                .put("name", "Alice")
+                .put("email", "alice@example.com")
+                .put("age", 25)
+                .set("address", json().put("city", "NYC").put("zip", "10001"))
+                .toString();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/validate/not-a-number")
-                .body(body)
-                .queryParam("page", "1"));
+                StubRequest.request("/validate/not-a-number")
+                        .body(body)
+                        .queryParam("page", "1"));
 
         String expected = json()
-            .put("message", "Validation failed")
-            .set("errors", json()
-                .set("userId", TestHelper.MAPPER.createArrayNode().add("must match pattern: [0-9]+")))
-            .toString();
+                .put("message", "Validation failed")
+                .set("errors", json()
+                        .set("userId", TestHelper.MAPPER.createArrayNode().add("must match pattern: [0-9]+")))
+                .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expected).withStatusCode(422), response);
     }

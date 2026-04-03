@@ -27,7 +27,7 @@ public class TestHttpResponse {
 
     public static TestHttpResponse response(final String expectedResponseBody, final String contentType) {
         return new TestHttpResponse(expectedResponseBody)
-            .withHeader("Content-Type", contentType);
+                .withHeader("Content-Type", contentType);
     }
 
 

@@ -8,7 +8,8 @@ import tools.jackson.databind.json.JsonMapper;
 
 public final class JacksonUtil {
 
-    private JacksonUtil() { }
+    private JacksonUtil() {
+    }
 
     public static ObjectMapper createMapper() {
         return JsonMapper.builder()

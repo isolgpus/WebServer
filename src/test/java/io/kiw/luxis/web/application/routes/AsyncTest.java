@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.application.routes;
 
+import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpResult;
@@ -7,16 +8,13 @@ import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
-import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.test.handler.AsyncBlockingMapTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncCustomTimeoutTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncMapTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncThrowTestHandler;
-import io.kiw.luxis.web.test.handler.AsyncTimeoutTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncWithHttpContextTestHandler;
 import org.junit.After;
 import org.junit.Assert;
-import org.junit.Assume;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -24,7 +22,10 @@ import org.junit.runners.Parameterized;
 
 import java.util.Collection;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.STUB_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -98,7 +99,7 @@ public class AsyncTest {
 
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/async", Method.POST, state,
-                handler);
+                    handler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
         handler.evillyReferenceLuxis(testClientAndServer.luxis());
@@ -121,11 +122,11 @@ public class AsyncTest {
         TestClient luxisTestClient = testClientAndServer.client();
 
         TestHttpResponse response = luxisTestClient.post(
-            StubRequest.request("/async").body(json().put("value", 42).toString()));
+                StubRequest.request("/async").body(json().put("value", 42).toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("result", 420).toString()).withStatusCode(200),
-            response);
+                TestHttpResponse.response(json().put("result", 420).toString()).withStatusCode(200),
+                response);
     }
 
 
@@ -169,7 +170,7 @@ public class AsyncTest {
         AsyncMapTestHandler handler = new AsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("not found")));
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/async", Method.POST, state,
-                handler);
+                    handler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
         handler.evillyReferenceLuxis(testClientAndServer.luxis());

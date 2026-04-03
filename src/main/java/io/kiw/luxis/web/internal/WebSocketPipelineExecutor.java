@@ -25,14 +25,16 @@ public class WebSocketPipelineExecutor {
     private final ExecutionDispatcher executionDispatcher;
     private final WebSocketRouteConfig config;
     private final Map<Class<?>, String> responseTypeRegistry;
+    private final PendingAsyncResponses pendingAsyncResponses;
 
-    public WebSocketPipelineExecutor(final ObjectMapper objectMapper, final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final Map<Class<?>, String> responseTypeRegistry) {
+    public WebSocketPipelineExecutor(final ObjectMapper objectMapper, final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final Map<Class<?>, String> responseTypeRegistry, final PendingAsyncResponses pendingAsyncResponses) {
         this.objectMapper = objectMapper;
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
         this.executionDispatcher = executionDispatcher;
         this.config = config;
         this.responseTypeRegistry = responseTypeRegistry;
+        this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
     @SuppressWarnings("unchecked")
@@ -62,7 +64,7 @@ public class WebSocketPipelineExecutor {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future;
             try {
-                future = instruction.handleAsync(message, session, (APP) appState);
+                future = instruction.handleAsync(message, session, (APP) appState, pendingAsyncResponses);
             } catch (final Exception e) {
                 exceptionHandler.accept(e);
                 return;

@@ -56,6 +56,7 @@ public class PendingAsyncResponses {
         exceptionHandler.accept(e);
     }
 
-    private record PendingEntry(CompletableFuture<Result<HttpErrorResponse, ?>> future, TimeoutScheduler.Cancellable cancellable) {
+    private record PendingEntry(CompletableFuture<Result<HttpErrorResponse, ?>> future,
+                                TimeoutScheduler.Cancellable cancellable) {
     }
 }

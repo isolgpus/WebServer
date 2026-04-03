@@ -1,8 +1,8 @@
 package io.kiw.luxis.web.handler;
 
-import tools.jackson.core.type.TypeReference;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
+import tools.jackson.core.type.TypeReference;
 
 public abstract class JsonHandler<IN, OUT, APP> extends TypeReference<IN> {
 

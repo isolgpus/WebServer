@@ -12,7 +12,7 @@ public class SimpleMultiplyHandler extends JsonHandler<SimpleValueRequest, Simpl
     @Override
     public RequestPipeline<SimpleValueResponse> handle(final HttpStream<SimpleValueRequest, MyApplicationState> httpStream) {
         return httpStream
-            .map(ctx -> ctx.in().value * 10)
-            .complete(ctx -> success(new SimpleValueResponse(ctx.in())));
+                .map(ctx -> ctx.in().value * 10)
+                .complete(ctx -> success(new SimpleValueResponse(ctx.in())));
     }
 }

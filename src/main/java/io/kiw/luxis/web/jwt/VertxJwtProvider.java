@@ -28,8 +28,8 @@ public class VertxJwtProvider implements JwtProvider {
     public VertxJwtProvider(final Vertx vertx, final String secret, final String algorithm) {
         final JWTAuthOptions config = new JWTAuthOptions()
                 .addPubSecKey(new PubSecKeyOptions()
-                .setAlgorithm(algorithm)
-                .setBuffer(secret));
+                        .setAlgorithm(algorithm)
+                        .setBuffer(secret));
         this.jwtAuth = JWTAuth.create(vertx, config);
     }
 

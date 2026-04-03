@@ -1,13 +1,11 @@
 package io.kiw.luxis.web.application.routes;
 
-import io.kiw.luxis.web.handler.VertxJsonFilter;
 import io.kiw.luxis.web.http.HttpCookie;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
-import io.kiw.luxis.web.test.TestFilter;
 import io.kiw.luxis.web.test.handler.GetTestFilterHandler;
 import io.kiw.luxis.web.test.handler.PostEchoHandler;
 import io.kiw.luxis.web.test.handler.TestFilterHandler;
@@ -23,7 +21,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -124,7 +124,7 @@ public class FilterOrderTest {
         TestClient client = testClientAndServer.client();
 
         client.post(StubRequest.request("/api/echo")
-            .body(json().put("intExample", 1).put("stringExample", "test").toString()));
+                .body(json().put("intExample", 1).put("stringExample", "test").toString()));
 
         Assert.assertEquals(Arrays.asList("api"), executionOrder);
     }

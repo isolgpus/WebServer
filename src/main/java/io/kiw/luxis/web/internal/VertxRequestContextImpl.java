@@ -112,15 +112,15 @@ public class VertxRequestContextImpl implements RequestContext {
     @Override
     public Map<String, HttpBuffer> resolveUploadedFiles() {
         return this.ctx.fileUploads().stream()
-            .collect(Collectors.toMap(
-                FileUpload::fileName,
-                a -> new HttpBuffer(ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName()).getBytes()),
-                new BinaryOperator<HttpBuffer>() {
-                    @Override
-                    public HttpBuffer apply(final HttpBuffer a, final HttpBuffer b) {
-                        return a;
-                    }
-                },
-                LinkedHashMap::new));
+                .collect(Collectors.toMap(
+                        FileUpload::fileName,
+                        a -> new HttpBuffer(ctx.vertx().fileSystem().readFileBlocking(a.uploadedFileName()).getBytes()),
+                        new BinaryOperator<HttpBuffer>() {
+                            @Override
+                            public HttpBuffer apply(final HttpBuffer a, final HttpBuffer b) {
+                                return a;
+                            }
+                        },
+                        LinkedHashMap::new));
     }
 }

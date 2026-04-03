@@ -11,7 +11,10 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class ValidatorTest {
 
@@ -272,7 +275,7 @@ public class ValidatorTest {
     @Test
     public void shouldFailQueryParamValidationWhenMissing() {
         HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
-            Collections.emptyMap(), Collections.emptyMap());
+                Collections.emptyMap(), Collections.emptyMap());
         v.queryParam("page").required();
         assertError(v, "page", "must not be blank");
     }
@@ -280,7 +283,7 @@ public class ValidatorTest {
     @Test
     public void shouldFailQueryParamValidationOnPatternMismatch() {
         HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
-            Map.of("page", "abc"), Collections.emptyMap());
+                Map.of("page", "abc"), Collections.emptyMap());
         v.queryParam("page").matches("[0-9]+");
         assertError(v, "page", "must match pattern: [0-9]+");
     }
@@ -288,7 +291,7 @@ public class ValidatorTest {
     @Test
     public void shouldPassQueryParamValidationWhenValid() {
         HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
-            Map.of("page", "5"), Collections.emptyMap());
+                Map.of("page", "5"), Collections.emptyMap());
         v.queryParam("page").required().matches("[0-9]+");
         assertNoErrors(v);
     }
@@ -298,7 +301,7 @@ public class ValidatorTest {
     @Test
     public void shouldFailPathParamValidationWhenMissing() {
         HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
-            Collections.emptyMap(), Collections.emptyMap());
+                Collections.emptyMap(), Collections.emptyMap());
         v.pathParam("userId").required();
         assertError(v, "userId", "must not be blank");
     }
@@ -306,7 +309,7 @@ public class ValidatorTest {
     @Test
     public void shouldPassPathParamValidationWhenPresent() {
         HttpValidator<Body> v = validatorWithHttp(new Body(null, null, null, null),
-            Collections.emptyMap(), Map.of("userId", "42"));
+                Collections.emptyMap(), Map.of("userId", "42"));
         v.pathParam("userId").required().matches("[0-9]+");
         assertNoErrors(v);
     }
@@ -320,7 +323,8 @@ public class ValidatorTest {
         v.field("name", r -> r.name).required();
         Result<HttpErrorResponse, Body> result = v.toResult();
         boolean[] isSuccess = {false};
-        result.consume(err -> {}, val -> isSuccess[0] = true);
+        result.consume(err -> {
+        }, val -> isSuccess[0] = true);
         assertTrue(isSuccess[0]);
     }
 
@@ -334,7 +338,8 @@ public class ValidatorTest {
         result.consume(err -> {
             isError[0] = true;
             statusCode[0] = err.statusCode();
-        }, val -> {});
+        }, val -> {
+        });
         assertTrue(isError[0]);
         assertEquals(422, statusCode[0]);
     }
@@ -368,10 +373,10 @@ public class ValidatorTest {
         List<Address> list = Arrays.asList(new Address(null, "12345"));
         Validator<Body> v = validator(new Body(null, null, null, null, list));
         v.listField("addresses", r -> r.addresses)
-            .each(a -> {
-                a.field("city", x -> x.city).required();
-                a.field("zip", x -> x.zip).required().matches("[0-9]{5}");
-            });
+                .each(a -> {
+                    a.field("city", x -> x.city).required();
+                    a.field("zip", x -> x.zip).required().matches("[0-9]{5}");
+                });
         assertError(v, "addresses[0].city", "must not be blank");
         assertNoErrors_forField(v, "addresses[0].zip");
     }
@@ -380,7 +385,7 @@ public class ValidatorTest {
     public void shouldSkipListFieldEachValidationWhenNull() {
         Validator<Body> v = validator(new Body(null, null, null, null));
         v.listField("addresses", r -> r.addresses)
-            .each(a -> a.field("city", x -> x.city).required());
+                .each(a -> a.field("city", x -> x.city).required());
         assertNoErrors(v);
     }
 
@@ -389,10 +394,10 @@ public class ValidatorTest {
         List<Address> list = Arrays.asList(new Address("NYC", "12345"), new Address("LA", "90001"));
         Validator<Body> v = validator(new Body(null, null, null, null, list));
         v.listField("addresses", r -> r.addresses)
-            .each(a -> {
-                a.field("city", x -> x.city).required();
-                a.field("zip", x -> x.zip).required().matches("[0-9]{5}");
-            });
+                .each(a -> {
+                    a.field("city", x -> x.city).required();
+                    a.field("zip", x -> x.zip).required().matches("[0-9]{5}");
+                });
         assertNoErrors(v);
     }
 

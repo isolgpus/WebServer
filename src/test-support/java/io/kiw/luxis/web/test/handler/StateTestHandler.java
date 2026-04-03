@@ -12,6 +12,6 @@ public class StateTestHandler extends JsonHandler<EmptyRequest, StateResponse, M
     @Override
     public RequestPipeline<StateResponse> handle(final HttpStream<EmptyRequest, MyApplicationState> e) {
         return e.complete(ctx ->
-            HttpResult.success(new StateResponse(ctx.app().getLongValue())));
+                HttpResult.success(new StateResponse(ctx.app().getLongValue())));
     }
 }

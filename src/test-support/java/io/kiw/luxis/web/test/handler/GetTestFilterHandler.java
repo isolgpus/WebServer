@@ -12,6 +12,6 @@ public class GetTestFilterHandler extends JsonHandler<EmptyRequest, TestFilterRe
     @Override
     public RequestPipeline<TestFilterResponse> handle(final HttpStream<EmptyRequest, MyApplicationState> e) {
         return e.complete(ctx ->
-            HttpResult.success(new TestFilterResponse("hit handler")));
+                HttpResult.success(new TestFilterResponse("hit handler")));
     }
 }

@@ -15,8 +15,8 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     private final Router router;
     private final int defaultTimeoutMillis;
 
-    public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler) {
-        super(exceptionHandler);
+    public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses) {
+        super(exceptionHandler, pendingAsyncResponses);
         this.router = router;
         this.defaultTimeoutMillis = defaultTimeoutMillis;
     }

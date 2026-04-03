@@ -1,10 +1,8 @@
 package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.RouteConfigBuilder;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-import io.kiw.luxis.web.internal.JacksonUtil;
 import io.kiw.luxis.web.http.Method;
+import io.kiw.luxis.web.internal.JacksonUtil;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
@@ -15,11 +13,18 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.Collection;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
-import static org.junit.Assert.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class OpenApiSpecTest {
@@ -95,10 +100,10 @@ public class OpenApiSpecTest {
     public void shouldConvertPathParamsToOpenApiFormat() throws Exception {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo/:pathExample", Method.GET, state, new GetEchoHandler(),
-                new RouteConfigBuilder()
-                    .openApi()
-                        .paramDescription("pathExample", "An example path param")
-                    .build()
+                    new RouteConfigBuilder()
+                            .openApi()
+                            .paramDescription("pathExample", "An example path param")
+                            .build()
             );
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -126,13 +131,13 @@ public class OpenApiSpecTest {
     public void shouldGenerateRequestBodySchemaFromInputType() throws Exception {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
-                new RouteConfigBuilder()
-                    .openApi()
-                        .summary("Echo the input")
-                        .description("Echoes back the provided values")
-                        .tag("echo")
-                        .responseDescription("The echoed response")
-                    .build()
+                    new RouteConfigBuilder()
+                            .openApi()
+                            .summary("Echo the input")
+                            .description("Echoes back the provided values")
+                            .tag("echo")
+                            .responseDescription("The echoed response")
+                            .build()
             );
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -158,10 +163,10 @@ public class OpenApiSpecTest {
     public void shouldGenerateResponseSchemaFromOutputType() throws Exception {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
-                new RouteConfigBuilder()
-                    .openApi()
-                        .summary("Echo the input")
-                    .build()
+                    new RouteConfigBuilder()
+                            .openApi()
+                            .summary("Echo the input")
+                            .build()
             );
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -200,13 +205,13 @@ public class OpenApiSpecTest {
     public void shouldApplyOpenApiMetadata() throws Exception {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
-                new RouteConfigBuilder()
-                    .openApi()
-                        .summary("Echo the input")
-                        .description("Echoes back the provided values")
-                        .tag("echo")
-                        .responseDescription("The echoed response")
-                    .build()
+                    new RouteConfigBuilder()
+                            .openApi()
+                            .summary("Echo the input")
+                            .description("Echoes back the provided values")
+                            .tag("echo")
+                            .responseDescription("The echoed response")
+                            .build()
             );
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -225,10 +230,10 @@ public class OpenApiSpecTest {
     public void shouldApplyParamDescriptions() throws Exception {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo/:pathExample", Method.GET, state, new GetEchoHandler(),
-                new RouteConfigBuilder()
-                    .openApi()
-                        .paramDescription("pathExample", "An example path param")
-                    .build()
+                    new RouteConfigBuilder()
+                            .openApi()
+                            .paramDescription("pathExample", "An example path param")
+                            .build()
             );
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -252,10 +257,10 @@ public class OpenApiSpecTest {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/openapi/hidden", Method.GET, state, new GetEchoHandler(),
-                new RouteConfigBuilder()
-                    .openApi()
-                        .hidden()
-                    .build()
+                    new RouteConfigBuilder()
+                            .openApi()
+                            .hidden()
+                            .build()
             );
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -288,10 +293,10 @@ public class OpenApiSpecTest {
     public void shouldMarkPrimitiveFieldsAsRequired() throws Exception {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
-                new RouteConfigBuilder()
-                    .openApi()
-                        .summary("Echo the input")
-                    .build()
+                    new RouteConfigBuilder()
+                            .openApi()
+                            .summary("Echo the input")
+                            .build()
             );
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -299,7 +304,7 @@ public class OpenApiSpecTest {
 
         JsonNode spec = getSpec(luxisTestClient);
         JsonNode schema = spec.get("paths").get("/openapi/echo").get("post")
-            .get("requestBody").get("content").get("application/json").get("schema");
+                .get("requestBody").get("content").get("application/json").get("schema");
 
         JsonNode required = schema.get("required");
         assertNotNull(required);
@@ -334,12 +339,12 @@ public class OpenApiSpecTest {
     public void shouldChainRouteConfigWithTimeoutAndOpenApi() throws Exception {
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/timeout", Method.POST, state, new PostEchoHandler(),
-                new RouteConfigBuilder()
-                    .timeout(5000)
-                    .openApi()
-                        .summary("Echo with timeout")
-                    .done()
-                    .build()
+                    new RouteConfigBuilder()
+                            .timeout(5000)
+                            .openApi()
+                            .summary("Echo with timeout")
+                            .done()
+                            .build()
             );
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });

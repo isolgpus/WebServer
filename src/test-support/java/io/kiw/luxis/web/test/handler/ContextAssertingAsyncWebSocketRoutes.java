@@ -29,7 +29,7 @@ public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyAppl
                                 })
                                 .<String>asyncMap(ctx -> {
                                     asserter.assertInApplicationContext();
-                                    final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
+                                    final CorrelatedAsync<String> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async"));
                                     return correlated.async();
                                 })
@@ -39,13 +39,13 @@ public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyAppl
                                 })
                                 .<String>asyncMap(ctx -> {
                                     asserter.assertInApplicationContext();
-                                    final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
+                                    final CorrelatedAsync<String> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async2"));
                                     return correlated.async();
                                 })
                                 .<String>asyncBlockingMap(ctx -> {
                                     asserter.assertInWorkerContext();
-                                    final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
+                                    final CorrelatedAsync<String> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async3"));
                                     return correlated.async();
                                 })

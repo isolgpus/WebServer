@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.test;
 
+import io.kiw.luxis.web.RouteConfigBuilder;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.RoutesRegister;
 import io.kiw.luxis.web.test.handler.BlockingCompleteTestHandler;
@@ -18,7 +19,6 @@ import io.kiw.luxis.web.test.handler.GetTestFilterHandler;
 import io.kiw.luxis.web.test.handler.JwtFilterProtectedHandler;
 import io.kiw.luxis.web.test.handler.JwtProtectedHandler;
 import io.kiw.luxis.web.test.handler.PostEchoHandler;
-import io.kiw.luxis.web.RouteConfigBuilder;
 import io.kiw.luxis.web.test.handler.StateTestHandler;
 import io.kiw.luxis.web.test.handler.StatefulWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.StatusCodeTestHandler;
@@ -30,7 +30,8 @@ import io.kiw.luxis.web.test.handler.ValidationTestHandler;
 import io.kiw.luxis.web.test.jwt.StubJwtProvider;
 
 public final class TestApplicationRoutes {
-    private TestApplicationRoutes() { }
+    private TestApplicationRoutes() {
+    }
 
     public static final String JWT_SECRET = "test-secret-key-for-unit-tests";
 
@@ -77,33 +78,33 @@ public final class TestApplicationRoutes {
         routesRegister.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
 
         routesRegister.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
-            new RouteConfigBuilder()
-                .openApi()
-                    .summary("Echo the input")
-                    .description("Echoes back the provided values")
-                    .tag("echo")
-                    .responseDescription("The echoed response")
-                .build()
+                new RouteConfigBuilder()
+                        .openApi()
+                        .summary("Echo the input")
+                        .description("Echoes back the provided values")
+                        .tag("echo")
+                        .responseDescription("The echoed response")
+                        .build()
         );
         routesRegister.jsonRoute("/openapi/echo/:pathExample", Method.GET, state, new GetEchoHandler(),
-            new RouteConfigBuilder()
-                .openApi()
-                    .paramDescription("pathExample", "An example path param")
-                .build()
+                new RouteConfigBuilder()
+                        .openApi()
+                        .paramDescription("pathExample", "An example path param")
+                        .build()
         );
         routesRegister.jsonRoute("/openapi/hidden", Method.GET, state, new GetEchoHandler(),
-            new RouteConfigBuilder()
-                .openApi()
-                    .hidden()
-                .build()
+                new RouteConfigBuilder()
+                        .openApi()
+                        .hidden()
+                        .build()
         );
         routesRegister.jsonRoute("/openapi/timeout", Method.POST, state, new PostEchoHandler(),
-            new RouteConfigBuilder()
-                .timeout(5000)
-                .openApi()
-                    .summary("Echo with timeout")
-                .done()
-                .build()
+                new RouteConfigBuilder()
+                        .timeout(5000)
+                        .openApi()
+                        .summary("Echo with timeout")
+                        .done()
+                        .build()
         );
         routesRegister.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
 

@@ -14,7 +14,9 @@ import org.junit.runners.Parameterized;
 
 import java.util.Collection;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -55,12 +57,12 @@ public class CustomStatusCodeTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
-            StubRequest.request("/statusCode")
-                .body(json().put("statusCode", "CREATED").put("value", "created").toString()));
+                StubRequest.request("/statusCode")
+                        .body(json().put("statusCode", "CREATED").put("value", "created").toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("value", "created").toString()).withStatusCode(201),
-            response);
+                TestHttpResponse.response(json().put("value", "created").toString()).withStatusCode(201),
+                response);
     }
 
     @Test
@@ -71,12 +73,12 @@ public class CustomStatusCodeTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
-            StubRequest.request("/statusCode")
-                .body(json().put("statusCode", "NO_CONTENT").put("value", "done").toString()));
+                StubRequest.request("/statusCode")
+                        .body(json().put("statusCode", "NO_CONTENT").put("value", "done").toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response("").withStatusCode(204),
-            response);
+                TestHttpResponse.response("").withStatusCode(204),
+                response);
     }
 
     @Test
@@ -87,11 +89,11 @@ public class CustomStatusCodeTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
-            StubRequest.request("/statusCode")
-                .body(json().put("statusCode", "OK").put("value", "ok").toString()));
+                StubRequest.request("/statusCode")
+                        .body(json().put("statusCode", "OK").put("value", "ok").toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json().put("value", "ok").toString()),
-            response);
+                TestHttpResponse.response(json().put("value", "ok").toString()),
+                response);
     }
 }

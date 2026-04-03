@@ -9,7 +9,8 @@ import java.util.function.Consumer;
 public class WebServiceConfigBuilder {
     private int port = 8080;
     private int defaultTimeoutMillis = 30_000;
-    private Consumer<Exception> exceptionHandler = (e) -> {};
+    private Consumer<Exception> exceptionHandler = (e) -> {
+    };
     private OptionalLong maxBodySize = OptionalLong.empty();
     private Optional<CorsConfig> corsConfig = Optional.empty();
 

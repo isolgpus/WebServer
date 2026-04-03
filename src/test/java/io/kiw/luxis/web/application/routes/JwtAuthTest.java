@@ -1,7 +1,11 @@
 package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.http.Method;
-import io.kiw.luxis.web.test.*;
+import io.kiw.luxis.web.test.JwtFilter;
+import io.kiw.luxis.web.test.StubRequest;
+import io.kiw.luxis.web.test.TestApplicationRoutes;
+import io.kiw.luxis.web.test.TestClient;
+import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.JwtFilterProtectedHandler;
 import io.kiw.luxis.web.test.handler.JwtProtectedHandler;
 import io.kiw.luxis.web.test.jwt.StubJwtProvider;
@@ -14,7 +18,9 @@ import org.junit.runners.Parameterized;
 import java.util.Collection;
 import java.util.Map;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 import static org.junit.Assert.assertEquals;
 
@@ -61,12 +67,12 @@ public class JwtAuthTest {
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/protected")
-                .headerParam("Authorization", "Bearer " + token));
+                StubRequest.request("/jwt/protected")
+                        .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
-            TestHttpResponse.response(json().put("subject", "user123").toString()),
-            response);
+                TestHttpResponse.response(json().put("subject", "user123").toString()),
+                response);
     }
 
     @Test
@@ -78,12 +84,12 @@ public class JwtAuthTest {
         String token = jwtProvider.generateToken(Map.of("sub", "user456", "role", "admin"));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/protected")
-                .headerParam("Authorization", "Bearer " + token));
+                StubRequest.request("/jwt/protected")
+                        .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
-            TestHttpResponse.response(json().put("subject", "user456").toString()),
-            response);
+                TestHttpResponse.response(json().put("subject", "user456").toString()),
+                response);
     }
 
     @Test
@@ -94,14 +100,14 @@ public class JwtAuthTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/protected"));
+                StubRequest.request("/jwt/protected"));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Missing or invalid Authorization header")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Missing or invalid Authorization header")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 
     @Test
@@ -112,15 +118,15 @@ public class JwtAuthTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/protected")
-                .headerParam("Authorization", "Bearer header.payload.badsignature"));
+                StubRequest.request("/jwt/protected")
+                        .headerParam("Authorization", "Bearer header.payload.badsignature"));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Invalid token signature")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Invalid token signature")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 
     @Test
@@ -133,15 +139,15 @@ public class JwtAuthTest {
         String token = otherProvider.generateToken(Map.of("sub", "attacker"));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/protected")
-                .headerParam("Authorization", "Bearer " + token));
+                StubRequest.request("/jwt/protected")
+                        .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Invalid token signature")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Invalid token signature")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 
     @Test
@@ -154,15 +160,15 @@ public class JwtAuthTest {
         String token = jwtProvider.generateToken(Map.of("sub", "user789", "exp", oneHourAgo));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/protected")
-                .headerParam("Authorization", "Bearer " + token));
+                StubRequest.request("/jwt/protected")
+                        .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Token has expired")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Token has expired")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 
     @Test
@@ -174,15 +180,15 @@ public class JwtAuthTest {
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/protected")
-                .headerParam("Authorization", "Basic " + token));
+                StubRequest.request("/jwt/protected")
+                        .headerParam("Authorization", "Basic " + token));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Missing or invalid Authorization header")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Missing or invalid Authorization header")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 
     @Test
@@ -195,12 +201,12 @@ public class JwtAuthTest {
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/filter/test")
-                .headerParam("Authorization", "Bearer " + token));
+                StubRequest.request("/jwt/filter/test")
+                        .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
-            TestHttpResponse.response(json().put("subject", "user123").toString()),
-            response);
+                TestHttpResponse.response(json().put("subject", "user123").toString()),
+                response);
     }
 
     @Test
@@ -213,12 +219,12 @@ public class JwtAuthTest {
         String token = jwtProvider.generateToken(Map.of("sub", "user456", "role", "admin"));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/filter/test")
-                .headerParam("Authorization", "Bearer " + token));
+                StubRequest.request("/jwt/filter/test")
+                        .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
-            TestHttpResponse.response(json().put("subject", "user456").toString()),
-            response);
+                TestHttpResponse.response(json().put("subject", "user456").toString()),
+                response);
     }
 
     @Test
@@ -230,14 +236,14 @@ public class JwtAuthTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/filter/test"));
+                StubRequest.request("/jwt/filter/test"));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Missing or invalid Authorization header")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Missing or invalid Authorization header")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 
     @Test
@@ -249,15 +255,15 @@ public class JwtAuthTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/filter/test")
-                .headerParam("Authorization", "Bearer header.payload.badsignature"));
+                StubRequest.request("/jwt/filter/test")
+                        .headerParam("Authorization", "Bearer header.payload.badsignature"));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Invalid token signature")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Invalid token signature")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 
     @Test
@@ -271,15 +277,15 @@ public class JwtAuthTest {
         String token = otherProvider.generateToken(Map.of("sub", "attacker"));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/filter/test")
-                .headerParam("Authorization", "Bearer " + token));
+                StubRequest.request("/jwt/filter/test")
+                        .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Invalid token signature")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Invalid token signature")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 
     @Test
@@ -293,15 +299,15 @@ public class JwtAuthTest {
         String token = jwtProvider.generateToken(Map.of("sub", "user789", "exp", oneHourAgo));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/filter/test")
-                .headerParam("Authorization", "Bearer " + token));
+                StubRequest.request("/jwt/filter/test")
+                        .headerParam("Authorization", "Bearer " + token));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Token has expired")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Token has expired")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 
     @Test
@@ -314,14 +320,14 @@ public class JwtAuthTest {
         String token = jwtProvider.generateToken(Map.of("sub", "user123"));
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/jwt/filter/test")
-                .headerParam("Authorization", "Basic " + token));
+                StubRequest.request("/jwt/filter/test")
+                        .headerParam("Authorization", "Basic " + token));
 
         assertEquals(
-            TestHttpResponse.response(json()
-                .put("message", "Missing or invalid Authorization header")
-                .set("errors", json())
-                .toString()).withStatusCode(401),
-            response);
+                TestHttpResponse.response(json()
+                        .put("message", "Missing or invalid Authorization header")
+                        .set("errors", json())
+                        .toString()).withStatusCode(401),
+                response);
     }
 }

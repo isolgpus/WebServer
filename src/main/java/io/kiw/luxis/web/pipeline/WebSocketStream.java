@@ -4,9 +4,9 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.HttpErrorResponseException;
 import io.kiw.luxis.web.http.client.LuxisAsync;
-import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.WebSocketMapInstruction;
+import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.validation.WebSocketValidator;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
@@ -87,16 +87,16 @@ public class WebSocketStream<IN, APP, RESP> {
                 }
             });
             return resultFuture
-                .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
-                .exceptionally(throwable -> {
-                    final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
-                    if (cause instanceof HttpErrorResponseException hre) {
-                        return Result.error(hre.getErrorResponse().errorMessageValue());
-                    }
-                    pendingAsyncResponses.reportException(
-                            cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
-                    return Result.error(new ErrorMessageResponse("Something went wrong"));
-                });
+                    .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
+                    .exceptionally(throwable -> {
+                        final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                        if (cause instanceof HttpErrorResponseException hre) {
+                            return Result.error(hre.getErrorResponse().errorMessageValue());
+                        }
+                        pendingAsyncResponses.reportException(
+                                cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
+                        return Result.error(new ErrorMessageResponse("Something went wrong"));
+                    });
         };
         final WebSocketMapInstruction<IN, OUT, APP, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
         if (!instructionChain.isEmpty()) {
@@ -125,16 +125,16 @@ public class WebSocketStream<IN, APP, RESP> {
                 }
             });
             return resultFuture
-                .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
-                .exceptionally(throwable -> {
-                    final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
-                    if (cause instanceof HttpErrorResponseException hre) {
-                        return Result.error(hre.getErrorResponse().errorMessageValue());
-                    }
-                    pendingAsyncResponses.reportException(
-                            cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
-                    return Result.error(new ErrorMessageResponse("Something went wrong"));
-                });
+                    .thenApply(value -> Result.<ErrorMessageResponse, OUT>success(value))
+                    .exceptionally(throwable -> {
+                        final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                        if (cause instanceof HttpErrorResponseException hre) {
+                            return Result.error(hre.getErrorResponse().errorMessageValue());
+                        }
+                        pendingAsyncResponses.reportException(
+                                cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
+                        return Result.error(new ErrorMessageResponse("Something went wrong"));
+                    });
         };
         final WebSocketMapInstruction<IN, OUT, Object, RESP> e = new WebSocketMapInstruction<>(wrapper, false);
         if (!instructionChain.isEmpty()) {

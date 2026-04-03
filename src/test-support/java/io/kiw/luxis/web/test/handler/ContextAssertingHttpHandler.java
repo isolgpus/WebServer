@@ -19,26 +19,26 @@ public class ContextAssertingHttpHandler extends JsonHandler<ContextRequest, Con
     @Override
     public RequestPipeline<ContextResponse> handle(final HttpStream<ContextRequest, MyApplicationState> httpStream) {
         return httpStream
-            .blockingMap(ctx -> {
-                asserter.assertInWorkerContext();
-                return ctx.in().message;
-            })
-            .flatMap(ctx -> {
-                asserter.assertInApplicationContext();
-                return success(ctx.in() + " flatMap");
-            })
-            .blockingFlatMap(ctx -> {
-                asserter.assertInWorkerContext();
-                return success(ctx.in() + " blockingFlatMap");
-            })
-            .map(ctx -> {
-                asserter.assertInApplicationContext();
-                return ctx.in() + " map";
-            })
-            .blockingMap(ctx -> {
-                asserter.assertInWorkerContext();
-                return ctx.in() + " blocking2";
-            })
-            .complete(ctx -> success(new ContextResponse(ctx.in())));
+                .blockingMap(ctx -> {
+                    asserter.assertInWorkerContext();
+                    return ctx.in().message;
+                })
+                .flatMap(ctx -> {
+                    asserter.assertInApplicationContext();
+                    return success(ctx.in() + " flatMap");
+                })
+                .blockingFlatMap(ctx -> {
+                    asserter.assertInWorkerContext();
+                    return success(ctx.in() + " blockingFlatMap");
+                })
+                .map(ctx -> {
+                    asserter.assertInApplicationContext();
+                    return ctx.in() + " map";
+                })
+                .blockingMap(ctx -> {
+                    asserter.assertInWorkerContext();
+                    return ctx.in() + " blocking2";
+                })
+                .complete(ctx -> success(new ContextResponse(ctx.in())));
     }
 }

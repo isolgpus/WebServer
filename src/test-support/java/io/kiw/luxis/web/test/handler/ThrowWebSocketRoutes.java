@@ -35,7 +35,7 @@ public class ThrowWebSocketRoutes extends WebSocketRoutes<MyApplicationState, Te
                                     if ("asyncMap".equals(ctx.in())) {
                                         throw new RuntimeException("app error in asyncMap");
                                     }
-                                    final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
+                                    final CorrelatedAsync<String> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in()));
                                     return correlated.async();
                                 })
@@ -43,7 +43,7 @@ public class ThrowWebSocketRoutes extends WebSocketRoutes<MyApplicationState, Te
                                     if ("asyncBlockingMap".equals(ctx.in())) {
                                         throw new RuntimeException("app error in asyncBlockingMap");
                                     }
-                                    final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
+                                    final CorrelatedAsync<String> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in()));
                                     return correlated.async();
                                 })

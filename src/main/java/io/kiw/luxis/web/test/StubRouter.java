@@ -1,12 +1,13 @@
 package io.kiw.luxis.web.test;
 
+import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.http.Method;
+import io.kiw.luxis.web.internal.HttpWebSocketRouteHandler;
 import io.kiw.luxis.web.internal.MapInstruction;
+import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.internal.RouterWrapper;
-import io.kiw.luxis.web.internal.HttpWebSocketRouteHandler;
-import io.kiw.luxis.web.RouteConfig;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -22,8 +23,8 @@ public class StubRouter extends RouterWrapper {
     private OptionalLong maxBodySize = OptionalLong.empty();
     private final List<WebSocketRouteEntry> webSocketRoutes = new ArrayList<>();
 
-    public StubRouter(final Consumer<Exception> exceptionHandler) {
-        super(exceptionHandler);
+    public StubRouter(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses) {
+        super(exceptionHandler, pendingAsyncResponses);
     }
 
     public void setMaxBodySize(final OptionalLong maxBodySize) {

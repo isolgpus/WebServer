@@ -26,8 +26,8 @@ public class RouteConfigBuilder {
 
     public RouteConfig build() {
         return new RouteConfig(
-            timeoutInMillis,
-            openApiBuilder != null ? Optional.of(openApiBuilder.buildMetadata()) : Optional.empty()
+                timeoutInMillis,
+                openApiBuilder != null ? Optional.of(openApiBuilder.buildMetadata()) : Optional.empty()
         );
     }
 }

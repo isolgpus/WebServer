@@ -38,11 +38,11 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
             final String token = authHeader.substring(7);
             final Result<String, JwtClaims> result = jwtProvider.validateToken(token);
             return result.fold(
-                error -> HttpResult.error(ErrorStatusCode.UNAUTHORIZED, new ErrorMessageResponse(error)),
-                claims -> {
-                    ctx.http().ctx.put("__jwt_claims__", claims);
-                    return HttpResult.success(ctx.in());
-                }
+                    error -> HttpResult.error(ErrorStatusCode.UNAUTHORIZED, new ErrorMessageResponse(error)),
+                    claims -> {
+                        ctx.http().ctx.put("__jwt_claims__", claims);
+                        return HttpResult.success(ctx.in());
+                    }
             );
         }, false));
         return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);

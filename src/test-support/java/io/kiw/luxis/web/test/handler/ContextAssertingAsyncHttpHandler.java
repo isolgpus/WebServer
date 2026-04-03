@@ -23,31 +23,31 @@ public class ContextAssertingAsyncHttpHandler extends JsonHandler<ContextRequest
     @Override
     public RequestPipeline<ContextResponse> handle(final HttpStream<ContextRequest, MyApplicationState> httpStream) {
         return httpStream
-            .map(ctx -> {
-                asserter.assertInApplicationContext();
-                return ctx.in().message;
-            })
-            .<String>asyncMap(ctx -> {
-                asserter.assertInApplicationContext();
-                final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
-                luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async"));
-                return correlated.async();
-            })
-            .blockingMap(ctx -> {
-                asserter.assertInWorkerContext();
-                return ctx.in() + " blocking";
-            })
-            .<String>asyncBlockingMap(ctx -> {
-                asserter.assertInWorkerContext();
-                final CorrelatedAsync<String> correlated = luxis.createCorrelatedAsync();
-                luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " asyncBlocking"));
-                return correlated.async();
-            })
-            .map(ctx -> {
-                asserter.assertInApplicationContext();
-                return new ContextResponse(ctx.in() + " map");
-            })
-            .complete(ctx -> success(ctx.in()));
+                .map(ctx -> {
+                    asserter.assertInApplicationContext();
+                    return ctx.in().message;
+                })
+                .<String>asyncMap(ctx -> {
+                    asserter.assertInApplicationContext();
+                    final CorrelatedAsync<String> correlated = ctx.correlated();
+                    luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async"));
+                    return correlated.async();
+                })
+                .blockingMap(ctx -> {
+                    asserter.assertInWorkerContext();
+                    return ctx.in() + " blocking";
+                })
+                .<String>asyncBlockingMap(ctx -> {
+                    asserter.assertInWorkerContext();
+                    final CorrelatedAsync<String> correlated = ctx.correlated();
+                    luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " asyncBlocking"));
+                    return correlated.async();
+                })
+                .map(ctx -> {
+                    asserter.assertInApplicationContext();
+                    return new ContextResponse(ctx.in() + " map");
+                })
+                .complete(ctx -> success(ctx.in()));
     }
 
     public void evillyReferenceLuxis(Luxis<?> luxis) {

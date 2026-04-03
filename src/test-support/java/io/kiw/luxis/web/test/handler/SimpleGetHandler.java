@@ -19,6 +19,6 @@ public class SimpleGetHandler extends JsonHandler<EmptyRequest, SimpleValueRespo
     @Override
     public RequestPipeline<SimpleValueResponse> handle(final HttpStream<EmptyRequest, MyApplicationState> httpStream) {
         return httpStream
-            .complete(ctx -> success(new SimpleValueResponse(valueToReturn)));
+                .complete(ctx -> success(new SimpleValueResponse(valueToReturn)));
     }
 }

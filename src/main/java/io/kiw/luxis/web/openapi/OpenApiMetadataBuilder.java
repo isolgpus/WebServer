@@ -61,6 +61,6 @@ public class OpenApiMetadataBuilder {
 
     public OpenApiMetadata buildMetadata() {
         return new OpenApiMetadata(summary, description, tags, parameterDescriptions,
-            responseDescription, hidden);
+                responseDescription, hidden);
     }
 }

@@ -18,7 +18,9 @@ import org.junit.runners.Parameterized;
 
 import java.util.Collection;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
@@ -44,17 +46,17 @@ public class CorsTest {
             assumeRealModeEnabled();
         }
         defaultCorsConfig = new CorsConfigBuilder()
-            .allowOrigin("http://allowed.example.com")
-            .allowOrigin("http://another.example.com")
-            .allowMethod("GET")
-            .allowMethod("POST")
-            .allowMethod("PUT")
-            .allowHeader("Content-Type")
-            .allowHeader("Authorization")
-            .exposeHeader("X-Custom-Header")
-            .allowCredentials(true)
-            .maxAgeSeconds(3600)
-            .build();
+                .allowOrigin("http://allowed.example.com")
+                .allowOrigin("http://another.example.com")
+                .allowMethod("GET")
+                .allowMethod("POST")
+                .allowMethod("PUT")
+                .allowHeader("Content-Type")
+                .allowHeader("Authorization")
+                .exposeHeader("X-Custom-Header")
+                .allowCredentials(true)
+                .maxAgeSeconds(3600)
+                .build();
     }
 
     @Test
@@ -66,9 +68,9 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
-            StubRequest.request("/echo")
-                .headerParam("Origin", "http://allowed.example.com")
-                .headerParam("Access-Control-Request-Method", "POST"));
+                StubRequest.request("/echo")
+                        .headerParam("Origin", "http://allowed.example.com")
+                        .headerParam("Access-Control-Request-Method", "POST"));
 
         assertEquals(204, response.statusCode);
         assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));
@@ -87,9 +89,9 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
-            StubRequest.request("/echo")
-                .headerParam("Origin", "http://another.example.com")
-                .headerParam("Access-Control-Request-Method", "GET"));
+                StubRequest.request("/echo")
+                        .headerParam("Origin", "http://another.example.com")
+                        .headerParam("Access-Control-Request-Method", "GET"));
 
         assertEquals(204, response.statusCode);
         assertEquals("http://another.example.com", response.getHeader("access-control-allow-origin"));
@@ -104,9 +106,9 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
-            StubRequest.request("/echo")
-                .headerParam("Origin", "http://evil.example.com")
-                .headerParam("Access-Control-Request-Method", "POST"));
+                StubRequest.request("/echo")
+                        .headerParam("Origin", "http://evil.example.com")
+                        .headerParam("Access-Control-Request-Method", "POST"));
 
         assertEquals(403, response.statusCode);
         assertNull(response.getHeader("access-control-allow-origin"));
@@ -121,7 +123,7 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
-            StubRequest.request("/echo"));
+                StubRequest.request("/echo"));
 
         assertEquals(405, response.statusCode);
         assertNull(response.getHeader("access-control-allow-origin"));
@@ -136,8 +138,8 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/echo")
-                .headerParam("Origin", "http://allowed.example.com"));
+                StubRequest.request("/echo")
+                        .headerParam("Origin", "http://allowed.example.com"));
 
         assertEquals(200, response.statusCode);
         assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));
@@ -154,9 +156,9 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
-            StubRequest.request("/echo")
-                .headerParam("Origin", "http://allowed.example.com")
-                .body("{}"));
+                StubRequest.request("/echo")
+                        .headerParam("Origin", "http://allowed.example.com")
+                        .body("{}"));
 
         assertEquals(200, response.statusCode);
         assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));
@@ -172,8 +174,8 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/echo")
-                .headerParam("Origin", "http://evil.example.com"));
+                StubRequest.request("/echo")
+                        .headerParam("Origin", "http://evil.example.com"));
 
         assertEquals(403, response.statusCode);
         assertNull(response.getHeader("access-control-allow-origin"));
@@ -188,7 +190,7 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.get(
-            StubRequest.request("/echo"));
+                StubRequest.request("/echo"));
 
         assertEquals(200, response.statusCode);
         assertNull(response.getHeader("access-control-allow-origin"));
@@ -197,9 +199,9 @@ public class CorsTest {
     @Test
     public void shouldHandleWildcardOrigin() {
         CorsConfig wildcardConfig = new CorsConfigBuilder()
-            .allowOrigin("*")
-            .allowMethod("GET")
-            .build();
+                .allowOrigin("*")
+                .allowMethod("GET")
+                .build();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
@@ -207,16 +209,16 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse preflight = client.options(
-            StubRequest.request("/echo")
-                .headerParam("Origin", "http://any-origin.com")
-                .headerParam("Access-Control-Request-Method", "GET"));
+                StubRequest.request("/echo")
+                        .headerParam("Origin", "http://any-origin.com")
+                        .headerParam("Access-Control-Request-Method", "GET"));
 
         assertEquals(204, preflight.statusCode);
         assertEquals("*", preflight.getHeader("access-control-allow-origin"));
 
         TestHttpResponse normal = client.get(
-            StubRequest.request("/echo")
-                .headerParam("Origin", "http://any-origin.com"));
+                StubRequest.request("/echo")
+                        .headerParam("Origin", "http://any-origin.com"));
 
         assertEquals(200, normal.statusCode);
         assertEquals("*", normal.getHeader("access-control-allow-origin"));
@@ -225,9 +227,9 @@ public class CorsTest {
     @Test
     public void shouldWorkWithoutCredentialsOrMaxAge() {
         CorsConfig simpleConfig = new CorsConfigBuilder()
-            .allowOrigin("http://simple.example.com")
-            .allowMethod("GET")
-            .build();
+                .allowOrigin("http://simple.example.com")
+                .allowMethod("GET")
+                .build();
         testClientAndServer = createClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
@@ -235,9 +237,9 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
-            StubRequest.request("/echo")
-                .headerParam("Origin", "http://simple.example.com")
-                .headerParam("Access-Control-Request-Method", "GET"));
+                StubRequest.request("/echo")
+                        .headerParam("Origin", "http://simple.example.com")
+                        .headerParam("Access-Control-Request-Method", "GET"));
 
         assertEquals(204, response.statusCode);
         assertEquals("http://simple.example.com", response.getHeader("access-control-allow-origin"));
@@ -268,9 +270,9 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
-            StubRequest.request("/root/filter/test")
-                .headerParam("Origin", "http://allowed.example.com")
-                .body("{}"));
+                StubRequest.request("/root/filter/test")
+                        .headerParam("Origin", "http://allowed.example.com")
+                        .body("{}"));
 
         assertEquals(200, response.statusCode);
         assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));
@@ -286,9 +288,9 @@ public class CorsTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.options(
-            StubRequest.request("/root/filter/test")
-                .headerParam("Origin", "http://allowed.example.com")
-                .headerParam("Access-Control-Request-Method", "POST"));
+                StubRequest.request("/root/filter/test")
+                        .headerParam("Origin", "http://allowed.example.com")
+                        .headerParam("Access-Control-Request-Method", "POST"));
 
         assertEquals(204, response.statusCode);
         assertEquals("http://allowed.example.com", response.getHeader("access-control-allow-origin"));

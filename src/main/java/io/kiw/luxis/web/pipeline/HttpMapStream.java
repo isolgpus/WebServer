@@ -1,9 +1,9 @@
 package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
-import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpErrorResponseException;
+import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
@@ -69,14 +69,14 @@ public class HttpMapStream<IN, APP> {
                 }
             });
             return resultFuture
-                .thenApply(Result::<HttpErrorResponse, OUT>success)
-                .exceptionally(throwable -> {
-                    final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
-                    if (cause instanceof HttpErrorResponseException hre) {
-                        return Result.error(hre.getErrorResponse());
-                    }
-                    throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
-                });
+                    .thenApply(Result::<HttpErrorResponse, OUT>success)
+                    .exceptionally(throwable -> {
+                        final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                        if (cause instanceof HttpErrorResponseException hre) {
+                            return Result.error(hre.getErrorResponse());
+                        }
+                        throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
+                    });
         };
         instructionChain.add(new MapInstruction<>(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
@@ -101,14 +101,14 @@ public class HttpMapStream<IN, APP> {
                 }
             });
             return resultFuture
-                .thenApply(Result::<HttpErrorResponse, OUT>success)
-                .exceptionally(throwable -> {
-                    final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
-                    if (cause instanceof HttpErrorResponseException hre) {
-                        return Result.error(hre.getErrorResponse());
-                    }
-                    throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
-                });
+                    .thenApply(Result::<HttpErrorResponse, OUT>success)
+                    .exceptionally(throwable -> {
+                        final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
+                        if (cause instanceof HttpErrorResponseException hre) {
+                            return Result.error(hre.getErrorResponse());
+                        }
+                        throw throwable instanceof CompletionException ? (CompletionException) throwable : new CompletionException(throwable);
+                    });
         };
         instructionChain.add(new MapInstruction<>(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
@@ -124,7 +124,7 @@ public class HttpMapStream<IN, APP> {
     }
 
 
-    public <OUT> RequestPipeline<OUT>  blockingComplete(final HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper) {
+    public <OUT> RequestPipeline<OUT> blockingComplete(final HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper) {
         instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, canFinishSuccessfully));
         return new RequestPipeline<>(instructionChain, applicationState, ender);
     }

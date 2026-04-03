@@ -49,43 +49,43 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
 
         final String host = uri.getHost();
         final int port = uri.getPort() != -1 ? uri.getPort() : (
-            "https".equals(uri.getScheme()) ? 443 : 80
+                "https".equals(uri.getScheme()) ? 443 : 80
         );
         final String requestUri = buildRequestUri(uri, request.getQueryParams());
 
         httpClient.request(method, port, host, requestUri)
-            .onSuccess(req -> {
-                for (final Map.Entry<String, String> header : request.getHeaders().entrySet()) {
-                    req.putHeader(header.getKey(), header.getValue());
-                }
+                .onSuccess(req -> {
+                    for (final Map.Entry<String, String> header : request.getHeaders().entrySet()) {
+                        req.putHeader(header.getKey(), header.getValue());
+                    }
 
-                if (request.getBody() != null) {
-                    req.putHeader("Content-Type", "application/json");
-                    req.send(Buffer.buffer(request.getBody()))
-                        .onSuccess(resp -> handleResponse(resp, future))
-                        .onFailure(future::completeExceptionally);
-                } else {
-                    req.send()
-                        .onSuccess(resp -> handleResponse(resp, future))
-                        .onFailure(future::completeExceptionally);
-                }
-            })
-            .onFailure(future::completeExceptionally);
+                    if (request.getBody() != null) {
+                        req.putHeader("Content-Type", "application/json");
+                        req.send(Buffer.buffer(request.getBody()))
+                                .onSuccess(resp -> handleResponse(resp, future))
+                                .onFailure(future::completeExceptionally);
+                    } else {
+                        req.send()
+                                .onSuccess(resp -> handleResponse(resp, future))
+                                .onFailure(future::completeExceptionally);
+                    }
+                })
+                .onFailure(future::completeExceptionally);
 
         return new LuxisAsync<>(future);
     }
 
     private static void handleResponse(final io.vertx.core.http.HttpClientResponse resp,
-                                        final CompletableFuture<HttpClientResponse> future) {
+                                       final CompletableFuture<HttpClientResponse> future) {
         resp.body()
-            .onSuccess(body -> {
-                final Map<String, String> headers = new LinkedHashMap<>();
-                for (final String name : resp.headers().names()) {
-                    headers.put(name, resp.getHeader(name));
-                }
-                future.complete(new HttpClientResponse(resp.statusCode(), body.toString(), headers));
-            })
-            .onFailure(future::completeExceptionally);
+                .onSuccess(body -> {
+                    final Map<String, String> headers = new LinkedHashMap<>();
+                    for (final String name : resp.headers().names()) {
+                        headers.put(name, resp.getHeader(name));
+                    }
+                    future.complete(new HttpClientResponse(resp.statusCode(), body.toString(), headers));
+                })
+                .onFailure(future::completeExceptionally);
     }
 
     private static String buildRequestUri(final URI uri, final Map<String, String> extraQueryParams) {

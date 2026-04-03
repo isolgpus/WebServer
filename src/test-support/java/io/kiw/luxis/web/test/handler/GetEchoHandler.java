@@ -13,16 +13,16 @@ public class GetEchoHandler extends JsonHandler<EmptyRequest, EchoResponse, MyAp
     @Override
     public RequestPipeline<EchoResponse> handle(final HttpStream<EmptyRequest, MyApplicationState> httpStream) {
         return
-            httpStream
-                .complete(ctx -> {
-                    final HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
+                httpStream
+                        .complete(ctx -> {
+                            final HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
 
-                    return HttpResult.success(new EchoResponse(188,
-                        "You invoked a GET",
-                        ctx.http().getPathParam("pathExample"),
-                        ctx.http().getQueryParam("queryExample"),
-                        ctx.http().getRequestHeader("requestHeaderExample"),
-                        requestCookieExample != null ? requestCookieExample.value() : null));
-                });
+                            return HttpResult.success(new EchoResponse(188,
+                                    "You invoked a GET",
+                                    ctx.http().getPathParam("pathExample"),
+                                    ctx.http().getQueryParam("queryExample"),
+                                    ctx.http().getRequestHeader("requestHeaderExample"),
+                                    requestCookieExample != null ? requestCookieExample.value() : null));
+                        });
     }
 }

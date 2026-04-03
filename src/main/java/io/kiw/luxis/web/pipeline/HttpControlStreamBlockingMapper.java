@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.pipeline;
 
-import io.kiw.luxis.web.http.BlockingContext;
+import io.kiw.luxis.web.http.BlockingRouteContext;
 
 public interface HttpControlStreamBlockingMapper<REQ, RES> {
-    RES handle(BlockingContext<REQ> ctx);
+    RES handle(BlockingRouteContext<REQ> ctx);
 }

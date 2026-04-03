@@ -1,8 +1,13 @@
 package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.http.Method;
-import io.kiw.luxis.web.test.*;
-import io.kiw.luxis.web.test.handler.*;
+import io.kiw.luxis.web.test.ContextAsserter;
+import io.kiw.luxis.web.test.StubRequest;
+import io.kiw.luxis.web.test.TestClient;
+import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.test.handler.ContextAssertingAsyncBlockingHttpHandler;
+import io.kiw.luxis.web.test.handler.ContextAssertingAsyncHttpHandler;
+import io.kiw.luxis.web.test.handler.ContextAssertingHttpHandler;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -12,7 +17,9 @@ import org.junit.runners.Parameterized;
 
 import java.util.Collection;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)

@@ -12,7 +12,8 @@ import java.util.concurrent.CompletableFuture;
 
 public class AsyncCustomTimeoutTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
-    private Runnable onRegistered = () -> {};
+    private Runnable onRegistered = () -> {
+    };
 
     public AsyncCustomTimeoutTestHandler() {
     }

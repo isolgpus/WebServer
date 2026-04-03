@@ -12,9 +12,9 @@ public class BlockingTestHandler extends JsonHandler<BlockingRequest, BlockingTe
     @Override
     public RequestPipeline<BlockingTestResponse> handle(final HttpStream<BlockingRequest, MyApplicationState> httpStream) {
         return
-            httpStream
-                .map(ctx -> ctx.in().numberToMultiply)
-                .blockingMap(ctx -> ctx.in() * 2)
-                .complete(ctx -> success(new BlockingTestResponse(ctx.in())));
+                httpStream
+                        .map(ctx -> ctx.in().numberToMultiply)
+                        .blockingMap(ctx -> ctx.in() * 2)
+                        .complete(ctx -> success(new BlockingTestResponse(ctx.in())));
     }
 }

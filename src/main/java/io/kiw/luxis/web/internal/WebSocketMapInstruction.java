@@ -6,6 +6,8 @@ import io.kiw.luxis.web.pipeline.WebSocketStreamAsyncBlockingFlatMapper;
 import io.kiw.luxis.web.pipeline.WebSocketStreamAsyncFlatMapper;
 import io.kiw.luxis.web.pipeline.WebSocketStreamBlockingFlatMapper;
 import io.kiw.luxis.web.pipeline.WebSocketStreamFlatMapper;
+import io.kiw.luxis.web.websocket.WebSocketAsyncContext;
+import io.kiw.luxis.web.websocket.WebSocketBlockingAsyncContext;
 import io.kiw.luxis.web.websocket.WebSocketBlockingContext;
 import io.kiw.luxis.web.websocket.WebSocketContext;
 import io.kiw.luxis.web.websocket.WebSocketSession;
@@ -90,11 +92,11 @@ public class WebSocketMapInstruction<IN, OUT, APP, RESP> {
         throw new UnsupportedOperationException("Unknown consumer");
     }
 
-    public CompletableFuture<Result<ErrorMessageResponse, OUT>> handleAsync(final IN state, final WebSocketSession<RESP> connection, final APP applicationState) {
+    public CompletableFuture<Result<ErrorMessageResponse, OUT>> handleAsync(final IN state, final WebSocketSession<RESP> connection, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses) {
         if (asyncConsumer != null) {
-            return asyncConsumer.handle(new WebSocketContext<>(state, connection, applicationState));
+            return asyncConsumer.handle(new WebSocketAsyncContext<>(state, connection, applicationState, pendingAsyncResponses));
         } else if (asyncBlockingConsumer != null) {
-            return asyncBlockingConsumer.handle(new WebSocketBlockingContext<>(state));
+            return asyncBlockingConsumer.handle(new WebSocketBlockingAsyncContext<>(state, pendingAsyncResponses));
         }
 
         throw new UnsupportedOperationException("Unknown async consumer");

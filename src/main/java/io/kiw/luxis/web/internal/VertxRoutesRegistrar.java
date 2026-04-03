@@ -10,7 +10,8 @@ import java.util.OptionalLong;
 import java.util.function.Consumer;
 
 public final class VertxRoutesRegistrar {
-    private VertxRoutesRegistrar() { }
+    private VertxRoutesRegistrar() {
+    }
 
     public static <R> R register(final Router router,
                                  final ApplicationRoutesRegister<R> routesRegisterConsumer,
@@ -20,7 +21,7 @@ public final class VertxRoutesRegistrar {
                                  final Optional<CorsConfig> corsConfig,
                                  final VertxExecutionDispatcher executionDispatcher,
                                  final PendingAsyncResponses pendingAsyncResponses) {
-        final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler);
+        final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
         final BodyHandler handler = BodyHandler.create()

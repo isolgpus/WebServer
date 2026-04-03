@@ -12,6 +12,6 @@ public class StatusCodeTestHandler extends JsonHandler<StatusCodeRequest, HttpSu
     @Override
     public RequestPipeline<HttpSuccessResponse<StatusCodeResponse>> handle(final HttpStream<StatusCodeRequest, MyApplicationState> e) {
         return e.complete(ctx ->
-            HttpResult.success(new StatusCodeResponse(ctx.in().value), ctx.in().statusCode));
+                HttpResult.success(new StatusCodeResponse(ctx.in().value), ctx.in().statusCode));
     }
 }

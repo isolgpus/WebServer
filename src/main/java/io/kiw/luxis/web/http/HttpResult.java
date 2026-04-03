@@ -7,8 +7,8 @@ public abstract class HttpResult {
 
     public static <S> Result<HttpErrorResponse, S> from(final Result<String, S> result, final ErrorStatusCode statusCodeOnFailure) {
         return result.fold(
-            e -> Result.error(new HttpErrorResponse(new ErrorMessageResponse(e), statusCodeOnFailure)),
-            Result::success);
+                e -> Result.error(new HttpErrorResponse(new ErrorMessageResponse(e), statusCodeOnFailure)),
+                Result::success);
     }
 
     public static <S> Result<HttpErrorResponse, S> from(final Result<String, S> result) {

@@ -4,7 +4,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public final class TypeResolver {
-    private TypeResolver() { }
+    private TypeResolver() {
+    }
 
     public static Type[] resolveTypeArguments(final Class<?> concreteClass, final Class<?> targetSuperclass) {
         if (targetSuperclass.isInterface()) {

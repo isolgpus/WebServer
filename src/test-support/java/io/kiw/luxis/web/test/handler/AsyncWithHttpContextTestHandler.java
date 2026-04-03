@@ -14,6 +14,7 @@ public class AsyncWithHttpContextTestHandler extends JsonHandler<AsyncMapRequest
 
 
     private Luxis<?> luxis;
+
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
@@ -22,7 +23,7 @@ public class AsyncWithHttpContextTestHandler extends JsonHandler<AsyncMapRequest
                     return multiplier != null ? Integer.parseInt(multiplier) : 1;
                 })
                 .<Integer>asyncMap(ctx -> {
-                    final CorrelatedAsync<Integer> correlated = luxis.createCorrelatedAsync();
+                    final CorrelatedAsync<Integer> correlated = ctx.correlated();
                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() * 7));
                     return correlated.async();
                 })

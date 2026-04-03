@@ -15,11 +15,11 @@ public class TimeoutTestHandler extends JsonHandler<ThrowRequest, ThrowResponse,
     @Override
     public RequestPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
         return e
-            .blockingMap(ctx -> {
-                LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(5));
-                return ctx.in();
+                .blockingMap(ctx -> {
+                    LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(5));
+                    return ctx.in();
 
-            }).complete(ctx ->
-                HttpResult.error(ErrorStatusCode.INTERNAL_SERVER_ERROR, new ErrorMessageResponse("should not have got here")));
+                }).complete(ctx ->
+                        HttpResult.error(ErrorStatusCode.INTERNAL_SERVER_ERROR, new ErrorMessageResponse("should not have got here")));
     }
 }

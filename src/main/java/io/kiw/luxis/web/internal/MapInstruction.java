@@ -1,7 +1,8 @@
 package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.result.Result;
-import io.kiw.luxis.web.http.BlockingContext;
+import io.kiw.luxis.web.http.BlockingAsyncRouteContext;
+import io.kiw.luxis.web.http.BlockingRouteContext;
 import io.kiw.luxis.web.http.HttpContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.pipeline.HttpControlStreamAsyncBlockingFlatMapper;
@@ -64,17 +65,17 @@ public class MapInstruction<IN, OUT, APP> {
         if (consumer != null) {
             return consumer.handle(new RouteContext<>(state, httpContext, applicationState));
         } else if (blockingConsumer != null) {
-            return blockingConsumer.handle(new BlockingContext<>(state, httpContext));
+            return blockingConsumer.handle(new BlockingRouteContext<>(state, httpContext));
         }
 
         throw new UnsupportedOperationException("Unknown consumer");
     }
 
-    public CompletableFuture<Result<HttpErrorResponse, OUT>> handleAsync(final IN state, final HttpContext httpContext, final APP applicationState) {
+    public CompletableFuture<Result<HttpErrorResponse, OUT>> handleAsync(final IN state, final HttpContext httpContext, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses) {
         if (asyncConsumer != null) {
-            return asyncConsumer.handle(new RouteContext<>(state, httpContext, applicationState));
+            return asyncConsumer.handle(new AsyncRouteContext<>(state, httpContext, applicationState, pendingAsyncResponses));
         } else if (asyncBlockingConsumer != null) {
-            return asyncBlockingConsumer.handle(new BlockingContext<>(state, httpContext));
+            return asyncBlockingConsumer.handle(new BlockingAsyncRouteContext<>(state, httpContext, pendingAsyncResponses));
         }
 
         throw new UnsupportedOperationException("Unknown async consumer");

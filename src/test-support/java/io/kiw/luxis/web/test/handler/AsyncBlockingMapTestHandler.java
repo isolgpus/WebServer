@@ -21,7 +21,7 @@ public class AsyncBlockingMapTestHandler extends JsonHandler<AsyncMapRequest, As
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .<Integer>asyncBlockingMap(ctx -> {
-                    final CorrelatedAsync<Integer> correlated = luxis.createCorrelatedAsync();
+                    final CorrelatedAsync<Integer> correlated = ctx.correlated();
                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in().value * 20));
                     return correlated.async();
                 })

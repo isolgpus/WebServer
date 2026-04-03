@@ -63,7 +63,7 @@ public class StubTestClient<APP> implements TestClient {
     public void assertNoMoreExceptions() {
         if (!this.seenExceptions.isEmpty()) {
             throw new AssertionError("Expected to find no exceptions but found " + seenExceptions.stream()
-                .map(Throwable::getMessage).collect(Collectors.toList()));
+                    .map(Throwable::getMessage).collect(Collectors.toList()));
         }
     }
 
@@ -79,7 +79,7 @@ public class StubTestClient<APP> implements TestClient {
         }
 
         throw new AssertionError("Unable to find exception in seen exceptions " + seenExceptions.stream()
-            .map(Throwable::getMessage).collect(Collectors.toList()));
+                .map(Throwable::getMessage).collect(Collectors.toList()));
     }
 
     @Override

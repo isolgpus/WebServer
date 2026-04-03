@@ -19,18 +19,18 @@ public class ContextAssertingAsyncBlockingHttpHandler extends JsonHandler<Contex
     @Override
     public RequestPipeline<ContextResponse> handle(final HttpStream<ContextRequest, MyApplicationState> httpStream) {
         return httpStream
-            .map(ctx -> {
-                asserter.assertInApplicationContext();
-                return ctx.in().message;
-            })
-            .blockingMap(ctx -> {
-                asserter.assertInWorkerContext();
-                return ctx.in() + " blocking";
-            })
-            .map(ctx -> {
-                asserter.assertInApplicationContext();
-                return ctx.in() + " map";
-            })
-            .complete(ctx -> success(new ContextResponse(ctx.in())));
+                .map(ctx -> {
+                    asserter.assertInApplicationContext();
+                    return ctx.in().message;
+                })
+                .blockingMap(ctx -> {
+                    asserter.assertInWorkerContext();
+                    return ctx.in() + " blocking";
+                })
+                .map(ctx -> {
+                    asserter.assertInApplicationContext();
+                    return ctx.in() + " map";
+                })
+                .complete(ctx -> success(new ContextResponse(ctx.in())));
     }
 }

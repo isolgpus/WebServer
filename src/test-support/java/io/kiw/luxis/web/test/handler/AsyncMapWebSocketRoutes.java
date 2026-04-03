@@ -18,7 +18,7 @@ public class AsyncMapWebSocketRoutes extends WebSocketRoutes<MyApplicationState,
         routesRegister
                 .registerInbound("number", WebSocketNumberRequest.class, s ->
                         s.<Integer>asyncMap(ctx -> {
-                                    final CorrelatedAsync<Integer> correlated = luxis.createCorrelatedAsync();
+                                    final CorrelatedAsync<Integer> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in().value * 10));
                                     return correlated.async();
                                 })

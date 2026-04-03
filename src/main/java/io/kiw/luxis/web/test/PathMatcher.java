@@ -29,7 +29,7 @@ public class PathMatcher {
 
     private Queue<String> splitPath(final String path) {
         return Arrays.stream(path.split("/")).filter(s -> !s.isEmpty())
-            .collect(Collectors.toCollection(LinkedList::new));
+                .collect(Collectors.toCollection(LinkedList::new));
     }
 
     private void putRoute(final Queue<String> pathSegments, final Method method, final RequestPipeline<?> flow) {

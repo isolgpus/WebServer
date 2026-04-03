@@ -7,7 +7,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ResultTest {
 
@@ -131,7 +135,7 @@ public class ResultTest {
     @Test
     public void shouldCollapseAllSuccessesToSuccessList() {
         List<Result<String, Integer>> results = Arrays.asList(
-            Result.success(1), Result.success(2), Result.success(3)
+                Result.success(1), Result.success(2), Result.success(3)
         );
         Result<Map<Integer, String>, List<Integer>> collapsed = Result.collapse(results);
         List<Integer> values = collapsed.fold(e -> null, s -> s);
@@ -141,7 +145,7 @@ public class ResultTest {
     @Test
     public void shouldCollapseAllErrorsToErrorMap() {
         List<Result<String, Integer>> results = Arrays.asList(
-            Result.error("a"), Result.error("b")
+                Result.error("a"), Result.error("b")
         );
         Result<Map<Integer, String>, List<Integer>> collapsed = Result.collapse(results);
         Map<Integer, String> errors = collapsed.fold(e -> e, s -> null);
@@ -153,7 +157,7 @@ public class ResultTest {
     @Test
     public void shouldCollapseMixedResultsToErrorMap() {
         List<Result<String, Integer>> results = Arrays.asList(
-            Result.success(1), Result.error("x"), Result.success(3)
+                Result.success(1), Result.error("x"), Result.success(3)
         );
         Result<Map<Integer, String>, List<Integer>> collapsed = Result.collapse(results);
         Map<Integer, String> errors = collapsed.fold(e -> e, s -> null);
@@ -190,7 +194,7 @@ public class ResultTest {
     @Test
     public void shouldCollapsePreservingErrorIndices() {
         List<Result<String, Integer>> results = Arrays.asList(
-            Result.success(1), Result.success(2), Result.error("c"), Result.success(4), Result.error("e")
+                Result.success(1), Result.success(2), Result.error("c"), Result.success(4), Result.error("e")
         );
         Result<Map<Integer, String>, List<Integer>> collapsed = Result.collapse(results);
         Map<Integer, String> errors = collapsed.fold(e -> e, s -> null);
@@ -204,16 +208,16 @@ public class ResultTest {
     @Test
     public void shouldChainMapThenFlatMapOnSuccess() {
         Result<String, Integer> result = Result.<String, Integer>success(3)
-            .map(v -> v * 10)
-            .flatMap(v -> Result.success(v + 1));
+                .map(v -> v * 10)
+                .flatMap(v -> Result.success(v + 1));
         assertEquals(Integer.valueOf(31), result.fold(e -> null, s -> s));
     }
 
     @Test
     public void shouldChainMapThenFlatMapReturningError() {
         Result<String, Integer> result = Result.<String, Integer>success(3)
-            .map(v -> v * 10)
-            .flatMap(v -> Result.error("too big"));
+                .map(v -> v * 10)
+                .flatMap(v -> Result.error("too big"));
         assertEquals("too big", result.fold(e -> e, s -> null));
     }
 
@@ -221,11 +225,11 @@ public class ResultTest {
     public void shouldShortCircuitOnFlatMapError() {
         boolean[] mapCalled = {false};
         Result<String, Integer> result = Result.<String, Integer>success(1)
-            .flatMap(v -> Result.<String, Integer>error("stop"))
-            .map(v -> {
-                mapCalled[0] = true;
-                return v + 100;
-            });
+                .flatMap(v -> Result.<String, Integer>error("stop"))
+                .map(v -> {
+                    mapCalled[0] = true;
+                    return v + 100;
+                });
         assertFalse(mapCalled[0]);
         assertEquals("stop", result.fold(e -> e, s -> null));
     }
@@ -234,12 +238,12 @@ public class ResultTest {
     public void shouldShortCircuitMultipleFlatMaps() {
         boolean[] thirdCalled = {false};
         Result<String, Integer> result = Result.<String, Integer>success(1)
-            .flatMap(v -> Result.success(v + 1))
-            .flatMap(v -> Result.<String, Integer>error("halt"))
-            .flatMap(v -> {
-                thirdCalled[0] = true;
-                return Result.success(v + 1);
-            });
+                .flatMap(v -> Result.success(v + 1))
+                .flatMap(v -> Result.<String, Integer>error("halt"))
+                .flatMap(v -> {
+                    thirdCalled[0] = true;
+                    return Result.success(v + 1);
+                });
         assertFalse(thirdCalled[0]);
         assertEquals("halt", result.fold(e -> e, s -> null));
     }
@@ -247,24 +251,24 @@ public class ResultTest {
     @Test
     public void shouldTransformErrorThroughMapErrorInChain() {
         Result<String, Integer> result = Result.<String, Integer>error("fail")
-            .flatMap(v -> Result.success(v + 1))
-            .mapError(String::toUpperCase);
+                .flatMap(v -> Result.success(v + 1))
+                .mapError(String::toUpperCase);
         assertEquals("FAIL", result.fold(e -> e, s -> null));
     }
 
     @Test
     public void shouldIgnoreMapErrorOnSuccessChain() {
         Result<String, Integer> result = Result.<String, Integer>success(5)
-            .map(v -> v * 2)
-            .mapError(e -> "won't happen");
+                .map(v -> v * 2)
+                .mapError(e -> "won't happen");
         assertEquals(Integer.valueOf(10), result.fold(e -> null, s -> s));
     }
 
     @Test
     public void shouldTransformTypeThroughChain() {
         Result<String, Integer> result = Result.<String, Integer>success(42)
-            .map(v -> "value=" + v)
-            .flatMap(s -> Result.success(s.length()));
+                .map(v -> "value=" + v)
+                .flatMap(s -> Result.success(s.length()));
         assertEquals(Integer.valueOf(8), result.fold(e -> null, s -> s));
     }
 

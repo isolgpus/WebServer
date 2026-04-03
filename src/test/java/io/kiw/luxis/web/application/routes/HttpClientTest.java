@@ -55,15 +55,15 @@ public class HttpClientTest {
         final StubTestClient<MyApplicationState> client = new StubTestClient<>("127.0.0.1", 8080, serverA);
 
         final TestHttpResponse response = client.post(
-            StubRequest.request("/call-b")
-                .body(json().put("targetPath", "/api/value").toString()));
+                StubRequest.request("/call-b")
+                        .body(json().put("targetPath", "/api/value").toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json()
-                .put("statusCode", 200)
-                .put("body", json().put("result", 42).toString())
-                .toString()),
-            response);
+                TestHttpResponse.response(json()
+                        .put("statusCode", 200)
+                        .put("body", json().put("result", 42).toString())
+                        .toString()),
+                response);
     }
 
     @Test
@@ -86,18 +86,18 @@ public class HttpClientTest {
 
         final String bodyForB = json().put("value", 7).toString();
         final TestHttpResponse response = client.post(
-            StubRequest.request("/forward")
-                .body(json()
-                    .put("targetPath", "/api/multiply")
-                    .put("forwardBody", bodyForB)
-                    .toString()));
+                StubRequest.request("/forward")
+                        .body(json()
+                                .put("targetPath", "/api/multiply")
+                                .put("forwardBody", bodyForB)
+                                .toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json()
-                .put("statusCode", 200)
-                .put("body", json().put("result", 70).toString())
-                .toString()),
-            response);
+                TestHttpResponse.response(json()
+                        .put("statusCode", 200)
+                        .put("body", json().put("result", 70).toString())
+                        .toString()),
+                response);
     }
 
     @Test
@@ -105,7 +105,7 @@ public class HttpClientTest {
         serverB = Luxis.test(r -> {
             final MyApplicationState state = new MyApplicationState();
             r.jsonRoute("/api/error", Method.GET, state,
-                new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+                    new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
             return state;
         });
 
@@ -120,17 +120,17 @@ public class HttpClientTest {
         final StubTestClient<MyApplicationState> client = new StubTestClient<>("127.0.0.1", 8080, serverA);
 
         final TestHttpResponse response = client.post(
-            StubRequest.request("/call-error")
-                .body(json().put("targetPath", "/api/error").toString()));
+                StubRequest.request("/call-error")
+                        .body(json().put("targetPath", "/api/error").toString()));
 
         Assert.assertEquals(
-            TestHttpResponse.response(json()
-                .put("statusCode", 400)
-                .put("body", json()
-                    .put("message", "bad input")
-                    .set("errors", json())
-                    .toString())
-                .toString()),
-            response);
+                TestHttpResponse.response(json()
+                        .put("statusCode", 400)
+                        .put("body", json()
+                                .put("message", "bad input")
+                                .set("errors", json())
+                                .toString())
+                        .toString()),
+                response);
     }
 }

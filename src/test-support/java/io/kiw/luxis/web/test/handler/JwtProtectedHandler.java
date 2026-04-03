@@ -19,8 +19,8 @@ public class JwtProtectedHandler extends JsonHandler<EmptyRequest, SubjectRespon
     @Override
     public RequestPipeline<SubjectResponse> handle(final HttpStream<EmptyRequest, MyApplicationState> stream) {
         return stream
-            .requireJwt(jwtProvider)
-            .complete(ctx ->
-                HttpResult.success(new SubjectResponse(ctx.http().getJwtClaims().getSubject())));
+                .requireJwt(jwtProvider)
+                .complete(ctx ->
+                        HttpResult.success(new SubjectResponse(ctx.http().getJwtClaims().getSubject())));
     }
 }

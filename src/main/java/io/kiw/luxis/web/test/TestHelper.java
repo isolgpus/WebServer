@@ -1,13 +1,14 @@
 package io.kiw.luxis.web.test;
 
+import io.kiw.luxis.web.internal.JacksonUtil;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
-import io.kiw.luxis.web.internal.JacksonUtil;
 
 import java.util.function.BooleanSupplier;
 
 public final class TestHelper {
-    private TestHelper() { }
+    private TestHelper() {
+    }
 
     public static final ObjectMapper MAPPER = JacksonUtil.createMapper();
 

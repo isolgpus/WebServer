@@ -1,11 +1,11 @@
 package io.kiw.luxis.web.test.jwt;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.internal.JacksonUtil;
 import io.kiw.luxis.web.jwt.JwtClaims;
 import io.kiw.luxis.web.jwt.JwtProvider;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -50,7 +50,8 @@ public class StubJwtProvider implements JwtProvider {
             }
 
             final String payloadJson = new String(Base64.getUrlDecoder().decode(parts[1]), StandardCharsets.UTF_8);
-            final Map<String, Object> claims = MAPPER.readValue(payloadJson, new TypeReference<>() {});
+            final Map<String, Object> claims = MAPPER.readValue(payloadJson, new TypeReference<>() {
+            });
 
             final Object exp = claims.get("exp");
             if (exp != null && System.currentTimeMillis() / 1000 > ((Number) exp).longValue()) {

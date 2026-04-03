@@ -14,7 +14,9 @@ import org.junit.runners.Parameterized;
 
 import java.util.Collection;
 
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.*;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -55,8 +57,8 @@ public class MaxBodySizeTest {
         TestClient client = testClientAndServer.client();
 
         TestHttpResponse response = client.post(
-            StubRequest.request("/echo")
-                .body(json().put("intExample", 42).put("stringExample", "this body is way too long").toString()));
+                StubRequest.request("/echo")
+                        .body(json().put("intExample", 42).put("stringExample", "this body is way too long").toString()));
 
         Assert.assertEquals(413, response.statusCode);
     }
@@ -71,7 +73,7 @@ public class MaxBodySizeTest {
         String body = json().put("intExample", 42).put("stringExample", "hello").toString();
 
         TestHttpResponse response = client.post(
-            StubRequest.request("/echo").body(body));
+                StubRequest.request("/echo").body(body));
 
         Assert.assertEquals(200, response.statusCode);
     }
@@ -86,7 +88,7 @@ public class MaxBodySizeTest {
         String body = json().put("intExample", 42).put("stringExample", "any size body is fine").toString();
 
         TestHttpResponse response = client.post(
-            StubRequest.request("/echo").body(body));
+                StubRequest.request("/echo").body(body));
 
         Assert.assertEquals(200, response.statusCode);
     }

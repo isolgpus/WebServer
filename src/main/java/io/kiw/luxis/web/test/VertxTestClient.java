@@ -107,43 +107,43 @@ public class VertxTestClient implements TestClient {
         final String uri = buildUri(stubRequest);
 
         httpClient.request(method, port, host, uri)
-            .onSuccess(req -> {
-                for (final Map.Entry<String, String> header : stubRequest.headers.entrySet()) {
-                    req.putHeader(header.getKey(), header.getValue());
-                }
-
-                for (final Map.Entry<String, HttpCookie> cookie : stubRequest.cookies.entrySet()) {
-                    req.putHeader("Cookie", cookie.getValue().name() + "=" + cookie.getValue().value());
-                }
-
-                if (!stubRequest.fileUploads.isEmpty()) {
-                    final String boundary = "----VertxHttpClientBoundary" + System.nanoTime();
-                    req.putHeader("Content-Type", "multipart/form-data; boundary=" + boundary);
-
-                    final Buffer multipartBody = Buffer.buffer();
-                    for (final Map.Entry<String, HttpBuffer> upload : stubRequest.fileUploads.entrySet()) {
-                        multipartBody.appendString("--" + boundary + "\r\n");
-                        multipartBody.appendString("Content-Disposition: form-data; name=\"" + upload.getKey() + "\"; filename=\"" + upload.getKey() + "\"\r\n");
-                        multipartBody.appendString("Content-Type: application/octet-stream\r\n\r\n");
-                        multipartBody.appendBuffer(Buffer.buffer(upload.getValue().bytes()));
-                        multipartBody.appendString("\r\n");
+                .onSuccess(req -> {
+                    for (final Map.Entry<String, String> header : stubRequest.headers.entrySet()) {
+                        req.putHeader(header.getKey(), header.getValue());
                     }
-                    multipartBody.appendString("--" + boundary + "--\r\n");
 
-                    req.send(multipartBody)
-                            .onSuccess(resp -> handleResponse(resp, future))
-                            .onFailure(future::completeExceptionally);
-                } else if (stubRequest.body != null) {
-                    req.putHeader("Content-Type", "application/json");
-                    req.send(Buffer.buffer(stubRequest.body))
-                            .onSuccess(resp -> handleResponse(resp, future))
-                            .onFailure(future::completeExceptionally);
-                } else {
-                    req.send()
-                            .onSuccess(resp -> handleResponse(resp, future))
-                            .onFailure(future::completeExceptionally);
-                }
-            })
+                    for (final Map.Entry<String, HttpCookie> cookie : stubRequest.cookies.entrySet()) {
+                        req.putHeader("Cookie", cookie.getValue().name() + "=" + cookie.getValue().value());
+                    }
+
+                    if (!stubRequest.fileUploads.isEmpty()) {
+                        final String boundary = "----VertxHttpClientBoundary" + System.nanoTime();
+                        req.putHeader("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+                        final Buffer multipartBody = Buffer.buffer();
+                        for (final Map.Entry<String, HttpBuffer> upload : stubRequest.fileUploads.entrySet()) {
+                            multipartBody.appendString("--" + boundary + "\r\n");
+                            multipartBody.appendString("Content-Disposition: form-data; name=\"" + upload.getKey() + "\"; filename=\"" + upload.getKey() + "\"\r\n");
+                            multipartBody.appendString("Content-Type: application/octet-stream\r\n\r\n");
+                            multipartBody.appendBuffer(Buffer.buffer(upload.getValue().bytes()));
+                            multipartBody.appendString("\r\n");
+                        }
+                        multipartBody.appendString("--" + boundary + "--\r\n");
+
+                        req.send(multipartBody)
+                                .onSuccess(resp -> handleResponse(resp, future))
+                                .onFailure(future::completeExceptionally);
+                    } else if (stubRequest.body != null) {
+                        req.putHeader("Content-Type", "application/json");
+                        req.send(Buffer.buffer(stubRequest.body))
+                                .onSuccess(resp -> handleResponse(resp, future))
+                                .onFailure(future::completeExceptionally);
+                    } else {
+                        req.send()
+                                .onSuccess(resp -> handleResponse(resp, future))
+                                .onFailure(future::completeExceptionally);
+                    }
+                })
                 .onFailure(future::completeExceptionally);
 
         try {
@@ -155,25 +155,25 @@ public class VertxTestClient implements TestClient {
 
     private void handleResponse(final HttpClientResponse resp, final CompletableFuture<TestHttpResponse> future) {
         resp.body()
-            .onSuccess(body -> {
-                final TestHttpResponse testResponse = new TestHttpResponse(body.toString())
-                        .withStatusCode(resp.statusCode());
+                .onSuccess(body -> {
+                    final TestHttpResponse testResponse = new TestHttpResponse(body.toString())
+                            .withStatusCode(resp.statusCode());
 
-                for (final String headerName : resp.headers().names()) {
-                    testResponse.withHeader(headerName, resp.getHeader(headerName));
-                }
+                    for (final String headerName : resp.headers().names()) {
+                        testResponse.withHeader(headerName, resp.getHeader(headerName));
+                    }
 
-                if (resp.cookies() != null) {
-                    for (final String setCookie : resp.cookies()) {
-                        final String[] parts = setCookie.split(";")[0].split("=", 2);
-                        if (parts.length == 2) {
-                            testResponse.withCookie(parts[0].trim(), parts[1].trim());
+                    if (resp.cookies() != null) {
+                        for (final String setCookie : resp.cookies()) {
+                            final String[] parts = setCookie.split(";")[0].split("=", 2);
+                            if (parts.length == 2) {
+                                testResponse.withCookie(parts[0].trim(), parts[1].trim());
+                            }
                         }
                     }
-                }
 
-                future.complete(testResponse);
-            })
+                    future.complete(testResponse);
+                })
                 .onFailure(future::completeExceptionally);
     }
 

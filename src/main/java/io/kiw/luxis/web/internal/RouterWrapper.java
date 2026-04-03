@@ -1,15 +1,15 @@
 package io.kiw.luxis.web.internal;
 
-import tools.jackson.databind.ObjectMapper;
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.cors.CorsConfig;
-import io.kiw.luxis.web.http.RequestContext;
-import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.http.HttpContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpSuccessResponse;
+import io.kiw.luxis.web.http.Method;
+import io.kiw.luxis.web.http.RequestContext;
 import io.kiw.luxis.web.internal.ender.Ender;
-import io.kiw.luxis.web.RouteConfig;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
@@ -17,9 +17,11 @@ import java.util.function.Consumer;
 public abstract class RouterWrapper {
 
     private final Consumer<Exception> exceptionHandler;
+    private final PendingAsyncResponses pendingAsyncResponses;
 
-    public RouterWrapper(final Consumer<Exception> exceptionHandler) {
+    public RouterWrapper(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses) {
         this.exceptionHandler = exceptionHandler;
+        this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
     Consumer<Exception> getExceptionHandler() {
@@ -53,7 +55,7 @@ public abstract class RouterWrapper {
         final HttpContext httpContext = new HttpContext(vertxContext);
         final CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
-            future = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState);
+            future = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState, pendingAsyncResponses);
         } catch (final Exception e) {
             handleException(vertxContext, e);
             return;
@@ -76,7 +78,7 @@ public abstract class RouterWrapper {
     public <T> void handleAsyncBlocking(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
         final HttpContext httpContext = new HttpContext(vertxContext);
         try {
-            final Result<HttpErrorResponse, T> result = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState).join();
+            final Result<HttpErrorResponse, T> result = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState, pendingAsyncResponses).join();
             processResult(result, applicationInstruction, vertxContext, ender);
         } catch (final Exception e) {
             handleException(vertxContext, e);

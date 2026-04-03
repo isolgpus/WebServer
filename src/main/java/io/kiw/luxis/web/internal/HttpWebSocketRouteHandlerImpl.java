@@ -33,7 +33,7 @@ public class HttpWebSocketRouteHandlerImpl<APP, RESP> implements HttpWebSocketRo
         routes = new LinkedHashMap<>();
         routesRegister = new WebSocketRoutesRegister<>(appState, pendingAsyncResponses, routes, responseTypeRegistry);
         route.registerRoutes(routesRegister);
-        this.executor = new WebSocketPipelineExecutor(objectMapper, appState, exceptionHandler, executionDispatcher, config, responseTypeRegistry);
+        this.executor = new WebSocketPipelineExecutor(objectMapper, appState, exceptionHandler, executionDispatcher, config, responseTypeRegistry, pendingAsyncResponses);
     }
 
     @Override

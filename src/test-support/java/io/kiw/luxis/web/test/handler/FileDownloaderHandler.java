@@ -12,6 +12,6 @@ public class FileDownloaderHandler implements VertxFileDownloadRoute<String, MyA
     @Override
     public RequestPipeline<DownloadFileResponse> handle(final HttpMapStream<String, MyApplicationState> e) {
         return e.complete(ctx ->
-            Result.success(new DownloadFileResponse(HttpBuffer.fromString("file contents"), "data.txt")));
+                Result.success(new DownloadFileResponse(HttpBuffer.fromString("file contents"), "data.txt")));
     }
 }

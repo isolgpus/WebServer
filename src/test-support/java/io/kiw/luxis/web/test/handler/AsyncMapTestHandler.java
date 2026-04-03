@@ -5,7 +5,6 @@ import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.client.CorrelatedAsync;
-import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
@@ -31,7 +30,7 @@ public class AsyncMapTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapRe
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .<Integer>asyncMap(ctx -> {
-                    final CorrelatedAsync<Integer> correlated = luxis.createCorrelatedAsync();
+                    final CorrelatedAsync<Integer> correlated = ctx.correlated();
                     luxis.handleAsyncResponse(correlated.correlationId(), responder.apply(ctx.in().value));
                     return correlated.async();
                 })

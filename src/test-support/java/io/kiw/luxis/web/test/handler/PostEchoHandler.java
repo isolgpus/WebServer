@@ -21,12 +21,12 @@ public class PostEchoHandler extends JsonHandler<EchoRequest, EchoResponse, MyAp
             }
             final HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
             return HttpResult.success(new EchoResponse(
-                ctx.in().intExample,
-                ctx.in().stringExample,
-                ctx.http().getPathParam("pathExample"),
-                ctx.http().getQueryParam("queryExample"),
-                ctx.http().getRequestHeader("requestHeaderExample"),
-                requestCookieExample != null ? requestCookieExample.value() :  null));
+                    ctx.in().intExample,
+                    ctx.in().stringExample,
+                    ctx.http().getPathParam("pathExample"),
+                    ctx.http().getQueryParam("queryExample"),
+                    ctx.http().getRequestHeader("requestHeaderExample"),
+                    requestCookieExample != null ? requestCookieExample.value() : null));
         });
     }
 

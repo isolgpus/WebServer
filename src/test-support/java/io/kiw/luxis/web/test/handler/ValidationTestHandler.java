@@ -12,22 +12,22 @@ public class ValidationTestHandler extends JsonHandler<ValidationRequest, Valida
     @Override
     public RequestPipeline<ValidationResponse> handle(final HttpStream<ValidationRequest, MyApplicationState> httpStream) {
         return httpStream
-            .validate(v -> {
-                v.field("name", r -> r.name).required().minLength(2);
-                v.field("email", r -> r.email).required().email();
-                v.field("age", r -> r.age).required().min(0).max(150);
-                v.field("address", r -> r.address, a -> {
-                    a.field("city", x -> x.city).required();
-                    a.field("zip", x -> x.zip).required().matches("[0-9]{5}");
+                .validate(v -> {
+                    v.field("name", r -> r.name).required().minLength(2);
+                    v.field("email", r -> r.email).required().email();
+                    v.field("age", r -> r.age).required().min(0).max(150);
+                    v.field("address", r -> r.address, a -> {
+                        a.field("city", x -> x.city).required();
+                        a.field("zip", x -> x.zip).required().matches("[0-9]{5}");
+                    });
+                    v.queryParam("page").required().matches("[0-9]+");
+                    v.pathParam("userId").required().matches("[0-9]+");
+                })
+                .complete(ctx -> {
+                    final ValidationRequest r = ctx.in();
+                    final String page = ctx.http().getQueryParam("page");
+                    final String userId = ctx.http().getPathParam("userId");
+                    return success(new ValidationResponse(r.name, r.email, r.age, r.address.city, page, userId));
                 });
-                v.queryParam("page").required().matches("[0-9]+");
-                v.pathParam("userId").required().matches("[0-9]+");
-            })
-            .complete(ctx -> {
-                final ValidationRequest r = ctx.in();
-                final String page = ctx.http().getQueryParam("page");
-                final String userId = ctx.http().getPathParam("userId");
-                return success(new ValidationResponse(r.name, r.email, r.age, r.address.city, page, userId));
-            });
     }
 }

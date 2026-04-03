@@ -13,7 +13,7 @@ public class BlockingFlatMapFailHandler extends JsonHandler<BlockingRequest, Blo
     @Override
     public RequestPipeline<BlockingTestResponse> handle(final HttpStream<BlockingRequest, MyApplicationState> httpStream) {
         return httpStream
-            .<Integer>blockingFlatMap(ctx -> HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("blocking flat map failed")))
-            .complete(ctx -> HttpResult.success(new BlockingTestResponse(ctx.in())));
+                .<Integer>blockingFlatMap(ctx -> HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("blocking flat map failed")))
+                .complete(ctx -> HttpResult.success(new BlockingTestResponse(ctx.in())));
     }
 }

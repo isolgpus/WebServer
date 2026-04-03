@@ -1,9 +1,9 @@
 package io.kiw.luxis.web.openapi;
 
+import io.kiw.luxis.web.http.Method;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
-import io.kiw.luxis.web.http.Method;
 
 import java.util.LinkedHashMap;
 import java.util.Map;

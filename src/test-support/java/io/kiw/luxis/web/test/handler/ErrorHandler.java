@@ -22,6 +22,6 @@ public class ErrorHandler extends JsonHandler<EmptyRequest, Object, MyApplicatio
     @Override
     public RequestPipeline<Object> handle(final HttpStream<EmptyRequest, MyApplicationState> httpStream) {
         return httpStream
-            .complete(ctx -> HttpResult.error(statusCode, new ErrorMessageResponse(message)));
+                .complete(ctx -> HttpResult.error(statusCode, new ErrorMessageResponse(message)));
     }
 }

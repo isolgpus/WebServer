@@ -4,8 +4,8 @@ import java.util.Collections;
 import java.util.Set;
 
 public record CorsConfig(Set<String> allowedOrigins, Set<String> allowedMethods,
-                          Set<String> allowedHeaders, Set<String> exposedHeaders,
-                          boolean allowCredentials, int maxAgeSeconds) {
+                         Set<String> allowedHeaders, Set<String> exposedHeaders,
+                         boolean allowCredentials, int maxAgeSeconds) {
 
     public CorsConfig {
         allowedOrigins = Collections.unmodifiableSet(allowedOrigins);

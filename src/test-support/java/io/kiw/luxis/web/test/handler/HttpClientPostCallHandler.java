@@ -20,9 +20,9 @@ public class HttpClientPostCallHandler extends JsonHandler<HttpClientPostRequest
     @Override
     public RequestPipeline<HttpClientGetResponse> handle(final HttpStream<HttpClientPostRequest, MyApplicationState> httpStream) {
         return httpStream
-            .<HttpClientResponse>asyncMap(ctx ->
-                httpClient.post("http://serverB" + ctx.in().targetPath, ctx.in().forwardBody))
-            .map(ctx -> new HttpClientGetResponse(ctx.in().statusCode(), ctx.in().body()))
-            .complete(ctx -> success(ctx.in()));
+                .<HttpClientResponse>asyncMap(ctx ->
+                        httpClient.post("http://serverB" + ctx.in().targetPath, ctx.in().forwardBody))
+                .map(ctx -> new HttpClientGetResponse(ctx.in().statusCode(), ctx.in().body()))
+                .complete(ctx -> success(ctx.in()));
     }
 }

@@ -7,8 +7,8 @@ public abstract class WebSocketResult {
 
     public static <S> Result<ErrorMessageResponse, S> from(final Result<String, S> result) {
         return result.fold(
-            e -> Result.error(new ErrorMessageResponse(e)),
-            Result::success);
+                e -> Result.error(new ErrorMessageResponse(e)),
+                Result::success);
     }
 
     public static <S> Result<ErrorMessageResponse, S> error(final ErrorMessageResponse messageResponse) {
