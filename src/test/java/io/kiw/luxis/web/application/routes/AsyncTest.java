@@ -25,7 +25,7 @@ import java.util.Collection;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.STUB_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createTestServerAndClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -63,7 +63,7 @@ public class AsyncTest {
     public void shouldSupportCorrelatedAsyncMap() {
         final AsyncMapTestHandler handler = new AsyncMapTestHandler();
 
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/async", Method.POST, state, handler);
         });
         handler.evillyReferenceLuxis(testClientAndServer.luxis());
@@ -80,7 +80,7 @@ public class AsyncTest {
     @Test
     public void shouldSupportCorrelatedAsyncBlockingMap() {
         AsyncBlockingMapTestHandler handler = new AsyncBlockingMapTestHandler();
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/asyncBlocking", Method.POST, state, handler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
@@ -97,7 +97,7 @@ public class AsyncTest {
     public void shouldReturnErrorWhenAsyncResponseIsError() {
         AsyncMapTestHandler handler = new AsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async error")));
 
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/async", Method.POST, state,
                     handler);
         });
@@ -115,7 +115,7 @@ public class AsyncTest {
     @Test
     public void shouldPassInputValueToHandler() {
         AsyncMapTestHandler handler = new AsyncMapTestHandler();
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/async", Method.POST, state, handler);
         });
         handler.evillyReferenceLuxis(testClientAndServer.luxis());
@@ -132,7 +132,7 @@ public class AsyncTest {
 
     @Test
     public void shouldHandleExceptionInCorrelatedAsyncHandler() {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/throw", Method.POST, state, new AsyncThrowTestHandler());
         });
         TestClient luxisTestClient = testClientAndServer.client();
@@ -147,7 +147,7 @@ public class AsyncTest {
     @Test
     public void shouldWorkWithPipelineStepsBeforeCorrelatedAsync() {
         AsyncWithHttpContextTestHandler vertxJsonRoute = new AsyncWithHttpContextTestHandler();
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/withContext", Method.POST, state, vertxJsonRoute);
         });
         TestClient luxisTestClient = testClientAndServer.client();
@@ -168,7 +168,7 @@ public class AsyncTest {
     @Test
     public void shouldReturnDifferentErrorStatusCodes() {
         AsyncMapTestHandler handler = new AsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("not found")));
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/async", Method.POST, state,
                     handler);
         });
@@ -185,7 +185,7 @@ public class AsyncTest {
     public void shouldTimeoutWithCustomOneSecondTimeout() {
         final AsyncCustomTimeoutTestHandler handler = new AsyncCustomTimeoutTestHandler();
 
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/customTimeout", Method.POST, state, handler);
         });
 

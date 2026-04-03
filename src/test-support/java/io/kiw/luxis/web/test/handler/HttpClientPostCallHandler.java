@@ -12,16 +12,18 @@ import static io.kiw.luxis.web.http.HttpResult.success;
 public class HttpClientPostCallHandler extends JsonHandler<HttpClientPostRequest, HttpClientGetResponse, MyApplicationState> {
 
     private final LuxisHttpClient httpClient;
+    private final String url;
 
-    public HttpClientPostCallHandler(final LuxisHttpClient httpClient) {
+    public HttpClientPostCallHandler(final LuxisHttpClient httpClient, String url) {
         this.httpClient = httpClient;
+        this.url = url;
     }
 
     @Override
     public RequestPipeline<HttpClientGetResponse> handle(final HttpStream<HttpClientPostRequest, MyApplicationState> httpStream) {
         return httpStream
-                .<HttpClientResponse>asyncMap(ctx ->
-                        httpClient.post("http://serverB" + ctx.in().targetPath, ctx.in().forwardBody))
+                .asyncMap(ctx ->
+                        httpClient.post("http://" + url + ctx.in().targetPath, ctx.in().forwardBody))
                 .map(ctx -> new HttpClientGetResponse(ctx.in().statusCode(), ctx.in().body()))
                 .complete(ctx -> success(ctx.in()));
     }

@@ -11,15 +11,17 @@ import static io.kiw.luxis.web.http.HttpResult.success;
 public class HttpClientCallHandler extends JsonHandler<HttpClientGetRequest, HttpClientGetResponse, MyApplicationState> {
 
     private final LuxisHttpClient httpClient;
+    private final String baseUrl;
 
-    public HttpClientCallHandler(final LuxisHttpClient httpClient) {
+    public HttpClientCallHandler(final LuxisHttpClient httpClient, final String baseUrl) {
         this.httpClient = httpClient;
+        this.baseUrl = baseUrl;
     }
 
     @Override
     public RequestPipeline<HttpClientGetResponse> handle(final HttpStream<HttpClientGetRequest, MyApplicationState> httpStream) {
         return httpStream
-                .asyncMap(ctx -> httpClient.get("http://serverB" + ctx.in().targetPath))
+                .asyncMap(ctx -> httpClient.get(this.baseUrl + ctx.in().targetPath))
                 .map(ctx -> new HttpClientGetResponse(ctx.in().statusCode(), ctx.in().body()))
                 .complete(ctx -> success(ctx.in()));
     }

@@ -20,7 +20,7 @@ import java.util.Collection;
 
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createTestServerAndClient;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -65,7 +65,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldGenerateSpecWithCorrectVersion() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -81,7 +81,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldGeneratePathsForRegisteredRoutes() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
@@ -98,7 +98,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldConvertPathParamsToOpenApiFormat() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo/:pathExample", Method.GET, state, new GetEchoHandler(),
                     new RouteConfigBuilder()
                             .openApi()
@@ -129,7 +129,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldGenerateRequestBodySchemaFromInputType() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
                     new RouteConfigBuilder()
                             .openApi()
@@ -161,7 +161,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldGenerateResponseSchemaFromOutputType() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
                     new RouteConfigBuilder()
                             .openApi()
@@ -189,7 +189,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldNotIncludeRequestBodyForGetRoutes() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -203,7 +203,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldApplyOpenApiMetadata() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
                     new RouteConfigBuilder()
                             .openApi()
@@ -228,7 +228,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldApplyParamDescriptions() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo/:pathExample", Method.GET, state, new GetEchoHandler(),
                     new RouteConfigBuilder()
                             .openApi()
@@ -254,7 +254,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldHideRoutesMarkedAsHidden() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.jsonRoute("/openapi/hidden", Method.GET, state, new GetEchoHandler(),
                     new RouteConfigBuilder()
@@ -276,7 +276,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldGenerateOperationIds() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -291,7 +291,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldMarkPrimitiveFieldsAsRequired() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
                     new RouteConfigBuilder()
                             .openApi()
@@ -320,7 +320,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldServeSpecViaEndpoint() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
             r.serveOpenApiSpec("/openapi.json", "Test API", "1.0.0", "A test API");
         });
@@ -337,7 +337,7 @@ public class OpenApiSpecTest {
 
     @Test
     public void shouldChainRouteConfigWithTimeoutAndOpenApi() throws Exception {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/openapi/timeout", Method.POST, state, new PostEchoHandler(),
                     new RouteConfigBuilder()
                             .timeout(5000)

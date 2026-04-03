@@ -19,7 +19,7 @@ import java.util.Collection;
 
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createTestServerAndClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -55,7 +55,7 @@ public class HttpContextTest {
     @Test
     public void shouldRunAllPipelineStagesOnCorrectContext() {
         final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/context", Method.POST, state, new ContextAssertingHttpHandler(asserter));
         });
         TestClient client = testClientAndServer.client();
@@ -76,7 +76,7 @@ public class HttpContextTest {
     @Test
     public void shouldRunAsyncBlockingMapOnCorrectContext() {
         final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/context-async-blocking", Method.POST, state, new ContextAssertingAsyncBlockingHttpHandler(asserter));
         });
         TestClient client = testClientAndServer.client();
@@ -98,7 +98,7 @@ public class HttpContextTest {
     public void shouldRunCorrelatedAsyncOnCorrectContext() {
         final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
         final ContextAssertingAsyncHttpHandler handler = new ContextAssertingAsyncHttpHandler(asserter);
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/context-correlated", Method.POST, state, handler);
         });
         handler.evillyReferenceLuxis(testClientAndServer.luxis());

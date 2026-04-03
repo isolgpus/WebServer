@@ -16,7 +16,7 @@ import java.util.Collection;
 
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createClient;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createTestServerAndClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -51,7 +51,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetCreatedStatusCode() {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         });
         TestClient client = testClientAndServer.client();
@@ -67,7 +67,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldAllowHandlerToSetNoContentStatusCode() {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         });
         TestClient client = testClientAndServer.client();
@@ -83,7 +83,7 @@ public class CustomStatusCodeTest {
 
     @Test
     public void shouldDefaultToOkWhenStatusCodeNotSet() {
-        testClientAndServer = createClient(mode, (r, state) -> {
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
         });
         TestClient client = testClientAndServer.client();

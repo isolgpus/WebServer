@@ -2,9 +2,13 @@ package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.ApplicationRoutesRegister;
 import io.kiw.luxis.web.Luxis;
+import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.WebServerConfig;
 import io.kiw.luxis.web.WebServiceConfigBuilder;
 import io.kiw.luxis.web.cors.CorsConfig;
+import io.kiw.luxis.web.http.client.LuxisHttpClient;
+import io.kiw.luxis.web.http.client.StubLuxisHttpClient;
+import io.kiw.luxis.web.http.client.VertxLuxisHttpClient;
 import io.kiw.luxis.web.internal.RoutesRegister;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
@@ -12,6 +16,7 @@ import io.kiw.luxis.web.test.StubContextAsserter;
 import io.kiw.luxis.web.test.StubTestClient;
 import io.kiw.luxis.web.test.VertxContextAsserter;
 import io.kiw.luxis.web.test.VertxTestClient;
+import io.vertx.core.Vertx;
 import org.junit.Assume;
 
 import java.util.Arrays;
@@ -34,8 +39,8 @@ public class TestApplicationClientCreator {
                 "VERTX".equals(System.getenv("TEST_MODE")));
     }
 
-    public static TestClientAndServer createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes) {
-        return createClient(mode, registerRoutes, new WebServiceConfigBuilder().setPort(8080));
+    public static TestClientAndServer createTestServerAndClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes) {
+        return createTestServerAndClient(mode, registerRoutes, new WebServiceConfigBuilder().setPort(8080));
     }
 
     public static ContextAsserter createContextAsserter(String mode) {
@@ -46,21 +51,29 @@ public class TestApplicationClientCreator {
         }
     }
 
-    public static TestClientAndServer createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, CorsConfig corsConfig) {
+    public static TestClientAndServer createTestServerAndClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, CorsConfig corsConfig) {
         WebServiceConfigBuilder builder = new WebServiceConfigBuilder().setPort(8080);
         if (corsConfig != null) {
             builder.setCorsConfig(corsConfig);
         }
-        return createClient(mode, registerRoutes, builder);
+        return createTestServerAndClient(mode, registerRoutes, builder);
     }
 
-    public static TestClientAndServer createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, Consumer<WebServiceConfigBuilder> configCustomizer) {
+    public static TestClientAndServer createTestServerAndClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, Consumer<WebServiceConfigBuilder> configCustomizer) {
         WebServiceConfigBuilder builder = new WebServiceConfigBuilder().setPort(8080);
         configCustomizer.accept(builder);
-        return createClient(mode, registerRoutes, builder);
+        return createTestServerAndClient(mode, registerRoutes, builder);
     }
 
-    private static TestClientAndServer createClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, WebServiceConfigBuilder builder) {
+    public static LuxisHttpClient createHttpClient(String mode, TestClientAndServer targetServer, String host, int port) {
+        if (REAL_MODE.equals(mode)) {
+            return new VertxLuxisHttpClient(Vertx.vertx());
+        } else {
+            return StubLuxisHttpClient.create((TestLuxis<?>) targetServer.luxis());
+        }
+    }
+
+    private static TestClientAndServer createTestServerAndClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, WebServiceConfigBuilder builder) {
         MyApplicationState state = new MyApplicationState();
         WebServerConfig config = builder.build();
 
