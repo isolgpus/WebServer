@@ -7,7 +7,10 @@ import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.ErrorHandler;
 import io.kiw.luxis.web.test.handler.HttpClientCallHandler;
+import io.kiw.luxis.web.test.handler.HttpClientChainedCallHandler;
+import io.kiw.luxis.web.test.handler.HttpClientDeleteCallHandler;
 import io.kiw.luxis.web.test.handler.HttpClientPostCallHandler;
+import io.kiw.luxis.web.test.handler.HttpClientPutCallHandler;
 import io.kiw.luxis.web.test.handler.SimpleGetHandler;
 import io.kiw.luxis.web.test.handler.SimpleMultiplyHandler;
 import org.junit.After;
@@ -137,5 +140,202 @@ public class HttpClientTest {
                                 .toString())
                         .toString()),
                 response);
+    }
+
+    @Test
+    public void shouldForwardPutRequestToServerB() {
+        serverB = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/api/multiply", Method.PUT, state, new SimpleMultiplyHandler());
+            return state;
+        });
+
+        final LuxisHttpClient httpClient = StubLuxisHttpClient.create(serverB);
+
+        serverA = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/put-forward", Method.POST, state, new HttpClientPutCallHandler(httpClient));
+            return state;
+        });
+
+        final StubTestClient<MyApplicationState> client = new StubTestClient<>("127.0.0.1", 8080, serverA);
+
+        final String bodyForB = json().put("value", 5).toString();
+        final TestHttpResponse response = client.post(
+            StubRequest.request("/put-forward")
+                .body(json()
+                    .put("targetPath", "/api/multiply")
+                    .put("forwardBody", bodyForB)
+                    .toString()));
+
+        Assert.assertEquals(
+            TestHttpResponse.response(json()
+                .put("statusCode", 200)
+                .put("body", json().put("result", 50).toString())
+                .toString()),
+            response);
+    }
+
+    @Test
+    public void shouldForwardDeleteRequestToServerB() {
+        serverB = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/api/resource", Method.DELETE, state, new SimpleGetHandler(99));
+            return state;
+        });
+
+        final LuxisHttpClient httpClient = StubLuxisHttpClient.create(serverB);
+
+        serverA = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/delete-forward", Method.POST, state, new HttpClientDeleteCallHandler(httpClient));
+            return state;
+        });
+
+        final StubTestClient<MyApplicationState> client = new StubTestClient<>("127.0.0.1", 8080, serverA);
+
+        final TestHttpResponse response = client.post(
+            StubRequest.request("/delete-forward")
+                .body(json().put("targetPath", "/api/resource").toString()));
+
+        Assert.assertEquals(
+            TestHttpResponse.response(json()
+                .put("statusCode", 200)
+                .put("body", json().put("result", 99).toString())
+                .toString()),
+            response);
+    }
+
+    @Test
+    public void shouldPropagateInternalServerErrorFromServerB() {
+        serverB = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/api/broken", Method.GET, state,
+                new ErrorHandler(ErrorStatusCode.INTERNAL_SERVER_ERROR, "something went wrong"));
+            return state;
+        });
+
+        final LuxisHttpClient httpClient = StubLuxisHttpClient.create(serverB);
+
+        serverA = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/call-broken", Method.POST, state, new HttpClientCallHandler(httpClient));
+            return state;
+        });
+
+        final StubTestClient<MyApplicationState> client = new StubTestClient<>("127.0.0.1", 8080, serverA);
+
+        final TestHttpResponse response = client.post(
+            StubRequest.request("/call-broken")
+                .body(json().put("targetPath", "/api/broken").toString()));
+
+        Assert.assertEquals(
+            TestHttpResponse.response(json()
+                .put("statusCode", 500)
+                .put("body", json()
+                    .put("message", "something went wrong")
+                    .set("errors", json())
+                    .toString())
+                .toString()),
+            response);
+    }
+
+    @Test
+    public void shouldPropagateUnauthorizedErrorFromServerB() {
+        serverB = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/api/protected", Method.GET, state,
+                new ErrorHandler(ErrorStatusCode.UNAUTHORIZED, "authentication required"));
+            return state;
+        });
+
+        final LuxisHttpClient httpClient = StubLuxisHttpClient.create(serverB);
+
+        serverA = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/call-protected", Method.POST, state, new HttpClientCallHandler(httpClient));
+            return state;
+        });
+
+        final StubTestClient<MyApplicationState> client = new StubTestClient<>("127.0.0.1", 8080, serverA);
+
+        final TestHttpResponse response = client.post(
+            StubRequest.request("/call-protected")
+                .body(json().put("targetPath", "/api/protected").toString()));
+
+        Assert.assertEquals(
+            TestHttpResponse.response(json()
+                .put("statusCode", 401)
+                .put("body", json()
+                    .put("message", "authentication required")
+                    .set("errors", json())
+                    .toString())
+                .toString()),
+            response);
+    }
+
+    @Test
+    public void shouldPropagateNotFoundErrorFromServerB() {
+        serverB = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/api/item", Method.GET, state,
+                new ErrorHandler(ErrorStatusCode.NOT_FOUND, "item not found"));
+            return state;
+        });
+
+        final LuxisHttpClient httpClient = StubLuxisHttpClient.create(serverB);
+
+        serverA = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/call-item", Method.POST, state, new HttpClientCallHandler(httpClient));
+            return state;
+        });
+
+        final StubTestClient<MyApplicationState> client = new StubTestClient<>("127.0.0.1", 8080, serverA);
+
+        final TestHttpResponse response = client.post(
+            StubRequest.request("/call-item")
+                .body(json().put("targetPath", "/api/item").toString()));
+
+        Assert.assertEquals(
+            TestHttpResponse.response(json()
+                .put("statusCode", 404)
+                .put("body", json()
+                    .put("message", "item not found")
+                    .set("errors", json())
+                    .toString())
+                .toString()),
+            response);
+    }
+
+    @Test
+    public void shouldChainCallsToServerBSequentially() {
+        serverB = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/api/seed", Method.GET, state, new SimpleGetHandler(6));
+            r.jsonRoute("/api/multiply", Method.POST, state, new SimpleMultiplyHandler());
+            return state;
+        });
+
+        final LuxisHttpClient httpClient = StubLuxisHttpClient.create(serverB);
+
+        serverA = Luxis.test(r -> {
+            final MyApplicationState state = new MyApplicationState();
+            r.jsonRoute("/chain", Method.POST, state,
+                new HttpClientChainedCallHandler(httpClient, "/api/seed", "/api/multiply"));
+            return state;
+        });
+
+        final StubTestClient<MyApplicationState> client = new StubTestClient<>("127.0.0.1", 8080, serverA);
+
+        final TestHttpResponse response = client.post(
+            StubRequest.request("/chain").body("{}"));
+
+        Assert.assertEquals(
+            TestHttpResponse.response(json()
+                .put("statusCode", 200)
+                .put("body", json().put("result", 60).toString())
+                .toString()),
+            response);
     }
 }
