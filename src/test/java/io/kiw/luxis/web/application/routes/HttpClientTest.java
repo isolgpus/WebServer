@@ -70,7 +70,7 @@ public class HttpClientTest {
                 r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42)),
                 builder -> builder.setPort(SERVER_B_PORT));
 
-        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, SERVER_B_HOST, SERVER_B_PORT);
+        final LuxisHttpClient httpClient = createHttpClient(mode, serverB);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
                 r.jsonRoute("/call-b", Method.POST, state, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));
@@ -93,7 +93,7 @@ public class HttpClientTest {
                 r.jsonRoute("/api/multiply", Method.POST, state, new SimpleMultiplyHandler()),
                 builder -> builder.setPort(SERVER_B_PORT));
 
-        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, SERVER_B_HOST, SERVER_B_PORT);
+        final LuxisHttpClient httpClient = createHttpClient(mode, serverB);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
                 r.jsonRoute("/forward", Method.POST, state, new HttpClientPostCallHandler(httpClient, "127.0.0.1:" + SERVER_B_PORT)));
@@ -122,7 +122,7 @@ public class HttpClientTest {
 
         final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
                 .baseUrl(SERVER_B_BASE_URL);
-        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, SERVER_B_HOST, SERVER_B_PORT, config);
+        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, config);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
                 r.jsonRoute("/call-b", Method.POST, state, new HttpClientCallHandler(httpClient, "")));
@@ -148,7 +148,7 @@ public class HttpClientTest {
 
         final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
                 .errorAwareResponses(true);
-        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, SERVER_B_HOST, SERVER_B_PORT, config);
+        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, config);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
                 r.jsonRoute("/call-error", Method.POST, state, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));
@@ -170,7 +170,7 @@ public class HttpClientTest {
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults();
-        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, SERVER_B_HOST, SERVER_B_PORT, config);
+        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, config);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
                 r.jsonRoute("/call-b-typed", Method.POST, state, new HttpClientTypedGetHandler(httpClient, SERVER_B_BASE_URL)));
@@ -193,7 +193,7 @@ public class HttpClientTest {
                         new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input")),
                 builder -> builder.setPort(SERVER_B_PORT));
 
-        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, SERVER_B_HOST, SERVER_B_PORT);
+        final LuxisHttpClient httpClient = createHttpClient(mode, serverB);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
                 r.jsonRoute("/call-error", Method.POST, state, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));

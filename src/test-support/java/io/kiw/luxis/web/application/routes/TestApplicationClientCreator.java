@@ -66,7 +66,7 @@ public class TestApplicationClientCreator {
         return createTestServerAndClient(mode, registerRoutes, builder);
     }
 
-    public static LuxisHttpClient createHttpClient(String mode, TestClientAndServer targetServer, String host, int port) {
+    public static LuxisHttpClient createHttpClient(String mode, TestClientAndServer targetServer) {
         if (REAL_MODE.equals(mode)) {
             return new VertxLuxisHttpClient(Vertx.vertx());
         } else {
@@ -74,7 +74,7 @@ public class TestApplicationClientCreator {
         }
     }
 
-    public static LuxisHttpClient createHttpClient(String mode, TestClientAndServer targetServer, String host, int port, LuxisHttpClientConfig config) {
+    public static LuxisHttpClient createHttpClient(String mode, TestClientAndServer targetServer, LuxisHttpClientConfig config) {
         if (REAL_MODE.equals(mode)) {
             return new VertxLuxisHttpClient(Vertx.vertx(), config);
         } else {
@@ -97,7 +97,7 @@ public class TestApplicationClientCreator {
             return new TestClientAndServer(new VertxTestClient("127.0.0.1", 8080), luxis);
         } else {
             Luxis<MyApplicationState> luxis = Luxis.test(routes, config);
-            return new TestClientAndServer(new StubTestClient<>("127.0.0.1", 8080, luxis), luxis);
+            return new TestClientAndServer(new StubTestClient("127.0.0.1", 8080, luxis), luxis);
         }
 
     }

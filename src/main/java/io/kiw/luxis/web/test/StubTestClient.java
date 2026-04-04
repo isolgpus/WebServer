@@ -9,13 +9,13 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class StubTestClient<APP> implements TestClient {
+public class StubTestClient implements TestClient {
 
     private List<Exception> seenExceptions = new ArrayList<>();
     private final StubRouter router;
 
 
-    public StubTestClient(final String host, final int port, final Luxis<APP> luxis) {
+    public <APP> StubTestClient(final String host, final int port, final Luxis<APP> luxis) {
         final TestLuxis<APP> testWebServer = (TestLuxis<APP>) luxis;
         testWebServer.setExceptionHandler(seenExceptions::add);
         this.router = testWebServer.getRouter();

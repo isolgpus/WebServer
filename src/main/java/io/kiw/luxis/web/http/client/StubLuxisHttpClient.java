@@ -4,9 +4,8 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.HttpErrorResponse;
-import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.StubRequest;
-import io.kiw.luxis.web.test.StubRouter;
+import io.kiw.luxis.web.test.StubTestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import tools.jackson.databind.ObjectMapper;
 
@@ -17,50 +16,51 @@ import java.util.concurrent.CompletableFuture;
 
 public final class StubLuxisHttpClient implements LuxisHttpClient {
 
-    private final StubRouter router;
+    private final StubTestClient stubTestClient;
     private final LuxisHttpClientConfig config;
     private final ObjectMapper mapper = new ObjectMapper();
 
-    private StubLuxisHttpClient(final StubRouter router, final LuxisHttpClientConfig config) {
-        this.router = router;
+    private StubLuxisHttpClient(final StubTestClient stubTestClient, final LuxisHttpClientConfig config) {
+        this.stubTestClient = stubTestClient;
         this.config = config;
     }
 
     public static StubLuxisHttpClient create(final TestLuxis<?> targetServer) {
-        return new StubLuxisHttpClient(targetServer.getRouter(), LuxisHttpClientConfig.defaults());
+
+        return create(targetServer, LuxisHttpClientConfig.defaults());
     }
 
     public static StubLuxisHttpClient create(final TestLuxis<?> targetServer, final LuxisHttpClientConfig config) {
-        return new StubLuxisHttpClient(targetServer.getRouter(), config);
+        return new StubLuxisHttpClient(new StubTestClient(null, 80, targetServer), config);
     }
 
     @Override
     public <T> LuxisAsync<HttpClientResponse<T>> get(final HttpClientRequest request, final Class<T> responseType) {
-        return send(request, Method.GET, responseType);
+        return send(request, r -> stubTestClient.get(r), responseType);
     }
 
     @Override
     public <T> LuxisAsync<HttpClientResponse<T>> post(final HttpClientRequest request, final Class<T> responseType) {
-        return send(request, Method.POST, responseType);
+        return send(request, r -> stubTestClient.post(r), responseType);
     }
 
     @Override
     public <T> LuxisAsync<HttpClientResponse<T>> put(final HttpClientRequest request, final Class<T> responseType) {
-        return send(request, Method.PUT, responseType);
+        return send(request, r -> stubTestClient.put(r), responseType);
     }
 
     @Override
     public <T> LuxisAsync<HttpClientResponse<T>> delete(final HttpClientRequest request, final Class<T> responseType) {
-        return send(request, Method.DELETE, responseType);
+        return send(request, r -> stubTestClient.delete(r), responseType);
     }
 
     @Override
     public <T> LuxisAsync<HttpClientResponse<T>> patch(final HttpClientRequest request, final Class<T> responseType) {
-        return send(request, Method.PATCH, responseType);
+        return send(request, r -> stubTestClient.patch(r), responseType);
     }
 
     @SuppressWarnings("unchecked")
-    private <T> LuxisAsync<HttpClientResponse<T>> send(final HttpClientRequest request, final Method method, final Class<T> responseType) {
+    private <T> LuxisAsync<HttpClientResponse<T>> send(final HttpClientRequest request, final java.util.function.Function<StubRequest, TestHttpResponse> method, final Class<T> responseType) {
         final String resolvedUrl = resolveUrl(request.getUrl());
         final URI uri = URI.create(resolvedUrl);
         final String path = uri.getPath();
@@ -89,7 +89,7 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
             }
         }
 
-        final TestHttpResponse testResponse = router.handle(stubRequest, method);
+        final TestHttpResponse testResponse = method.apply(stubRequest);
         final String rawBody = testResponse.responseBody;
         final int statusCode = testResponse.statusCode;
 
