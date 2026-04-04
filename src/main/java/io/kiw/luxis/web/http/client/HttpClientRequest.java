@@ -1,5 +1,7 @@
 package io.kiw.luxis.web.http.client;
 
+import tools.jackson.databind.ObjectMapper;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,6 +21,11 @@ public final class HttpClientRequest {
 
     public HttpClientRequest body(final String body) {
         this.body = body;
+        return this;
+    }
+
+    public HttpClientRequest jsonBody(final Object body, final ObjectMapper objectMapper) {
+        this.body = objectMapper.writeValueAsString(body);
         return this;
     }
 

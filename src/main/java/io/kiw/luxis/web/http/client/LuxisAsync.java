@@ -16,6 +16,10 @@ public final class LuxisAsync<T> {
         return new LuxisAsync<>(CompletableFuture.completedFuture(Result.success(value)));
     }
 
+    public <R> LuxisAsync<R> map(final java.util.function.Function<T, R> mapper) {
+        return new LuxisAsync<>(future.thenApply(result -> result.map(mapper)));
+    }
+
     public CompletableFuture<Result<HttpErrorResponse, T>> toCompletableFuture() {
         return future;
     }

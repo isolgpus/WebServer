@@ -7,6 +7,7 @@ import io.kiw.luxis.web.WebServerConfig;
 import io.kiw.luxis.web.WebServiceConfigBuilder;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.http.client.LuxisHttpClient;
+import io.kiw.luxis.web.http.client.LuxisHttpClientConfig;
 import io.kiw.luxis.web.http.client.StubLuxisHttpClient;
 import io.kiw.luxis.web.http.client.VertxLuxisHttpClient;
 import io.kiw.luxis.web.internal.RoutesRegister;
@@ -70,6 +71,14 @@ public class TestApplicationClientCreator {
             return new VertxLuxisHttpClient(Vertx.vertx());
         } else {
             return StubLuxisHttpClient.create((TestLuxis<?>) targetServer.luxis());
+        }
+    }
+
+    public static LuxisHttpClient createHttpClient(String mode, TestClientAndServer targetServer, String host, int port, LuxisHttpClientConfig config) {
+        if (REAL_MODE.equals(mode)) {
+            return new VertxLuxisHttpClient(Vertx.vertx(), config);
+        } else {
+            return StubLuxisHttpClient.create((TestLuxis<?>) targetServer.luxis(), config);
         }
     }
 

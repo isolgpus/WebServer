@@ -2,33 +2,53 @@ package io.kiw.luxis.web.http.client;
 
 public interface LuxisHttpClient {
 
-    LuxisAsync<HttpClientResponse> get(HttpClientRequest request);
+    <T> LuxisAsync<HttpClientResponse<T>> get(HttpClientRequest request, Class<T> responseType);
 
-    LuxisAsync<HttpClientResponse> post(HttpClientRequest request);
+    <T> LuxisAsync<HttpClientResponse<T>> post(HttpClientRequest request, Class<T> responseType);
 
-    LuxisAsync<HttpClientResponse> put(HttpClientRequest request);
+    <T> LuxisAsync<HttpClientResponse<T>> put(HttpClientRequest request, Class<T> responseType);
 
-    LuxisAsync<HttpClientResponse> delete(HttpClientRequest request);
+    <T> LuxisAsync<HttpClientResponse<T>> delete(HttpClientRequest request, Class<T> responseType);
 
-    LuxisAsync<HttpClientResponse> patch(HttpClientRequest request);
+    <T> LuxisAsync<HttpClientResponse<T>> patch(HttpClientRequest request, Class<T> responseType);
 
-    default LuxisAsync<HttpClientResponse> get(final String url) {
-        return get(HttpClientRequest.request(url));
+    default LuxisAsync<HttpClientResponse<String>> get(final String url) {
+        return get(HttpClientRequest.request(url), String.class);
     }
 
-    default LuxisAsync<HttpClientResponse> post(final String url, final String body) {
-        return post(HttpClientRequest.request(url).body(body));
+    default LuxisAsync<HttpClientResponse<String>> post(final String url, final String body) {
+        return post(HttpClientRequest.request(url).body(body), String.class);
     }
 
-    default LuxisAsync<HttpClientResponse> put(final String url, final String body) {
-        return put(HttpClientRequest.request(url).body(body));
+    default LuxisAsync<HttpClientResponse<String>> put(final String url, final String body) {
+        return put(HttpClientRequest.request(url).body(body), String.class);
     }
 
-    default LuxisAsync<HttpClientResponse> delete(final String url) {
-        return delete(HttpClientRequest.request(url));
+    default LuxisAsync<HttpClientResponse<String>> delete(final String url) {
+        return delete(HttpClientRequest.request(url), String.class);
     }
 
-    default LuxisAsync<HttpClientResponse> patch(final String url, final String body) {
-        return patch(HttpClientRequest.request(url).body(body));
+    default LuxisAsync<HttpClientResponse<String>> patch(final String url, final String body) {
+        return patch(HttpClientRequest.request(url).body(body), String.class);
+    }
+
+    default <T> LuxisAsync<HttpClientResponse<T>> get(final String url, final Class<T> responseType) {
+        return get(HttpClientRequest.request(url), responseType);
+    }
+
+    default <T> LuxisAsync<HttpClientResponse<T>> post(final String url, final String body, final Class<T> responseType) {
+        return post(HttpClientRequest.request(url).body(body), responseType);
+    }
+
+    default <T> LuxisAsync<HttpClientResponse<T>> put(final String url, final String body, final Class<T> responseType) {
+        return put(HttpClientRequest.request(url).body(body), responseType);
+    }
+
+    default <T> LuxisAsync<HttpClientResponse<T>> delete(final String url, final Class<T> responseType) {
+        return delete(HttpClientRequest.request(url), responseType);
+    }
+
+    default <T> LuxisAsync<HttpClientResponse<T>> patch(final String url, final String body, final Class<T> responseType) {
+        return patch(HttpClientRequest.request(url).body(body), responseType);
     }
 }

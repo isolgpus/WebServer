@@ -2,12 +2,14 @@ package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.http.client.LuxisHttpClient;
+import io.kiw.luxis.web.http.client.LuxisHttpClientConfig;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.ErrorHandler;
 import io.kiw.luxis.web.test.handler.HttpClientCallHandler;
 import io.kiw.luxis.web.test.handler.HttpClientPostCallHandler;
+import io.kiw.luxis.web.test.handler.HttpClientTypedGetHandler;
 import io.kiw.luxis.web.test.handler.SimpleGetHandler;
 import io.kiw.luxis.web.test.handler.SimpleMultiplyHandler;
 import org.junit.After;
@@ -108,6 +110,78 @@ public class HttpClientTest {
                 TestHttpResponse.response(json()
                         .put("statusCode", 200)
                         .put("body", json().put("result", 70).toString())
+                        .toString()),
+                response);
+    }
+
+    @Test
+    public void shouldCallServerBUsingBaseUrl() {
+        serverB = createTestServerAndClient(mode, (r, state) ->
+                r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(99)),
+                builder -> builder.setPort(SERVER_B_PORT));
+
+        final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
+                .baseUrl(SERVER_B_BASE_URL);
+        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, SERVER_B_HOST, SERVER_B_PORT, config);
+
+        serverA = createTestServerAndClient(mode, (r, state) ->
+                r.jsonRoute("/call-b", Method.POST, state, new HttpClientCallHandler(httpClient, "")));
+
+        final TestHttpResponse response = serverA.client().post(
+                StubRequest.request("/call-b")
+                        .body(json().put("targetPath", "/api/value").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json()
+                        .put("statusCode", 200)
+                        .put("body", json().put("result", 99).toString())
+                        .toString()),
+                response);
+    }
+
+    @Test
+    public void shouldReturnResultErrorWhenErrorAwareAndServerBReturns400() {
+        serverB = createTestServerAndClient(mode, (r, state) ->
+                r.jsonRoute("/api/error", Method.GET, state,
+                        new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input")),
+                builder -> builder.setPort(SERVER_B_PORT));
+
+        final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
+                .errorAwareResponses(true);
+        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, SERVER_B_HOST, SERVER_B_PORT, config);
+
+        serverA = createTestServerAndClient(mode, (r, state) ->
+                r.jsonRoute("/call-error", Method.POST, state, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));
+
+        final TestHttpResponse response = serverA.client().post(
+                StubRequest.request("/call-error")
+                        .body(json().put("targetPath", "/api/error").toString()));
+
+        Assert.assertEquals(400, response.statusCode);
+        Assert.assertEquals(
+                json().put("message", "bad input").set("errors", json()).toString(),
+                response.responseBody);
+    }
+
+    @Test
+    public void shouldDeserializeTypedResponseFromServerB() {
+        serverB = createTestServerAndClient(mode, (r, state) ->
+                r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42)),
+                builder -> builder.setPort(SERVER_B_PORT));
+
+        final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults();
+        final LuxisHttpClient httpClient = createHttpClient(mode, serverB, SERVER_B_HOST, SERVER_B_PORT, config);
+
+        serverA = createTestServerAndClient(mode, (r, state) ->
+                r.jsonRoute("/call-b-typed", Method.POST, state, new HttpClientTypedGetHandler(httpClient, SERVER_B_BASE_URL)));
+
+        final TestHttpResponse response = serverA.client().post(
+                StubRequest.request("/call-b-typed")
+                        .body(json().put("targetPath", "/api/value").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json()
+                        .put("result", 42)
                         .toString()),
                 response);
     }
