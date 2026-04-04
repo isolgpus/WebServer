@@ -1,11 +1,15 @@
 package io.kiw.luxis.web.application.routes;
 
+import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.http.ErrorStatusCode;
+import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.Method;
+import io.kiw.luxis.web.http.client.HttpClientResponse;
 import io.kiw.luxis.web.http.client.LuxisHttpClient;
 import io.kiw.luxis.web.http.client.LuxisHttpClientConfig;
-import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.test.handler.AlwaysThrowHandler;
 import io.kiw.luxis.web.test.handler.ErrorHandler;
 import io.kiw.luxis.web.test.handler.HttpClientCallHandler;
 import io.kiw.luxis.web.test.handler.HttpClientPostCallHandler;
@@ -23,8 +27,8 @@ import java.util.Collection;
 
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createTestServerAndClient;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createHttpClient;
+import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createTestServerAndClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -211,5 +215,239 @@ public class HttpClientTest {
                                 .toString())
                         .toString()),
                 response);
+    }
+
+    // --- Direct LuxisHttpClient tests against a single server ---
+
+    private LuxisHttpClient createDirectClient() {
+        serverB = createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42));
+            r.jsonRoute("/api/value", Method.POST, state, new SimpleGetHandler(42));
+            r.jsonRoute("/api/value", Method.PUT, state, new SimpleGetHandler(42));
+            r.jsonRoute("/api/value", Method.DELETE, state, new SimpleGetHandler(42));
+            r.jsonRoute("/api/value", Method.PATCH, state, new SimpleGetHandler(42));
+
+            r.jsonRoute("/api/bad-request", Method.GET, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+            r.jsonRoute("/api/bad-request", Method.POST, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+            r.jsonRoute("/api/bad-request", Method.PUT, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+            r.jsonRoute("/api/bad-request", Method.DELETE, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+            r.jsonRoute("/api/bad-request", Method.PATCH, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+
+            r.jsonRoute("/api/throw", Method.GET, state, new AlwaysThrowHandler());
+            r.jsonRoute("/api/throw", Method.POST, state, new AlwaysThrowHandler());
+            r.jsonRoute("/api/throw", Method.PUT, state, new AlwaysThrowHandler());
+            r.jsonRoute("/api/throw", Method.DELETE, state, new AlwaysThrowHandler());
+            r.jsonRoute("/api/throw", Method.PATCH, state, new AlwaysThrowHandler());
+        }, builder -> builder.setPort(SERVER_B_PORT));
+
+        final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
+                .baseUrl(SERVER_B_BASE_URL)
+                .errorAwareResponses(true);
+        return createHttpClient(mode, serverB, config);
+    }
+
+    // GET
+
+    @Test
+    public void shouldGetSuccessfulResponseDirectly() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.get("/api/value").toCompletableFuture().join();
+
+        result.consume(
+                error -> Assert.fail("Expected success but got error: " + error.statusCode()),
+                success -> {
+                    Assert.assertEquals(200, success.statusCode());
+                    Assert.assertEquals(json().put("result", 42).toString(), success.body());
+                });
+    }
+
+    @Test
+    public void shouldGetReturn400WhenValidationFails() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.get("/api/bad-request").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(400, error.statusCode());
+                    Assert.assertEquals("bad input", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    @Test
+    public void shouldGetReturn500WhenExceptionThrown() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.get("/api/throw").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(500, error.statusCode());
+                    Assert.assertEquals("Something went wrong", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    // POST
+
+    @Test
+    public void shouldPostSuccessfulResponseDirectly() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.post("/api/value", "{}").toCompletableFuture().join();
+
+        result.consume(
+                error -> Assert.fail("Expected success but got error: " + error.statusCode()),
+                success -> {
+                    Assert.assertEquals(200, success.statusCode());
+                    Assert.assertEquals(json().put("result", 42).toString(), success.body());
+                });
+    }
+
+    @Test
+    public void shouldPostReturn400WhenValidationFails() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.post("/api/bad-request", "{}").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(400, error.statusCode());
+                    Assert.assertEquals("bad input", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    @Test
+    public void shouldPostReturn500WhenExceptionThrown() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.post("/api/throw", "{}").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(500, error.statusCode());
+                    Assert.assertEquals("Something went wrong", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    // PUT
+
+    @Test
+    public void shouldPutSuccessfulResponseDirectly() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.put("/api/value", "{}").toCompletableFuture().join();
+
+        result.consume(
+                error -> Assert.fail("Expected success but got error: " + error.statusCode()),
+                success -> {
+                    Assert.assertEquals(200, success.statusCode());
+                    Assert.assertEquals(json().put("result", 42).toString(), success.body());
+                });
+    }
+
+    @Test
+    public void shouldPutReturn400WhenValidationFails() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.put("/api/bad-request", "{}").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(400, error.statusCode());
+                    Assert.assertEquals("bad input", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    @Test
+    public void shouldPutReturn500WhenExceptionThrown() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.put("/api/throw", "{}").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(500, error.statusCode());
+                    Assert.assertEquals("Something went wrong", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    // DELETE
+
+    @Test
+    public void shouldDeleteSuccessfulResponseDirectly() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.delete("/api/value").toCompletableFuture().join();
+
+        result.consume(
+                error -> Assert.fail("Expected success but got error: " + error.statusCode() + " " + error.errorMessageValue().message()),
+                success -> {
+                    Assert.assertEquals(200, success.statusCode());
+                    Assert.assertEquals(json().put("result", 42).toString(), success.body());
+                });
+    }
+
+    @Test
+    public void shouldDeleteReturn400WhenValidationFails() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.delete("/api/bad-request").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(400, error.statusCode());
+                    Assert.assertEquals("bad input", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    @Test
+    public void shouldDeleteReturn500WhenExceptionThrown() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.delete("/api/throw").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(500, error.statusCode());
+                    Assert.assertEquals("Something went wrong", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    // PATCH
+
+    @Test
+    public void shouldPatchSuccessfulResponseDirectly() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.patch("/api/value", "{}").toCompletableFuture().join();
+
+        result.consume(
+                error -> Assert.fail("Expected success but got error: " + error.statusCode()),
+                success -> {
+                    Assert.assertEquals(200, success.statusCode());
+                    Assert.assertEquals(json().put("result", 42).toString(), success.body());
+                });
+    }
+
+    @Test
+    public void shouldPatchReturn400WhenValidationFails() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.patch("/api/bad-request", "{}").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(400, error.statusCode());
+                    Assert.assertEquals("bad input", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    @Test
+    public void shouldPatchReturn500WhenExceptionThrown() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<String>> result = client.patch("/api/throw", "{}").toCompletableFuture().join();
+
+        result.consume(
+                error -> {
+                    Assert.assertEquals(500, error.statusCode());
+                    Assert.assertEquals("Something went wrong", error.errorMessageValue().message());
+                },
+                success -> Assert.fail("Expected error but got success: " + success.statusCode()));
     }
 }

@@ -63,12 +63,12 @@ public class RoutesRegister {
                 .flatMap(ctx -> {
                     ctx.http().addResponseHeader("Content-Type", "application/json");
 
-                    if (method.canHaveABody() && ctx.http().ctx.getRequestBody() == null) {
+                    if (method.canHaveABody() && ctx.http().ctx.getRequestBody() == null && !jsonHandler.getType().equals(Void.class)) {
                         return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
                     }
 
                     try {
-                        final IN jsonRequest = method.canHaveABody() ? objectMapper.readValue(ctx.http().ctx.getRequestBody(), jsonHandler) : null;
+                        final IN jsonRequest = method.canHaveABody() && !jsonHandler.getType().equals(Void.class) ? objectMapper.readValue(ctx.http().ctx.getRequestBody(), jsonHandler) : null;
                         return HttpResult.success(jsonRequest);
                     } catch (final Exception e) {
                         return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));

@@ -1,17 +1,16 @@
 package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.web.handler.JsonHandler;
-import io.kiw.luxis.web.http.EmptyRequest;
 import io.kiw.luxis.web.http.HttpCookie;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class GetEchoHandler extends JsonHandler<EmptyRequest, EchoResponse, MyApplicationState> {
+public class GetEchoHandler extends JsonHandler<Void, EchoResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<EchoResponse> handle(final HttpStream<EmptyRequest, MyApplicationState> httpStream) {
+    public RequestPipeline<EchoResponse> handle(final HttpStream<Void, MyApplicationState> httpStream) {
         return
                 httpStream
                         .complete(ctx -> {
