@@ -17,11 +17,11 @@ public interface LuxisHttpClient {
     }
 
     default LuxisAsync<HttpClientResponse<String>> post(final String url, final String body) {
-        return post(HttpClientRequest.request(url).body(body), String.class);
+        return post(HttpClientRequest.request(url, body), String.class);
     }
 
     default LuxisAsync<HttpClientResponse<String>> put(final String url, final String body) {
-        return put(HttpClientRequest.request(url).body(body), String.class);
+        return put(HttpClientRequest.request(url, body), String.class);
     }
 
     default LuxisAsync<HttpClientResponse<String>> delete(final String url) {
@@ -29,7 +29,7 @@ public interface LuxisHttpClient {
     }
 
     default LuxisAsync<HttpClientResponse<String>> patch(final String url, final String body) {
-        return patch(HttpClientRequest.request(url).body(body), String.class);
+        return patch(HttpClientRequest.request(url, body), String.class);
     }
 
     default <T> LuxisAsync<HttpClientResponse<T>> get(final String url, final Class<T> responseType) {
@@ -37,11 +37,11 @@ public interface LuxisHttpClient {
     }
 
     default <T> LuxisAsync<HttpClientResponse<T>> post(final String url, final String body, final Class<T> responseType) {
-        return post(HttpClientRequest.request(url).body(body), responseType);
+        return post(HttpClientRequest.request(url, body), responseType);
     }
 
     default <T> LuxisAsync<HttpClientResponse<T>> put(final String url, final String body, final Class<T> responseType) {
-        return put(HttpClientRequest.request(url).body(body), responseType);
+        return put(HttpClientRequest.request(url, body), responseType);
     }
 
     default <T> LuxisAsync<HttpClientResponse<T>> delete(final String url, final Class<T> responseType) {
@@ -49,6 +49,6 @@ public interface LuxisHttpClient {
     }
 
     default <T> LuxisAsync<HttpClientResponse<T>> patch(final String url, final String body, final Class<T> responseType) {
-        return patch(HttpClientRequest.request(url).body(body), responseType);
+        return patch(HttpClientRequest.request(url, body), responseType);
     }
 }

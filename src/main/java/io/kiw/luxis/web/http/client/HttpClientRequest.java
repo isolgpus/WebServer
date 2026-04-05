@@ -1,33 +1,27 @@
 package io.kiw.luxis.web.http.client;
 
-import tools.jackson.databind.ObjectMapper;
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public final class HttpClientRequest {
     private final String url;
-    private String body;
+    private final Object body;
     private final Map<String, String> headers = new LinkedHashMap<>();
     private final Map<String, String> queryParams = new LinkedHashMap<>();
 
-    private HttpClientRequest(final String url) {
+    private HttpClientRequest(final String url, final Object body) {
         this.url = url;
+        this.body = body;
     }
 
     public static HttpClientRequest request(final String url) {
-        return new HttpClientRequest(url);
+        return request(url, null);
     }
 
-    public HttpClientRequest body(final String body) {
-        this.body = body;
-        return this;
+    public static HttpClientRequest request(final String url, final Object body) {
+        return new HttpClientRequest(url, body);
     }
 
-    public HttpClientRequest jsonBody(final Object body, final ObjectMapper objectMapper) {
-        this.body = objectMapper.writeValueAsString(body);
-        return this;
-    }
 
     public HttpClientRequest header(final String key, final String value) {
         this.headers.put(key, value);
@@ -43,7 +37,7 @@ public final class HttpClientRequest {
         return url;
     }
 
-    public String getBody() {
+    public Object getBody() {
         return body;
     }
 

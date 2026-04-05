@@ -68,7 +68,8 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
         final StubRequest stubRequest = StubRequest.request(path);
 
         if (request.getBody() != null) {
-            stubRequest.body(request.getBody());
+
+            stubRequest.body(request.getBody() instanceof String ? (String) request.getBody() : mapper.writeValueAsString(request.getBody()));
         }
 
         for (final Map.Entry<String, String> entry : request.getHeaders().entrySet()) {

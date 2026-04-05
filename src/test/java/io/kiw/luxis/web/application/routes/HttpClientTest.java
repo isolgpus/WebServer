@@ -4,6 +4,7 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.Method;
+import io.kiw.luxis.web.http.client.HttpClientRequest;
 import io.kiw.luxis.web.http.client.HttpClientResponse;
 import io.kiw.luxis.web.http.client.LuxisHttpClient;
 import io.kiw.luxis.web.http.client.LuxisHttpClientConfig;
@@ -16,6 +17,7 @@ import io.kiw.luxis.web.test.handler.HttpClientPostCallHandler;
 import io.kiw.luxis.web.test.handler.HttpClientTypedGetHandler;
 import io.kiw.luxis.web.test.handler.SimpleGetHandler;
 import io.kiw.luxis.web.test.handler.SimpleMultiplyHandler;
+import io.kiw.luxis.web.test.handler.SimplePostValueHandler;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -71,7 +73,7 @@ public class HttpClientTest {
     @Test
     public void shouldCallServerBViaHttpClientGet() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42)),
+                        r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42)),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClient httpClient = createHttpClient(mode, serverB);
@@ -94,7 +96,7 @@ public class HttpClientTest {
     @Test
     public void shouldForwardPostBodyToServerB() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/api/multiply", Method.POST, state, new SimpleMultiplyHandler()),
+                        r.jsonRoute("/api/multiply", Method.POST, state, new SimpleMultiplyHandler()),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClient httpClient = createHttpClient(mode, serverB);
@@ -121,7 +123,7 @@ public class HttpClientTest {
     @Test
     public void shouldCallServerBUsingBaseUrl() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(99)),
+                        r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(99)),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
@@ -146,8 +148,8 @@ public class HttpClientTest {
     @Test
     public void shouldReturnResultErrorWhenErrorAwareAndServerBReturns400() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/api/error", Method.GET, state,
-                        new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input")),
+                        r.jsonRoute("/api/error", Method.GET, state,
+                                new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input")),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
@@ -170,7 +172,7 @@ public class HttpClientTest {
     @Test
     public void shouldDeserializeTypedResponseFromServerB() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42)),
+                        r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42)),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults();
@@ -193,8 +195,8 @@ public class HttpClientTest {
     @Test
     public void shouldHandleServerBReturningError() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/api/error", Method.GET, state,
-                        new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input")),
+                        r.jsonRoute("/api/error", Method.GET, state,
+                                new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input")),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClient httpClient = createHttpClient(mode, serverB);
@@ -226,6 +228,8 @@ public class HttpClientTest {
             r.jsonRoute("/api/value", Method.PUT, state, new SimpleGetHandler(42));
             r.jsonRoute("/api/value", Method.DELETE, state, new SimpleGetHandler(42));
             r.jsonRoute("/api/value", Method.PATCH, state, new SimpleGetHandler(42));
+
+            r.jsonRoute("/api/postValue", Method.POST, state, new SimplePostValueHandler());
 
             r.jsonRoute("/api/bad-request", Method.GET, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
             r.jsonRoute("/api/bad-request", Method.POST, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
@@ -299,6 +303,20 @@ public class HttpClientTest {
                 success -> {
                     Assert.assertEquals(200, success.statusCode());
                     Assert.assertEquals(json().put("result", 42).toString(), success.body());
+                });
+    }
+
+    @Test
+    public void shouldPostSuccessfulResponseDirectlyWithHttpClientRequestApi() {
+        final LuxisHttpClient client = createDirectClient();
+        final Result<HttpErrorResponse, HttpClientResponse<ValueResponse>> result = client.post(HttpClientRequest.request("/api/postValue", new ValueRequest("cheese")), ValueResponse.class)
+                .toCompletableFuture().join();
+
+        result.consume(
+                error -> Assert.fail("Expected success but got error: " + error.statusCode()),
+                success -> {
+                    Assert.assertEquals(200, success.statusCode());
+                    Assert.assertEquals(new ValueResponse("cheese string"), success.body());
                 });
     }
 

@@ -80,7 +80,8 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
 
                     if (request.getBody() != null) {
                         req.putHeader("Content-Type", "application/json");
-                        req.send(Buffer.buffer(request.getBody()))
+
+                        req.send(Buffer.buffer(request.getBody() instanceof String ? (String) request.getBody() : mapper.writeValueAsString(request.getBody())))
                                 .onSuccess(resp -> handleResponse(resp, future, responseType))
                                 .onFailure(future::completeExceptionally);
                     } else {
