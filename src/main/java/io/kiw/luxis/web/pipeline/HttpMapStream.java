@@ -38,6 +38,20 @@ public class HttpMapStream<IN, APP> {
     }
 
 
+    public HttpMapStream<IN, APP> peek(final HttpControlStreamPeeker<IN, APP> peeker) {
+        return map(ctx -> {
+            peeker.handle(ctx);
+            return ctx.in();
+        });
+    }
+
+    public HttpMapStream<IN, APP> blockingPeek(final HttpControlStreamBlockingPeeker<IN> peeker) {
+        return blockingMap(ctx -> {
+            peeker.handle(ctx);
+            return ctx.in();
+        });
+    }
+
     public <OUT> HttpMapStream<OUT, APP> blockingMap(final HttpControlStreamBlockingMapper<IN, OUT> flowHandler) {
 
         return blockingFlatMap(ctx -> Result.success(flowHandler.handle(ctx)));

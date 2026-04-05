@@ -17,6 +17,7 @@ import io.kiw.luxis.web.test.handler.AsyncMapWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.BlockingMapWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ContextAssertingAsyncWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.ContextAssertingPeekWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ContextAssertingWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.EchoWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.FlatMapFailWebSocketRoutes;
@@ -731,6 +732,27 @@ public class WebSocketTest {
             Assert.assertEquals(1, received.size());
             Assert.assertEquals(
                     json().put("type", "echoResponse").set("payload", json().put("echo", "hello blocked")).toString(),
+                    received.get(0));
+
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldRunPeekAndBlockingPeekOnCorrectContext() {
+        final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/context-peek", state, new ContextAssertingPeekWebSocketRoutes(asserter));
+        });
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/context-peek"));
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "hello afterPeek")).toString(),
                     received.get(0));
 
             client.assertNoMoreExceptions();

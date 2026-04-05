@@ -17,10 +17,16 @@ public class AsyncMapWebSocketRoutes extends WebSocketRoutes<MyApplicationState,
 
         routesRegister
                 .registerInbound("number", WebSocketNumberRequest.class, s ->
-                        s.<Integer>asyncMap(ctx -> {
+                        s.asyncMap(ctx -> {
                                     final CorrelatedAsync<Integer> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in().value * 10));
                                     return correlated.async();
+                                })
+                                .peek(ctx -> {
+                                    // do something async with access to app
+                                })
+                                .blockingPeek(ctx -> {
+                                    // do something async that does not have access to application state
                                 })
                                 .map(ctx -> new WebSocketNumberResponse(ctx.in()))
                                 .complete());

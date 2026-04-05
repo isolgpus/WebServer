@@ -8,6 +8,7 @@ import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.ContextAssertingAsyncBlockingHttpHandler;
 import io.kiw.luxis.web.test.handler.ContextAssertingAsyncHttpHandler;
 import io.kiw.luxis.web.test.handler.ContextAssertingHttpHandler;
+import io.kiw.luxis.web.test.handler.ContextAssertingPeekHttpHandler;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -112,6 +113,27 @@ public class HttpContextTest {
 
         final String expectedResponse = json()
                 .put("result", "hello async blocking asyncBlocking map")
+                .toString();
+
+        Assert.assertEquals(TestHttpResponse.response(expectedResponse), response);
+    }
+
+    @Test
+    public void shouldRunPeekAndBlockingPeekOnCorrectContext() {
+        final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/context-peek", Method.POST, state, new ContextAssertingPeekHttpHandler(asserter));
+        });
+        TestClient client = testClientAndServer.client();
+
+        final String requestBody = json()
+                .put("message", "hello")
+                .toString();
+
+        TestHttpResponse response = client.post(StubRequest.request("/context-peek").body(requestBody));
+
+        final String expectedResponse = json()
+                .put("result", "hello afterPeek")
                 .toString();
 
         Assert.assertEquals(TestHttpResponse.response(expectedResponse), response);

@@ -55,6 +55,20 @@ public class WebSocketStream<IN, APP, RESP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
+    public WebSocketStream<IN, APP, RESP> peek(final WebSocketStreamPeeker<IN, APP, RESP> peeker) {
+        return map(ctx -> {
+            peeker.handle(ctx);
+            return ctx.in();
+        });
+    }
+
+    public WebSocketStream<IN, APP, RESP> blockingPeek(final WebSocketStreamBlockingPeeker<IN> peeker) {
+        return blockingMap(ctx -> {
+            peeker.handle(ctx);
+            return ctx.in();
+        });
+    }
+
     public <OUT> WebSocketStream<OUT, APP, RESP> blockingMap(final WebSocketStreamBlockingMapper<IN, OUT> flowHandler) {
         return blockingFlatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
