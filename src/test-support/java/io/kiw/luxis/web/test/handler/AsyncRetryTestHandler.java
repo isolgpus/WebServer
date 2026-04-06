@@ -40,7 +40,7 @@ public class AsyncRetryTestHandler extends JsonHandler<AsyncMapRequest, AsyncMap
                         }
                     }
                     return new LuxisAsync<>(future);
-                }, new AsyncMapConfigBuilder().retries(3, 500).build())
+                }, new AsyncMapConfigBuilder().retries(3, 50).build())
                 .map(ctx -> new AsyncMapResponse(ctx.in()))
                 .complete(ctx -> HttpResult.success(ctx.in()));
     }

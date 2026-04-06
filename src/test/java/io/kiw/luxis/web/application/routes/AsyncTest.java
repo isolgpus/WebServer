@@ -12,9 +12,11 @@ import io.kiw.luxis.web.test.handler.AsyncBlockingMapTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncCustomTimeoutTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncMapTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncRetryTestHandler;
+import io.kiw.luxis.web.test.handler.AsyncRetryWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.AsyncThrowTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncWithHttpContextTestHandler;
 import io.kiw.luxis.web.test.handler.TestRetryBehaviour;
+import io.kiw.luxis.web.test.TestWebSocketClient;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -41,6 +43,7 @@ public class AsyncTest {
 
     private final String mode;
     private TestClientAndServer testClientAndServer;
+    private TestWebSocketClient ws;
 
     public AsyncTest(final String mode) {
         this.mode = mode;
@@ -55,6 +58,9 @@ public class AsyncTest {
 
     @After
     public void tearDown() throws Exception {
+        if (ws != null) {
+            ws.close();
+        }
         if (testClientAndServer != null) {
             testClientAndServer.client().assertNoMoreExceptions();
             testClientAndServer.close();
@@ -192,7 +198,7 @@ public class AsyncTest {
         });
 
         if (STUB_MODE.equals(mode)) {
-            handler.setOnRegistered(() -> ((TestLuxis<?>) testClientAndServer.luxis()).advanceTimeBy(1_001));
+            handler.setOnRegistered(() -> ((TestLuxis<?>) testClientAndServer.luxis()).advanceTimeBy(201));
         }
 
         final TestClient luxisTestClient = testClientAndServer.client();
@@ -374,5 +380,202 @@ public class AsyncTest {
                 response);
         Assert.assertEquals(4, counter.get());
         luxisTestClient.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldRetryWebSocketAsyncMapOnFailure() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryWebSocketRoutes handler = new AsyncRetryWebSocketRoutes(counter, new TestRetryBehaviour().error().error().error().error());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/retry", state, handler);
+        });
+
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/retry"));
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":1}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "error").set("payload", json().put("message", "Failed running async").set("errors", json())).toString(),
+                    received.get(0));
+
+            Assert.assertEquals(4, counter.get());
+        });
+    }
+
+    @Test
+    public void shouldSucceedWebSocketAsyncMapOnFirstAttemptWithoutRetrying() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryWebSocketRoutes handler = new AsyncRetryWebSocketRoutes(counter, new TestRetryBehaviour().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/retry", state, handler);
+        });
+
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/retry"));
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":7}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 7)).toString(),
+                    received.get(0));
+
+            Assert.assertEquals(1, counter.get());
+        });
+    }
+
+    @Test
+    public void shouldSucceedWebSocketAsyncMapAfterErrorRetries() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryWebSocketRoutes handler = new AsyncRetryWebSocketRoutes(counter, new TestRetryBehaviour().error().error().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/retry", state, handler);
+        });
+
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/retry"));
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":5}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 5)).toString(),
+                    received.get(0));
+
+            Assert.assertEquals(3, counter.get());
+        });
+    }
+
+    @Test
+    public void shouldSucceedWebSocketAsyncMapOnLastRetryAttempt() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryWebSocketRoutes handler = new AsyncRetryWebSocketRoutes(counter, new TestRetryBehaviour().error().error().error().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/retry", state, handler);
+        });
+
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/retry"));
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":3}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 3)).toString(),
+                    received.get(0));
+
+            Assert.assertEquals(4, counter.get());
+        });
+    }
+
+    @Test
+    public void shouldSucceedWebSocketAsyncMapAfterExceptionAndCallExceptionHandler() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryWebSocketRoutes handler = new AsyncRetryWebSocketRoutes(counter, new TestRetryBehaviour().exception().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/retry", state, handler);
+        });
+
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/retry"));
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":9}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 9)).toString(),
+                    received.get(0));
+
+            Assert.assertEquals(2, counter.get());
+        });
+    }
+
+    @Test
+    public void shouldSucceedWebSocketAsyncMapAfterMixOfErrorsAndExceptions() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryWebSocketRoutes handler = new AsyncRetryWebSocketRoutes(counter, new TestRetryBehaviour().error().exception().error().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/retry", state, handler);
+        });
+
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/retry"));
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":4}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "numberResponse").set("payload", json().put("result", 4)).toString(),
+                    received.get(0));
+
+            Assert.assertEquals(4, counter.get());
+        });
+    }
+
+    @Test
+    public void shouldFailWebSocketAsyncMapAndReportAllExceptionsWhenAllAttemptsThrow() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryWebSocketRoutes handler = new AsyncRetryWebSocketRoutes(counter, new TestRetryBehaviour()
+                .exception()
+                .exception()
+                .exception()
+                .exception());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/retry", state, handler);
+        });
+
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/retry"));
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":1}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "error").set("payload", json().put("message", "Something went wrong").set("errors", json())).toString(),
+                    received.get(0));
+
+            Assert.assertEquals(4, counter.get());
+            client.assertException("Async exception on attempt 3");
+        });
+    }
+
+    @Test
+    public void shouldFailWebSocketAsyncMapWithMixedFailuresExhaustingRetries() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryWebSocketRoutes handler = new AsyncRetryWebSocketRoutes(counter, new TestRetryBehaviour().exception().error().exception().error());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/retry", state, handler);
+        });
+
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/retry"));
+        ws.send("{\"type\":\"number\",\"payload\":{\"value\":1}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "error").set("payload", json().put("message", "Failed running async").set("errors", json())).toString(),
+                    received.get(0));
+
+            Assert.assertEquals(4, counter.get());
+        });
     }
 }

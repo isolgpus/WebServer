@@ -31,7 +31,7 @@ public class AsyncCustomTimeoutTestHandler extends JsonHandler<AsyncMapRequest, 
                     // Deliberately do NOT complete — simulates missing response
                     onRegistered.run();
                     return new LuxisAsync<>(new CompletableFuture<Result<HttpErrorResponse, Integer>>());
-                }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())
+                }, new AsyncMapConfigBuilder().setTimeoutMillis(200).build())
                 .map(ctx -> new AsyncMapResponse(ctx.in()))
                 .complete(ctx -> HttpResult.success(ctx.in()));
     }
