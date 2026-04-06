@@ -4,9 +4,18 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.internal.ClientWebSocketHandler;
+import io.kiw.luxis.web.internal.PendingAsyncResponses;
+import io.kiw.luxis.web.test.StubExecutionDispatcher;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.StubTestClient;
+import io.kiw.luxis.web.test.StubTestWebSocketClient;
+import io.kiw.luxis.web.test.StubTimeoutScheduler;
 import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.test.TimeInjector;
+import io.kiw.luxis.web.websocket.ClientWebSocketRoutes;
+import io.kiw.luxis.web.websocket.WebSocketConnection;
+import io.kiw.luxis.web.websocket.WebSocketSession;
 import tools.jackson.databind.ObjectMapper;
 
 import java.net.URI;
@@ -57,6 +66,58 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
     @Override
     public <T> LuxisAsync<HttpClientResponse<T>> patch(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, r -> stubTestClient.patch(r), responseType);
+    }
+
+    @Override
+    public <APP, RESP> WebSocketSession<RESP> connectToWebSocket(final String path, final ClientWebSocketRoutes<APP, RESP> routes) {
+        final String resolvedUrl = resolveUrl(path);
+        final URI uri = URI.create(resolvedUrl);
+        final String resolvedPath = uri.getPath();
+
+        final StubTestWebSocketClient serverWsClient = stubTestClient.webSocket(StubRequest.request(resolvedPath));
+        final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses(new StubTimeoutScheduler(new TimeInjector()), e -> {
+            throw new RuntimeException(e);
+        });
+        final ClientWebSocketHandler<APP, RESP> handler = new ClientWebSocketHandler<>(routes, mapper, new StubExecutionDispatcher(), pendingAsyncResponses, e -> {
+            throw new RuntimeException(e);
+        });
+
+        final StubClientWebSocketBridge bridge = new StubClientWebSocketBridge(serverWsClient);
+        final WebSocketSession<RESP> session = handler.createSession(bridge);
+        bridge.init(handler, session);
+        return session;
+    }
+
+    private static class StubClientWebSocketBridge implements WebSocketConnection {
+
+        private final StubTestWebSocketClient serverWsClient;
+        private ClientWebSocketHandler<?, ?> clientHandler;
+        private WebSocketSession<?> clientSession;
+
+        StubClientWebSocketBridge(final StubTestWebSocketClient serverWsClient) {
+            this.serverWsClient = serverWsClient;
+        }
+
+        void init(final ClientWebSocketHandler<?, ?> clientHandler, final WebSocketSession<?> clientSession) {
+            this.clientHandler = clientHandler;
+            this.clientSession = clientSession;
+        }
+
+        @Override
+        public CompletableFuture<Void> sendText(final String text) {
+            serverWsClient.send(text);
+            serverWsClient.onResponses(messages -> {
+                for (final String msg : messages) {
+                    clientHandler.onMessage(msg, clientSession);
+                }
+            });
+            return CompletableFuture.completedFuture(null);
+        }
+
+        @Override
+        public void close() {
+            serverWsClient.close();
+        }
     }
 
     @SuppressWarnings("unchecked")

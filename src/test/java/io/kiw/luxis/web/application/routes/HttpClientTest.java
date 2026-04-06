@@ -8,9 +8,11 @@ import io.kiw.luxis.web.http.client.HttpClientRequest;
 import io.kiw.luxis.web.http.client.HttpClientResponse;
 import io.kiw.luxis.web.http.client.LuxisHttpClient;
 import io.kiw.luxis.web.http.client.LuxisHttpClientConfig;
+import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.AlwaysThrowHandler;
+import io.kiw.luxis.web.test.handler.EchoWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ErrorHandler;
 import io.kiw.luxis.web.test.handler.HttpClientCallHandler;
 import io.kiw.luxis.web.test.handler.HttpClientPostCallHandler;
@@ -18,14 +20,21 @@ import io.kiw.luxis.web.test.handler.HttpClientTypedGetHandler;
 import io.kiw.luxis.web.test.handler.SimpleGetHandler;
 import io.kiw.luxis.web.test.handler.SimpleMultiplyHandler;
 import io.kiw.luxis.web.test.handler.SimplePostValueHandler;
+import io.kiw.luxis.web.test.handler.SimpleWebsocketRequest;
+import io.kiw.luxis.web.test.handler.WebSocketEchoRequest;
+import io.kiw.luxis.web.test.handler.WebSocketEchoResponse;
+import io.kiw.luxis.web.websocket.ClientWebSocketRoutes;
+import io.kiw.luxis.web.websocket.WebSocketSession;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
@@ -39,6 +48,7 @@ public class HttpClientTest {
     private static final String SERVER_B_HOST = "127.0.0.1";
     private static final int SERVER_B_PORT = 8081;
     private static final String SERVER_B_BASE_URL = "http://" + SERVER_B_HOST + ":" + SERVER_B_PORT;
+    private TestClientAndServer testClientAndServer;
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> modes() {
@@ -665,5 +675,40 @@ public class HttpClientTest {
                     Assert.assertEquals("Something went wrong", error.errorMessageValue().message());
                 },
                 success -> Assert.fail("Expected error but got success: " + success.statusCode()));
+    }
+
+    @Test
+    @Ignore
+    public void shouldCreateWebsocketConnection() {
+        serverB = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes());
+        }, builder -> builder.setPort(SERVER_B_PORT));
+        final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
+                .baseUrl(SERVER_B_BASE_URL);
+        final LuxisHttpClient client = createHttpClient(mode, serverB, config);
+        final AtomicReference<WebSocketEchoResponse> received = new AtomicReference<>();
+        final WebSocketSession<SimpleWebsocketRequest> session = client.connectToWebSocket("/ws/echo",
+                new ClientWebSocketRoutes<ClientState, SimpleWebsocketRequest>() {
+
+                    @Override
+                    public void registerRoutes(final WebSocketRoutesRegister<ClientState, SimpleWebsocketRequest> routesRegister) {
+                        routesRegister.registerInbound("echoResponse", WebSocketEchoResponse.class, stream ->
+                                stream.peek(ctx -> received.set(ctx.in()))
+                                        .completeWithNoResponse());
+
+                        routesRegister.registerOutbound("echo", WebSocketEchoRequest.class);
+                    }
+                });
+
+        final WebSocketEchoRequest request = new WebSocketEchoRequest();
+        request.message = "hello";
+        session.send(request);
+
+
+        Assert.assertNotNull(received.get());
+        Assert.assertEquals("echo: hello", received.get().echo());
+    }
+
+    private class ClientState {
     }
 }

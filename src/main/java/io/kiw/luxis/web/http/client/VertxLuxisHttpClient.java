@@ -3,11 +3,20 @@ package io.kiw.luxis.web.http.client;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.internal.ClientWebSocketHandler;
+import io.kiw.luxis.web.internal.PendingAsyncResponses;
+import io.kiw.luxis.web.internal.VertxClientWebSocketConnection;
+import io.kiw.luxis.web.internal.VertxExecutionDispatcher;
+import io.kiw.luxis.web.internal.VertxTimeoutScheduler;
+import io.kiw.luxis.web.websocket.ClientWebSocketRoutes;
+import io.kiw.luxis.web.websocket.WebSocketSession;
 import io.vertx.core.Vertx;
 import io.vertx.core.buffer.Buffer;
 import io.vertx.core.http.HttpClient;
 import io.vertx.core.http.HttpClientOptions;
 import io.vertx.core.http.HttpMethod;
+import io.vertx.core.http.WebSocketClient;
+import io.vertx.core.http.WebSocketConnectOptions;
 import tools.jackson.databind.ObjectMapper;
 
 import java.net.URI;
@@ -19,7 +28,9 @@ import java.util.concurrent.CompletableFuture;
 
 public final class VertxLuxisHttpClient implements LuxisHttpClient {
 
+    private final Vertx vertx;
     private final HttpClient httpClient;
+    private final WebSocketClient webSocketClient;
     private final LuxisHttpClientConfig config;
     private final ObjectMapper mapper = new ObjectMapper();
 
@@ -28,12 +39,14 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
     }
 
     public VertxLuxisHttpClient(final Vertx vertx, final LuxisHttpClientConfig config) {
+        this.vertx = vertx;
         this.config = config;
         if (config.isSsl()) {
             this.httpClient = vertx.createHttpClient(new HttpClientOptions().setSsl(true));
         } else {
             this.httpClient = vertx.createHttpClient();
         }
+        this.webSocketClient = vertx.createWebSocketClient();
     }
 
     @Override
@@ -93,6 +106,45 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
                 .onFailure(future::completeExceptionally);
 
         return new LuxisAsync<>(future);
+    }
+
+    @Override
+    public <APP, RESP> WebSocketSession<RESP> connectToWebSocket(final String path, final ClientWebSocketRoutes<APP, RESP> routes) {
+        final String resolvedUrl = resolveUrl(path);
+        final URI uri = URI.create(resolvedUrl);
+
+        final String host = uri.getHost();
+        final int port = uri.getPort() != -1 ? uri.getPort() : (
+                "https".equals(uri.getScheme()) ? 443 : 80
+        );
+        final String requestUri = uri.getRawPath() != null ? uri.getRawPath() : "/";
+
+        final VertxExecutionDispatcher executionDispatcher = new VertxExecutionDispatcher(vertx);
+        final VertxTimeoutScheduler timeoutScheduler = new VertxTimeoutScheduler(vertx);
+        final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses(timeoutScheduler, e -> {
+            throw new RuntimeException(e);
+        });
+        final ClientWebSocketHandler<APP, RESP> handler = new ClientWebSocketHandler<>(routes, mapper, executionDispatcher, pendingAsyncResponses, e -> {
+            throw new RuntimeException(e);
+        });
+
+        final WebSocketConnectOptions options = new WebSocketConnectOptions()
+                .setHost(host)
+                .setPort(port)
+                .setURI(requestUri);
+
+        final CompletableFuture<WebSocketSession<RESP>> future = new CompletableFuture<>();
+
+        webSocketClient.connect(options)
+                .onSuccess(ws -> {
+                    final VertxClientWebSocketConnection connection = new VertxClientWebSocketConnection(ws);
+                    final WebSocketSession<RESP> session = handler.createSession(connection);
+                    ws.textMessageHandler(msg -> handler.onMessage(msg, session));
+                    future.complete(session);
+                })
+                .onFailure(future::completeExceptionally);
+
+        return future.join();
     }
 
     private String resolveUrl(final String url) {

@@ -1,6 +1,11 @@
 package io.kiw.luxis.web.http.client;
 
+import io.kiw.luxis.web.websocket.ClientWebSocketRoutes;
+import io.kiw.luxis.web.websocket.WebSocketSession;
+
 public interface LuxisHttpClient {
+
+    <APP, RESP> WebSocketSession<RESP> connectToWebSocket(String path, ClientWebSocketRoutes<APP, RESP> routes);
 
     <T> LuxisAsync<HttpClientResponse<T>> get(HttpClientRequest request, Class<T> responseType);
 

@@ -1,4 +1,4 @@
 package io.kiw.luxis.web.test.handler;
 
-public interface SplitWebSocketMessage {
+public interface SimpleWebsocketRequest {
 }
