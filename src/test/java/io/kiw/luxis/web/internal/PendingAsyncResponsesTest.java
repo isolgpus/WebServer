@@ -3,6 +3,7 @@ package io.kiw.luxis.web.internal;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.test.StubTimeoutScheduler;
+import io.kiw.luxis.web.test.TimeInjector;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -15,7 +16,7 @@ public class PendingAsyncResponsesTest {
 
     private static final long DEFAULT_TIMEOUT = 30_000;
 
-    private final StubTimeoutScheduler scheduler = new StubTimeoutScheduler();
+    private final StubTimeoutScheduler scheduler = new StubTimeoutScheduler(new TimeInjector());
     private final List<Exception> exceptions = new ArrayList<>();
 
     private PendingAsyncResponses createPending() {

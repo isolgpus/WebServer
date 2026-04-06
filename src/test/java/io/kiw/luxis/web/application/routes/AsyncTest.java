@@ -8,9 +8,11 @@ import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.test.TimeInjector;
 import io.kiw.luxis.web.test.handler.AsyncBlockingMapTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncCustomTimeoutTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncMapTestHandler;
+import io.kiw.luxis.web.test.handler.AsyncRetryTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncThrowTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncWithHttpContextTestHandler;
 import org.junit.After;
@@ -21,11 +23,11 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.util.Collection;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.STUB_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
-import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createTestServerAndClient;
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
@@ -200,5 +202,29 @@ public class AsyncTest {
 
         Assert.assertEquals(500, response.statusCode);
         luxisTestClient.assertException("Correlated async response timed out");
+    }
+
+    @Test
+    public void shouldRetryOnFailure() {
+
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter);
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/customTimeout", Method.POST, state, handler);
+        });
+
+
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/customTimeout").body(json().put("value", 1).toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json()
+                        .put("message", "Failed running async")
+                        .set("errors", json()).toString()).withStatusCode(500),
+                response);
+        luxisTestClient.assertNoMoreExceptions();
     }
 }

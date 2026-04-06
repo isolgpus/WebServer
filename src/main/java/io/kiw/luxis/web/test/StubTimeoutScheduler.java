@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.test;
 
+import io.kiw.luxis.web.internal.ScheduleType;
 import io.kiw.luxis.web.internal.TimeoutScheduler;
 
 import java.util.ArrayList;
@@ -9,11 +10,17 @@ import java.util.List;
 public class StubTimeoutScheduler implements TimeoutScheduler {
 
     private final List<ScheduledEntry> entries = new ArrayList<>();
+    private final TimeInjector timeInjector;
+
+    public StubTimeoutScheduler(final TimeInjector timeInjector) {
+        this.timeInjector = timeInjector;
+    }
 
     @Override
-    public Cancellable schedule(final long delayMillis, final Runnable action) {
+    public Cancellable schedule(final ScheduleType scheduleType, final long delayMillis, final Runnable action) {
         final ScheduledEntry entry = new ScheduledEntry(delayMillis, action);
         entries.add(entry);
+        timeInjector.checkToAdvanceTime(scheduleType, delayMillis, this::advanceBy);
         return () -> entries.remove(entry);
     }
 
@@ -22,17 +29,28 @@ public class StubTimeoutScheduler implements TimeoutScheduler {
         for (final ScheduledEntry entry : snapshot) {
             entry.remainingMillis -= millis;
         }
+        final List<ScheduledEntry> actionsToExecute = new ArrayList<>();
+
         final Iterator<ScheduledEntry> iterator = entries.iterator();
+
         while (iterator.hasNext()) {
             final ScheduledEntry entry = iterator.next();
             if (entry.remainingMillis <= 0) {
                 iterator.remove();
-                entry.action.run();
+                actionsToExecute.add(entry);
             }
         }
+        try {
+            for (final ScheduledEntry scheduledEntry : actionsToExecute) {
+                scheduledEntry.action.run();
+            }
+        } finally {
+            actionsToExecute.clear();
+        }
+
     }
 
-    private static class ScheduledEntry {
+    private static final class ScheduledEntry {
         long remainingMillis;
         final Runnable action;
 

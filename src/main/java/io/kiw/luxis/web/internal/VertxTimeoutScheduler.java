@@ -10,7 +10,7 @@ public class VertxTimeoutScheduler implements TimeoutScheduler {
     }
 
     @Override
-    public Cancellable schedule(final long delayMillis, final Runnable action) {
+    public Cancellable schedule(final ScheduleType scheduleType, final long delayMillis, final Runnable action) {
         final long timerId = vertx.setTimer(delayMillis, id -> action.run());
         return () -> vertx.cancelTimer(timerId);
     }

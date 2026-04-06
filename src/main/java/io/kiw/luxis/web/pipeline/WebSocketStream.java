@@ -5,6 +5,7 @@ import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
+import io.kiw.luxis.web.internal.ScheduleType;
 import io.kiw.luxis.web.internal.WebSocketMapInstruction;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.validation.WebSocketValidator;
@@ -89,17 +90,31 @@ public class WebSocketStream<IN, APP, RESP> {
     public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final WebSocketStreamAsyncMapper<IN, OUT, APP, RESP> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncFlatMapper<IN, OUT, APP, RESP> wrapper = ctx -> {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> resultFuture = new CompletableFuture<>();
-            pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
-                resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
-            });
-            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
-            luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
-                if (throwable != null) {
-                    resultFuture.completeExceptionally(throwable);
-                } else {
-                    resultFuture.complete(result.mapError(HttpErrorResponse::errorMessageValue));
-                }
-            });
+            if (config.maxRetries > 0) {
+                AsyncRetryExecutor.executeWithRetry(
+                        resultFuture,
+                        () -> {
+                            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+                            return luxisAsync.toCompletableFuture()
+                                    .thenApply(result -> result.mapError(HttpErrorResponse::errorMessageValue));
+                        },
+                        config,
+                        pendingAsyncResponses,
+                        config.maxRetries
+                );
+            } else {
+                pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
+                    resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
+                }, ScheduleType.TIMEOUT);
+                final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+                luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        resultFuture.completeExceptionally(throwable);
+                    } else {
+                        resultFuture.complete(result.mapError(HttpErrorResponse::errorMessageValue));
+                    }
+                });
+            }
             return resultFuture.exceptionally(throwable -> {
                 final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
                 pendingAsyncResponses.reportException(
@@ -122,17 +137,31 @@ public class WebSocketStream<IN, APP, RESP> {
     public <OUT> WebSocketStream<OUT, APP, RESP> asyncBlockingMap(final WebSocketStreamAsyncBlockingMapper<IN, OUT> handler, final AsyncMapConfig config) {
         final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> resultFuture = new CompletableFuture<>();
-            pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
-                resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
-            });
-            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
-            luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
-                if (throwable != null) {
-                    resultFuture.completeExceptionally(throwable);
-                } else {
-                    resultFuture.complete(result.mapError(HttpErrorResponse::errorMessageValue));
-                }
-            });
+            if (config.maxRetries > 0) {
+                AsyncRetryExecutor.executeWithRetry(
+                        resultFuture,
+                        () -> {
+                            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+                            return luxisAsync.toCompletableFuture()
+                                    .thenApply(result -> result.mapError(HttpErrorResponse::errorMessageValue));
+                        },
+                        config,
+                        pendingAsyncResponses,
+                        config.maxRetries
+                );
+            } else {
+                pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
+                    resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
+                }, ScheduleType.TIMEOUT);
+                final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+                luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
+                    if (throwable != null) {
+                        resultFuture.completeExceptionally(throwable);
+                    } else {
+                        resultFuture.complete(result.mapError(HttpErrorResponse::errorMessageValue));
+                    }
+                });
+            }
             return resultFuture.exceptionally(throwable -> {
                 final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
                 pendingAsyncResponses.reportException(

@@ -24,7 +24,7 @@ public class PendingAsyncResponses {
     @SuppressWarnings("unchecked")
     public <T> long register(final CompletableFuture<Result<HttpErrorResponse, T>> future, final long timeoutMillis) {
         final long id = nextId.getAndIncrement();
-        final TimeoutScheduler.Cancellable cancellable = scheduler.schedule(timeoutMillis, () -> expire(id));
+        final TimeoutScheduler.Cancellable cancellable = scheduler.schedule(ScheduleType.TIMEOUT, timeoutMillis, () -> expire(id));
         pending.put(id, new PendingEntry((CompletableFuture<Result<HttpErrorResponse, ?>>) (CompletableFuture<?>) future, cancellable));
         return id;
     }
@@ -48,8 +48,8 @@ public class PendingAsyncResponses {
         exceptionHandler.accept(new RuntimeException("Correlated async response timed out for correlationId: " + correlationId));
     }
 
-    public TimeoutScheduler.Cancellable scheduleTimeout(final long delayMillis, final Runnable action) {
-        return scheduler.schedule(delayMillis, action);
+    public TimeoutScheduler.Cancellable scheduleTimeout(final long delayMillis, final Runnable action, final ScheduleType scheduleType) {
+        return scheduler.schedule(scheduleType, delayMillis, action);
     }
 
     public void reportException(final Exception e) {

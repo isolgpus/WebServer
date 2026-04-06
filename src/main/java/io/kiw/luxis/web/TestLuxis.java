@@ -5,6 +5,7 @@ import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.test.StubRouter;
 import io.kiw.luxis.web.test.StubTimeoutScheduler;
+import io.kiw.luxis.web.test.TimeInjector;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -16,14 +17,16 @@ public class TestLuxis<APP> implements Luxis<APP> {
     private final Consumer<Exception>[] exceptionHandlerRef;
     private final PendingAsyncResponses pendingAsyncResponses;
     private final StubTimeoutScheduler stubTimeoutScheduler;
+    private final TimeInjector timeInjector;
 
     @SuppressWarnings("unchecked")
-    TestLuxis(final StubRouter router, final APP applicationState, final Consumer<Exception>[] exceptionHandlerRef, final PendingAsyncResponses pendingAsyncResponses, final StubTimeoutScheduler stubTimeoutScheduler) {
+    TestLuxis(final StubRouter router, final APP applicationState, final Consumer<Exception>[] exceptionHandlerRef, final PendingAsyncResponses pendingAsyncResponses, final StubTimeoutScheduler stubTimeoutScheduler, final TimeInjector timeInjector) {
         this.router = router;
         this.applicationState = applicationState;
         this.exceptionHandlerRef = exceptionHandlerRef;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.stubTimeoutScheduler = stubTimeoutScheduler;
+        this.timeInjector = timeInjector;
     }
 
 
@@ -49,7 +52,12 @@ public class TestLuxis<APP> implements Luxis<APP> {
         pendingAsyncResponses.complete(correlationId, result);
     }
 
+
     @Override
     public void close() {
+    }
+
+    public TimeInjector getTimeInjector() {
+        return timeInjector;
     }
 }
