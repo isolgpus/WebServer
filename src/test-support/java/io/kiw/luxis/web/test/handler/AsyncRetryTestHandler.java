@@ -17,21 +17,32 @@ import java.util.concurrent.atomic.AtomicLong;
 public class AsyncRetryTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private final AtomicLong counter;
+    private final TestRetryBehaviour testRetryBehaviour;
 
-    public AsyncRetryTestHandler(final AtomicLong counter) {
+    public AsyncRetryTestHandler(final AtomicLong counter, final TestRetryBehaviour testRetryBehaviour) {
         this.counter = counter;
+        this.testRetryBehaviour = testRetryBehaviour;
     }
 
     @Override
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .<Integer>asyncMap(ctx -> {
-                    counter.incrementAndGet();
-                    CompletableFuture<Result<HttpErrorResponse, Integer>> resultCompletableFuture = new CompletableFuture<>();
-                    resultCompletableFuture.complete(Result.error(new HttpErrorResponse(new ErrorMessageResponse("Failed running async"), 500)));
-                    return new LuxisAsync<>(resultCompletableFuture);
+                    int attempt = (int) counter.getAndIncrement();
+                    CompletableFuture<Result<HttpErrorResponse, Integer>> future = new CompletableFuture<>();
+                    switch (testRetryBehaviour.getAction(attempt)) {
+                        case SUCCESS -> future.complete(Result.success(ctx.in().value));
+                        case ERROR ->
+                                future.complete(Result.error(new HttpErrorResponse(new ErrorMessageResponse("Failed running async"), 500)));
+                        case EXCEPTION ->
+                                future.completeExceptionally(new RuntimeException("Async exception on attempt " + attempt));
+                        case TIMEOUT -> {
+                        }
+                    }
+                    return new LuxisAsync<>(future);
                 }, new AsyncMapConfigBuilder().retries(3, 500).build())
                 .map(ctx -> new AsyncMapResponse(ctx.in()))
                 .complete(ctx -> HttpResult.success(ctx.in()));
     }
+
 }

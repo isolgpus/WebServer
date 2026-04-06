@@ -8,13 +8,13 @@ import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
-import io.kiw.luxis.web.test.TimeInjector;
 import io.kiw.luxis.web.test.handler.AsyncBlockingMapTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncCustomTimeoutTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncMapTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncRetryTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncThrowTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncWithHttpContextTestHandler;
+import io.kiw.luxis.web.test.handler.TestRetryBehaviour;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -208,7 +208,7 @@ public class AsyncTest {
     public void shouldRetryOnFailure() {
 
         final AtomicLong counter = new AtomicLong();
-        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter);
+        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().error().error().error().error());
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/customTimeout", Method.POST, state, handler);
@@ -225,6 +225,154 @@ public class AsyncTest {
                         .put("message", "Failed running async")
                         .set("errors", json()).toString()).withStatusCode(500),
                 response);
+        luxisTestClient.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldSucceedOnFirstAttemptWithoutRetrying() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/retry", Method.POST, state, handler);
+        });
+
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/retry").body(json().put("value", 7).toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json().put("result", 7).toString()),
+                response);
+        Assert.assertEquals(1, counter.get());
+    }
+
+    @Test
+    public void shouldSucceedAfterErrorRetries() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().error().error().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/retry", Method.POST, state, handler);
+        });
+
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/retry").body(json().put("value", 5).toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json().put("result", 5).toString()),
+                response);
+        Assert.assertEquals(3, counter.get());
+    }
+
+    @Test
+    public void shouldSucceedOnLastRetryAttempt() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().error().error().error().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/retry", Method.POST, state, handler);
+        });
+
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/retry").body(json().put("value", 3).toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json().put("result", 3).toString()),
+                response);
+        Assert.assertEquals(4, counter.get());
+    }
+
+    @Test
+    public void shouldSucceedAfterExceptionAndCallExceptionHandler() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().exception().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/retry", Method.POST, state, handler);
+        });
+
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/retry").body(json().put("value", 9).toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json().put("result", 9).toString()),
+                response);
+        Assert.assertEquals(2, counter.get());
+        luxisTestClient.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldSucceedAfterMixOfErrorsAndExceptions() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().error().exception().error().success());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/retry", Method.POST, state, handler);
+        });
+
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/retry").body(json().put("value", 4).toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json().put("result", 4).toString()),
+                response);
+        Assert.assertEquals(4, counter.get());
+        luxisTestClient.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldFailAndReportAllExceptionsWhenAllAttemptsThrow() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour()
+                .exception()
+                .exception()
+                .exception()
+                .exception());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/retry", Method.POST, state, handler);
+        });
+
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/retry").body(json().put("value", 1).toString()));
+
+        Assert.assertEquals(500, response.statusCode);
+        Assert.assertEquals(4, counter.get());
+        luxisTestClient.assertException("Async exception on attempt 3");
+    }
+
+    @Test
+    public void shouldFailWithExceptionsReportedWhenMixedFailuresExhaustRetries() {
+        final AtomicLong counter = new AtomicLong();
+        final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().exception().error().exception().error());
+
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/retry", Method.POST, state, handler);
+        });
+
+        final TestClient luxisTestClient = testClientAndServer.client();
+
+        final TestHttpResponse response = luxisTestClient.post(
+                StubRequest.request("/retry").body(json().put("value", 1).toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json()
+                        .put("message", "Failed running async")
+                        .set("errors", json()).toString()).withStatusCode(500),
+                response);
+        Assert.assertEquals(4, counter.get());
         luxisTestClient.assertNoMoreExceptions();
     }
 }
