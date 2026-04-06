@@ -79,7 +79,7 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
 
         for (final MapInstruction applicationInstruction : flow.getApplicationInstructions()) {
             if (applicationInstruction.isAsync && applicationInstruction.isBlocking) {
-                route.blockingHandler(ctx -> handleAsyncBlocking(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
+                route.blockingHandler(ctx -> handleAsync(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             } else if (applicationInstruction.isAsync) {
                 route.handler(ctx -> handleAsync(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             } else if (applicationInstruction.isBlocking) {

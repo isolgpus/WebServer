@@ -84,7 +84,7 @@ public class StubRouter extends RouterWrapper {
                 }
 
                 if (applicationInstruction.isAsync) {
-                    this.handleAsyncBlocking(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
+                    this.handleAsync(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
                 } else {
 
                     this.handle(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());

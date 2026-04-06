@@ -51,13 +51,13 @@ public abstract class RouterWrapper {
         processResult(result, applicationInstruction, vertxContext, ender);
     }
 
-    <T> void handleAsync(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
-        final HttpContext httpContext = new HttpContext(vertxContext);
+    protected <T> void handleAsync(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext requestContext, final Object applicationState, final Ender ender) {
+        final HttpContext httpContext = new HttpContext(requestContext);
         final CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
-            future = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState, pendingAsyncResponses);
+            future = applicationInstruction.handleAsync(requestContext.get("state"), httpContext, applicationState, pendingAsyncResponses);
         } catch (final Exception e) {
-            handleException(vertxContext, e);
+            handleException(requestContext, e);
             return;
         }
 
@@ -65,54 +65,44 @@ public abstract class RouterWrapper {
         // We must dispatch back to the application context before touching the pipeline
         // (ctx.next(), ctx.end(), etc. are not thread-safe outside the application context).
         future.whenComplete((result, throwable) ->
-                vertxContext.runOnContext(() -> {
+                requestContext.runOnContext(() -> {
                     if (throwable != null) {
-                        handleException(vertxContext, throwable instanceof Exception ? (Exception) throwable : new RuntimeException(throwable));
+                        handleException(requestContext, throwable instanceof Exception ? (Exception) throwable : new RuntimeException(throwable));
                         return;
                     }
-                    processResult(result, applicationInstruction, vertxContext, ender);
+                    processResult(result, applicationInstruction, requestContext, ender);
                 })
         );
     }
 
-    public <T> void handleAsyncBlocking(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
-        final HttpContext httpContext = new HttpContext(vertxContext);
-        try {
-            final Result<HttpErrorResponse, T> result = applicationInstruction.handleAsync(vertxContext.get("state"), httpContext, applicationState, pendingAsyncResponses).join();
-            processResult(result, applicationInstruction, vertxContext, ender);
-        } catch (final Exception e) {
-            handleException(vertxContext, e);
-        }
-    }
-
     @SuppressWarnings("IllegalCatch")
-    private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Ender ender) {
+    private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext requestContext, final Ender ender) {
         result.consume(httpErrorResponse -> {
-                    vertxContext.setStatusCode(httpErrorResponse.statusCode());
-                    vertxContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue()));
+                    requestContext.setStatusCode(httpErrorResponse.statusCode());
+                    requestContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue()));
                 },
                 s -> {
                     if (applicationInstruction.lastStep) {
                         try {
                             Object value = s;
                             if (s instanceof HttpSuccessResponse<?> successResponse) {
-                                vertxContext.setStatusCode(successResponse.statusCode());
+                                requestContext.setStatusCode(successResponse.statusCode());
                                 value = successResponse.value();
                             }
-                            ender.end(vertxContext, value);
+                            ender.end(requestContext, value);
                         } catch (final RuntimeException e) {
-                            handleException(vertxContext, e);
+                            handleException(requestContext, e);
                         }
                     } else {
-                        vertxContext.put("state", s);
-                        vertxContext.next();
+                        requestContext.put("state", s);
+                        requestContext.next();
                     }
                 });
     }
 
-    private void handleException(final RequestContext vertxContext, final Exception e) {
+    private void handleException(final RequestContext requestContext, final Exception e) {
         exceptionHandler.accept(e);
-        vertxContext.setStatusCode(500);
-        vertxContext.end("{\"message\":\"Something went wrong\"}");
+        requestContext.setStatusCode(500);
+        requestContext.end("{\"message\":\"Something went wrong\"}");
     }
 }
