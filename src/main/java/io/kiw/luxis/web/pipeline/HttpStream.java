@@ -3,8 +3,10 @@ package io.kiw.luxis.web.pipeline;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
+import io.kiw.luxis.web.http.HttpContext;
+import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
-import io.kiw.luxis.web.internal.MapInstruction;
+import io.kiw.luxis.web.internal.LuxisMapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.ender.Ender;
 import io.kiw.luxis.web.jwt.JwtClaims;
@@ -16,22 +18,25 @@ import java.util.function.Consumer;
 
 public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
 
-    public HttpStream(final List<MapInstruction> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender, final PendingAsyncResponses pendingAsyncResponses) {
+    public HttpStream(final List<LuxisMapInstruction<HttpErrorResponse>> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender, final PendingAsyncResponses pendingAsyncResponses) {
         super(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
+    @SuppressWarnings("unchecked")
     public HttpStream<IN, APP> validate(final Consumer<HttpValidator<IN>> config) {
-        instructionChain.add(new MapInstruction<>(false, (HttpControlStreamFlatMapper<IN, IN, APP>) ctx -> {
-            final HttpValidator<IN> v = new HttpValidator<>(ctx.in(), ctx.http(), "");
+        addSyncInstruction(false, (state, transport, app) -> {
+            final HttpValidator<IN> v = new HttpValidator<>((IN) state, (HttpContext) transport, "");
             config.accept(v);
             return v.toResult();
-        }, false));
+        }, false);
         return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
+    @SuppressWarnings("unchecked")
     public HttpStream<IN, APP> requireJwt(final JwtProvider jwtProvider) {
-        instructionChain.add(new MapInstruction<>(false, (HttpControlStreamFlatMapper<IN, IN, APP>) ctx -> {
-            final String authHeader = ctx.http().getRequestHeader("Authorization");
+        addSyncInstruction(false, (state, transport, app) -> {
+            final HttpContext httpContext = (HttpContext) transport;
+            final String authHeader = httpContext.getRequestHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return HttpResult.error(ErrorStatusCode.UNAUTHORIZED, new ErrorMessageResponse("Missing or invalid Authorization header"));
             }
@@ -40,11 +45,11 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
             return result.fold(
                     error -> HttpResult.error(ErrorStatusCode.UNAUTHORIZED, new ErrorMessageResponse(error)),
                     claims -> {
-                        ctx.http().ctx.put("__jwt_claims__", claims);
-                        return HttpResult.success(ctx.in());
+                        httpContext.ctx.put("__jwt_claims__", claims);
+                        return HttpResult.success((IN) state);
                     }
             );
-        }, false));
+        }, false);
         return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 }
