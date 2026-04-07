@@ -2,6 +2,7 @@ package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.cors.CorsConfig;
+import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 import io.vertx.core.http.HttpMethod;
@@ -77,7 +78,7 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
 
         route.handler(new VertxTimeoutHandler(timeout));
 
-        for (final MapInstruction applicationInstruction : flow.getApplicationInstructions()) {
+        for (final LuxisMapInstruction<HttpErrorResponse> applicationInstruction : flow.getApplicationInstructions()) {
             if (applicationInstruction.isAsync && applicationInstruction.isBlocking) {
                 route.blockingHandler(ctx -> handleAsync(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             } else if (applicationInstruction.isAsync) {
