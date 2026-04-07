@@ -1,5 +1,7 @@
 package io.kiw.luxis.web.http.client;
 
+import io.kiw.luxis.web.http.HttpBuffer;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -8,6 +10,7 @@ public final class HttpClientRequest {
     private final Object body;
     private final Map<String, String> headers = new LinkedHashMap<>();
     private final Map<String, String> queryParams = new LinkedHashMap<>();
+    private final Map<String, HttpBuffer> fileUploads = new LinkedHashMap<>();
 
     private HttpClientRequest(final String url, final Object body) {
         this.url = url;
@@ -47,5 +50,18 @@ public final class HttpClientRequest {
 
     public Map<String, String> getQueryParams() {
         return queryParams;
+    }
+
+    public HttpClientRequest fileUpload(final String name, final HttpBuffer contents) {
+        this.fileUploads.put(name, contents);
+        return this;
+    }
+
+    public HttpClientRequest fileUpload(final String name, final String contents) {
+        return fileUpload(name, HttpBuffer.fromString(contents));
+    }
+
+    public Map<String, HttpBuffer> getFileUploads() {
+        return fileUploads;
     }
 }

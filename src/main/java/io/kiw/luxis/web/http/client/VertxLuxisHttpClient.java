@@ -3,6 +3,7 @@ package io.kiw.luxis.web.http.client;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.HttpBuffer;
 import io.kiw.luxis.web.internal.ClientWebSocketHandler;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.VertxClientWebSocketConnection;
@@ -72,6 +73,91 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
     @Override
     public <T> LuxisAsync<HttpClientResponse<T>> patch(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, HttpMethod.PATCH, responseType);
+    }
+
+    @Override
+    public <T> LuxisAsync<HttpClientResponse<T>> postFiles(final HttpClientRequest request, final Class<T> responseType) {
+        final CompletableFuture<Result<HttpErrorResponse, HttpClientResponse<T>>> future = new CompletableFuture<>();
+        final String resolvedUrl = resolveUrl(request.getUrl());
+        final URI uri = URI.create(resolvedUrl);
+
+        final String host = uri.getHost();
+        final int port = uri.getPort() != -1 ? uri.getPort() : (
+                "https".equals(uri.getScheme()) ? 443 : 80
+        );
+        final String requestUri = buildRequestUri(uri, request.getQueryParams());
+
+        httpClient.request(HttpMethod.POST, port, host, requestUri)
+                .onSuccess(req -> {
+                    for (final Map.Entry<String, String> header : request.getHeaders().entrySet()) {
+                        req.putHeader(header.getKey(), header.getValue());
+                    }
+
+                    final String boundary = "----LuxisHttpClientBoundary" + System.nanoTime();
+                    req.putHeader("Content-Type", "multipart/form-data; boundary=" + boundary);
+
+                    final Buffer multipartBody = Buffer.buffer();
+                    for (final Map.Entry<String, HttpBuffer> upload : request.getFileUploads().entrySet()) {
+                        multipartBody.appendString("--" + boundary + "\r\n");
+                        multipartBody.appendString("Content-Disposition: form-data; name=\"" + upload.getKey() + "\"; filename=\"" + upload.getKey() + "\"\r\n");
+                        multipartBody.appendString("Content-Type: application/octet-stream\r\n\r\n");
+                        multipartBody.appendBuffer(Buffer.buffer(upload.getValue().bytes()));
+                        multipartBody.appendString("\r\n");
+                    }
+                    multipartBody.appendString("--" + boundary + "--\r\n");
+
+                    req.send(multipartBody)
+                            .onSuccess(resp -> handleResponse(resp, future, responseType))
+                            .onFailure(future::completeExceptionally);
+                })
+                .onFailure(future::completeExceptionally);
+
+        return new LuxisAsync<>(future);
+    }
+
+    @Override
+    public LuxisAsync<HttpClientResponse<HttpBuffer>> download(final HttpClientRequest request) {
+        final CompletableFuture<Result<HttpErrorResponse, HttpClientResponse<HttpBuffer>>> future = new CompletableFuture<>();
+        final String resolvedUrl = resolveUrl(request.getUrl());
+        final URI uri = URI.create(resolvedUrl);
+
+        final String host = uri.getHost();
+        final int port = uri.getPort() != -1 ? uri.getPort() : (
+                "https".equals(uri.getScheme()) ? 443 : 80
+        );
+        final String requestUri = buildRequestUri(uri, request.getQueryParams());
+
+        httpClient.request(HttpMethod.GET, port, host, requestUri)
+                .onSuccess(req -> {
+                    for (final Map.Entry<String, String> header : request.getHeaders().entrySet()) {
+                        req.putHeader(header.getKey(), header.getValue());
+                    }
+
+                    req.send()
+                            .onSuccess(resp -> handleDownloadResponse(resp, future))
+                            .onFailure(future::completeExceptionally);
+                })
+                .onFailure(future::completeExceptionally);
+
+        return new LuxisAsync<>(future);
+    }
+
+    private void handleDownloadResponse(final io.vertx.core.http.HttpClientResponse resp,
+                                        final CompletableFuture<Result<HttpErrorResponse, HttpClientResponse<HttpBuffer>>> future) {
+        resp.body()
+                .onSuccess(body -> {
+                    final Map<String, String> headers = new LinkedHashMap<>();
+                    for (final String name : resp.headers().names()) {
+                        headers.put(name, resp.getHeader(name));
+                    }
+
+                    if (config.isErrorAwareResponses() && resp.statusCode() >= 400) {
+                        future.complete(Result.error(toHttpErrorResponse(body.toString(), resp.statusCode())));
+                    } else {
+                        future.complete(Result.success(new HttpClientResponse<>(resp.statusCode(), new HttpBuffer(body.getBytes()), headers)));
+                    }
+                })
+                .onFailure(future::completeExceptionally);
     }
 
     private <T> LuxisAsync<HttpClientResponse<T>> send(final HttpClientRequest request, final HttpMethod method, final Class<T> responseType) {
