@@ -4,6 +4,7 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.TestLuxis;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.HttpBuffer;
 import io.kiw.luxis.web.internal.ClientWebSocketHandler;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.test.StubExecutionDispatcher;
@@ -69,6 +70,67 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
     }
 
     @Override
+    public <T> LuxisAsync<HttpClientResponse<T>> postFiles(final HttpClientRequest request, final Class<T> responseType) {
+        return send(request, r -> stubTestClient.post(r), responseType);
+    }
+
+    @Override
+    public LuxisAsync<HttpClientResponse<HttpBuffer>> download(final HttpClientRequest request) {
+        final String resolvedUrl = resolveUrl(request.getUrl());
+        final URI uri = URI.create(resolvedUrl);
+        final String path = uri.getPath();
+
+        final StubRequest stubRequest = StubRequest.request(path);
+
+        if (request.getBody() != null) {
+            stubRequest.body(request.getBody() instanceof String ? (String) request.getBody() : mapper.writeValueAsString(request.getBody()));
+        }
+
+        for (final Map.Entry<String, String> entry : request.getHeaders().entrySet()) {
+            stubRequest.headerParam(entry.getKey(), entry.getValue());
+        }
+
+        for (final Map.Entry<String, String> entry : request.getQueryParams().entrySet()) {
+            stubRequest.queryParam(entry.getKey(), entry.getValue());
+        }
+
+        final String query = uri.getQuery();
+        if (query != null) {
+            for (final String param : query.split("&")) {
+                final String[] parts = param.split("=", 2);
+                if (parts.length == 2) {
+                    stubRequest.queryParam(parts[0], parts[1]);
+                }
+            }
+        }
+
+        final TestHttpResponse testResponse = stubTestClient.get(stubRequest);
+        final String rawBody = testResponse.responseBody;
+        final int statusCode = testResponse.statusCode;
+
+        if (config.isErrorAwareResponses() && statusCode >= 400) {
+            final HttpErrorResponse errorResponse = toHttpErrorResponse(rawBody, statusCode);
+            return new LuxisAsync<>(CompletableFuture.completedFuture(Result.error(errorResponse)));
+        }
+
+        final Map<String, String> headers = new LinkedHashMap<>();
+        final String contentType = testResponse.getHeader("Content-Type");
+        if (contentType != null) {
+            headers.put("Content-Type", contentType);
+        }
+        final String contentDisposition = testResponse.getHeader("Content-Disposition");
+        if (contentDisposition != null) {
+            headers.put("Content-Disposition", contentDisposition);
+        }
+        final String transferEncoding = testResponse.getHeader("Transfer-Encoding");
+        if (transferEncoding != null) {
+            headers.put("Transfer-Encoding", transferEncoding);
+        }
+
+        return LuxisAsync.completed(new HttpClientResponse<>(statusCode, HttpBuffer.fromString(rawBody), headers));
+    }
+
+    @Override
     public <APP, RESP> WebSocketSession<RESP> connectToWebSocket(final String path, final ClientWebSocketRoutes<APP, RESP> routes) {
         final String resolvedUrl = resolveUrl(path);
         final URI uri = URI.create(resolvedUrl);
@@ -131,6 +193,10 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
         if (request.getBody() != null) {
 
             stubRequest.body(request.getBody() instanceof String ? (String) request.getBody() : mapper.writeValueAsString(request.getBody()));
+        }
+
+        for (final Map.Entry<String, HttpBuffer> entry : request.getFileUploads().entrySet()) {
+            stubRequest.fileUploads.put(entry.getKey(), entry.getValue());
         }
 
         for (final Map.Entry<String, String> entry : request.getHeaders().entrySet()) {

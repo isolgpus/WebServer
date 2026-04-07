@@ -2,6 +2,7 @@ package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorStatusCode;
+import io.kiw.luxis.web.http.HttpBuffer;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.http.client.HttpClientRequest;
@@ -14,6 +15,9 @@ import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.AlwaysThrowHandler;
 import io.kiw.luxis.web.test.handler.EchoWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ErrorHandler;
+import io.kiw.luxis.web.test.handler.FileDownloaderHandler;
+import io.kiw.luxis.web.test.handler.FileUploadResponse;
+import io.kiw.luxis.web.test.handler.FileUploaderHandler;
 import io.kiw.luxis.web.test.handler.HttpClientCallHandler;
 import io.kiw.luxis.web.test.handler.HttpClientPostCallHandler;
 import io.kiw.luxis.web.test.handler.HttpClientTypedGetHandler;
@@ -707,6 +711,59 @@ public class HttpClientTest {
 
         Assert.assertNotNull(received.get());
         Assert.assertEquals("echo: hello", received.get().echo());
+    }
+
+    // FILE UPLOAD
+
+    @Test
+    public void shouldUploadFilesViaHttpClient() {
+        serverB = createTestServerAndClient(mode, (r, state) ->
+                        r.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler()),
+                builder -> builder.setPort(SERVER_B_PORT));
+
+        final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
+                .baseUrl(SERVER_B_BASE_URL);
+        final LuxisHttpClient client = createHttpClient(mode, serverB, config);
+
+        final Result<HttpErrorResponse, HttpClientResponse<FileUploadResponse>> result = client.postFiles(
+                HttpClientRequest.request("/upload")
+                        .fileUpload("file1", "some bytes")
+                        .fileUpload("file2", "even more bytes"),
+                FileUploadResponse.class
+        ).toCompletableFuture().join();
+
+        result.consume(
+                error -> Assert.fail("Expected success but got error: " + error.statusCode()),
+                success -> {
+                    Assert.assertEquals(200, success.statusCode());
+                    Assert.assertEquals(10, (int) success.body().results().get("file1"));
+                    Assert.assertEquals(15, (int) success.body().results().get("file2"));
+                });
+    }
+
+    // FILE DOWNLOAD
+
+    @Test
+    public void shouldDownloadFileViaHttpClient() {
+        serverB = createTestServerAndClient(mode, (r, state) ->
+                        r.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8"),
+                builder -> builder.setPort(SERVER_B_PORT));
+
+        final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
+                .baseUrl(SERVER_B_BASE_URL);
+        final LuxisHttpClient client = createHttpClient(mode, serverB, config);
+
+        final Result<HttpErrorResponse, HttpClientResponse<HttpBuffer>> result = client.download("/download")
+                .toCompletableFuture().join();
+
+        result.consume(
+                error -> Assert.fail("Expected success but got error: " + error.statusCode()),
+                success -> {
+                    Assert.assertEquals(200, success.statusCode());
+                    Assert.assertEquals("file contents", new String(success.body().bytes(), java.nio.charset.StandardCharsets.UTF_8));
+                    Assert.assertEquals("data.txt", success.headers().get("Content-Disposition"));
+                    Assert.assertEquals("text/html; charset=utf-8", success.headers().get("Content-Type"));
+                });
     }
 
     private class ClientState {

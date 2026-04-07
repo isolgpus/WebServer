@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.http.client;
 
+import io.kiw.luxis.web.http.HttpBuffer;
 import io.kiw.luxis.web.websocket.ClientWebSocketRoutes;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 
@@ -55,5 +56,17 @@ public interface LuxisHttpClient {
 
     default <T> LuxisAsync<HttpClientResponse<T>> patch(final String url, final String body, final Class<T> responseType) {
         return patch(HttpClientRequest.request(url, body), responseType);
+    }
+
+    <T> LuxisAsync<HttpClientResponse<T>> postFiles(HttpClientRequest request, Class<T> responseType);
+
+    LuxisAsync<HttpClientResponse<HttpBuffer>> download(HttpClientRequest request);
+
+    default <T> LuxisAsync<HttpClientResponse<T>> postFiles(final String url, final Class<T> responseType) {
+        return postFiles(HttpClientRequest.request(url), responseType);
+    }
+
+    default LuxisAsync<HttpClientResponse<HttpBuffer>> download(final String url) {
+        return download(HttpClientRequest.request(url));
     }
 }
