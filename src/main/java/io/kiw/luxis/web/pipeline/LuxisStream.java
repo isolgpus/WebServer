@@ -73,7 +73,7 @@ public abstract class LuxisStream<IN, APP, ERR> {
                     }
                 });
             }
-            return handleAsyncException(resultFuture);
+            return (CompletableFuture<Result<ERR, ?>>) (CompletableFuture<?>) handleAsyncException(resultFuture);
         };
         addAsyncInstruction(isBlocking, wrapped, false);
     }
