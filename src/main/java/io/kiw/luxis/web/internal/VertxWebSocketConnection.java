@@ -19,6 +19,11 @@ public class VertxWebSocketConnection implements WebSocketConnection {
     }
 
     @Override
+    public boolean writeQueueFull() {
+        return webSocket.writeQueueFull();
+    }
+
+    @Override
     public void close() {
         webSocket.close();
     }

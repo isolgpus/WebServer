@@ -6,5 +6,7 @@ public interface WebSocketConnection {
 
     CompletableFuture<Void> sendText(String text);
 
+    boolean writeQueueFull();
+
     void close();
 }
