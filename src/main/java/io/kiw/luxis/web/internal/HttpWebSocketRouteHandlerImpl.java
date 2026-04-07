@@ -23,12 +23,14 @@ public class HttpWebSocketRouteHandlerImpl<APP, RESP> implements HttpWebSocketRo
     private final WebSocketRoutesRegister<APP, RESP> routesRegister;
     private final LinkedHashMap<String, WebSocketRoute<?>> routes;
     private final Map<Class<?>, String> responseTypeRegistry;
+    private final WebSocketRouteConfig config;
 
     public HttpWebSocketRouteHandlerImpl(final WebSocketRoutes<APP, RESP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
+        this.config = config;
         this.responseTypeRegistry = new HashMap<>();
         routes = new LinkedHashMap<>();
         routesRegister = new WebSocketRoutesRegister<>(appState, pendingAsyncResponses, routes, responseTypeRegistry);
@@ -38,7 +40,7 @@ public class HttpWebSocketRouteHandlerImpl<APP, RESP> implements HttpWebSocketRo
 
     @Override
     public WebSocketSession<?> createSession(final WebSocketConnection connection) {
-        return new WebSocketSession<>(connection, objectMapper, responseTypeRegistry);
+        return new WebSocketSession<>(connection, objectMapper, responseTypeRegistry, config.backpressureStrategy());
     }
 
     @Override

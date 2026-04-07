@@ -1,6 +1,7 @@
 package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.WebSocketRouteConfig;
+import io.kiw.luxis.web.pipeline.BackpressureStrategy;
 import io.kiw.luxis.web.pipeline.DisconnectSession;
 import io.kiw.luxis.web.pipeline.JustSendValidationError;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
@@ -28,12 +29,12 @@ public class ClientWebSocketHandler<APP, RESP> {
         this.routes = new LinkedHashMap<>();
         final WebSocketRoutesRegister<APP, RESP> routesRegister = new WebSocketRoutesRegister<>(null, pendingAsyncResponses, routes, responseTypeRegistry);
         clientRoutes.registerRoutes(routesRegister);
-        final WebSocketRouteConfig config = new WebSocketRouteConfig(DisconnectSession.INSTANCE, JustSendValidationError.INSTANCE);
+        final WebSocketRouteConfig config = new WebSocketRouteConfig(DisconnectSession.INSTANCE, JustSendValidationError.INSTANCE, BackpressureStrategy.UNBOUNDED_BUFFER);
         this.executor = new WebSocketPipelineExecutor(objectMapper, null, exceptionHandler, executionDispatcher, config, responseTypeRegistry, pendingAsyncResponses);
     }
 
     public WebSocketSession<RESP> createSession(final WebSocketConnection connection) {
-        return new WebSocketSession<>(connection, objectMapper, responseTypeRegistry);
+        return new WebSocketSession<>(connection, objectMapper, responseTypeRegistry, BackpressureStrategy.UNBOUNDED_BUFFER);
     }
 
     public void onMessage(final String rawMessage, final WebSocketSession<?> session) {
