@@ -30,6 +30,7 @@ export default defineConfig({
                         { label: 'HTTP Context', slug: 'guides/http-context' },
                         { label: 'Validation', slug: 'guides/validation' },
                         { label: 'Filters', slug: 'guides/filters' },
+                        { label: 'WebSockets', slug: 'guides/websockets' },
                         { label: 'File Upload & Download', slug: 'guides/file-upload-download' },
                         { label: 'Configuration', slug: 'guides/configuration' },
                     ],
