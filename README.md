@@ -279,54 +279,119 @@ WebServer.start(MyApp::registerRoutes, new WebServiceConfigBuilder()
 
 ## Testing Your Handlers
 
-### Setting Up a Test Client
+The same test code runs against an in-memory stub **and** a real Vert.x HTTP server. Write your tests once, choose the execution mode.
 
-Register the same routes against a `StubRouter` to run handlers in-memory without Vert.x:
+### Two modes, one test
+
+| | In-memory (stub) | Real server (Vert.x) |
+|---|---|---|
+| **Factory** | `Luxis.test(routes)` | `Luxis.start(routes)` |
+| **Speed** | Milliseconds | Seconds |
+| **Network** | None — everything in-process | Real HTTP over localhost |
+| **When to use** | Day-to-day development, CI | Final verification |
+
+Both give you a `TestClient` with the same API. Your test code doesn't know or care which mode it's running in.
+
+### Register your routes once
+
+This is the same function your production server calls:
 
 ```java
-public class TestApplicationClient {
-
-    private List<Exception> seenExceptions = new ArrayList<>();
-    private final StubRouter router = new StubRouter(seenExceptions::add);
-
-    public TestApplicationClient() {
-        RoutesRegister routesRegister = new RoutesRegister(router);
-        registerRoutes(routesRegister);
-    }
-
-    public static MyState registerRoutes(RoutesRegister routesRegister) {
-        MyState state = new MyState();
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
-        return state;
-    }
-
-    public TestHttpResponse post(StubRequest stubRequest) {
-        return router.handle(stubRequest, Method.POST);
-    }
-
-    public TestHttpResponse get(StubRequest stubRequest) {
-        return router.handle(stubRequest, Method.GET);
-    }
-
-    public void assertNoMoreExceptions() { /* ... */ }
-    public void assertException(String message) { /* ... */ }
+public static MyState registerRoutes(RoutesRegister routesRegister) {
+    MyState state = new MyState();
+    routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+    routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+    return state;
 }
 ```
 
-The same `registerRoutes` method can be used for both the real server and tests:
+### Create a test client
+
+**In-memory:**
 
 ```java
-// Production
-WebServer.start(TestApplicationClient::registerRoutes);
-
-// Test
-TestApplicationClient client = new TestApplicationClient();
+Luxis<MyState> luxis = Luxis.test(MyApp::registerRoutes);
+TestClient client = new StubTestClient("127.0.0.1", 8080, luxis);
 ```
 
-### Building Requests
+No server starts. No ports are opened. Your handlers execute synchronously in-process.
 
-Use `StubRequest` to build test requests fluently:
+**Real server:**
+
+```java
+Luxis<MyState> luxis = Luxis.start(MyApp::registerRoutes,
+    new WebServiceConfigBuilder().setPort(8080).build());
+TestClient client = new VertxTestClient("127.0.0.1", 8080);
+```
+
+A real HTTP server starts on port 8080. Requests go over the network through the full Vert.x stack.
+
+**The test code is identical from here on:**
+
+```java
+TestHttpResponse response = client.post(
+    StubRequest.request("/echo")
+        .body(json().put("name", "Alice").toString()));
+
+Assert.assertEquals(TestHttpResponse.response(expectedJson), response);
+```
+
+Same request builder. Same response type. Same assertions. The only difference is how you created the `Luxis` instance — one line.
+
+### A complete test
+
+```java
+public class EchoTest {
+
+    private Luxis<MyState> luxis;
+    private TestClient client;
+
+    @Before
+    public void setUp() {
+        luxis = Luxis.test(MyApp::registerRoutes);
+        client = new StubTestClient("127.0.0.1", 8080, luxis);
+    }
+
+    @After
+    public void tearDown() throws Exception {
+        client.assertNoMoreExceptions();
+        client.close();
+        luxis.close();
+    }
+
+    @Test
+    public void shouldEchoBackJsonValues() {
+        String requestBody = json()
+                .put("intExample", 17)
+                .put("stringExample", "hiya")
+                .toString();
+
+        TestHttpResponse response = client.post(
+                StubRequest.request("/echo").body(requestBody));
+
+        String expectedResponse = json()
+                .put("intExample", 17)
+                .put("stringExample", "hiya")
+                .toString();
+
+        Assert.assertEquals(
+                TestHttpResponse.response(expectedResponse),
+                response);
+    }
+}
+```
+
+To run this same test against the real Vert.x server, change two lines in `setUp()`:
+
+```java
+luxis = Luxis.start(MyApp::registerRoutes,
+    new WebServiceConfigBuilder().setPort(8080).build());
+client = new VertxTestClient("127.0.0.1", 8080);
+```
+
+Everything else stays exactly the same.
+
+### Building requests
 
 ```java
 StubRequest.request("/echo")
@@ -337,30 +402,25 @@ StubRequest.request("/echo")
     .fileUpload("document", "file contents")
 ```
 
-### Building JSON Test Data
-
-`TestHelper.json()` returns a Jackson `ObjectNode` you can build fluently and convert to a string:
+### Building JSON test data
 
 ```java
-String json = json()
+import static io.kiw.luxis.web.test.TestHelper.json;
+
+String body = json()
     .put("intExample", 17)
     .put("stringExample", "hiya")
     .putNull("optionalField")
     .toString();
-// {"intExample":17,"stringExample":"hiya","optionalField":null}
 ```
 
-Import it with `import static io.kiw.luxis.web.test.TestHelper.json;`.
-
-### Asserting Responses
-
-`TestHttpResponse` supports equality checks on body, status code, headers, and cookies:
+### Asserting responses
 
 ```java
 TestHttpResponse expected = TestHttpResponse.response(expectedJson)
     .withStatusCode(400)
     .withHeader("X-Custom", "value")
-    .withCookie(new CookieImpl("session", "abc"));
+    .withCookie(new HttpCookie("session", "abc"));
 
 Assert.assertEquals(expected, actual);
 ```
