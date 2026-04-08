@@ -1,0 +1,192 @@
+---
+title: HTTP Client
+description: Call other services from your handlers with the same stub-or-real pattern.
+---
+
+`LuxisHttpClient` is a fully async HTTP client that follows the same pattern as everything else in Luxis: one interface, two implementations, swap with one line.
+
+| | In-memory (stub) | Real HTTP (Vert.x) |
+|---|---|---|
+| **Factory** | `StubLuxisHttpClient.create(targetLuxis)` | `new VertxLuxisHttpClient(vertx)` |
+| **Network** | None — calls the target service in-process | Real HTTP requests |
+| **Speed** | Instant | Network latency |
+
+Every method returns `LuxisAsync`, which plugs directly into the pipeline's `asyncMap`. This is important — the client is purely async, so you get the most benefit when using it inside pipelines where the framework manages the threading for you.
+
+## Using the client in a handler
+
+```java
+return stream
+    .asyncMap(ctx -> httpClient.get(
+        "http://user-service:8080/api/users/" + ctx.in().userId,
+        UserResponse.class))
+    .map(ctx -> new OrderResponse(ctx.in().body()))
+    .complete(ctx -> HttpResult.success(ctx.in()));
+```
+
+The `asyncMap` step kicks off the HTTP call without blocking the event loop. When the response arrives, the pipeline continues. The response is automatically deserialized into your type.
+
+## Building requests
+
+For simple calls, use the convenience methods:
+
+```java
+httpClient.get("/api/users", UserResponse.class)
+httpClient.post("/api/users", requestBody)
+httpClient.put("/api/users/123", updatedUser)
+httpClient.delete("/api/users/123")
+```
+
+For more control, use `HttpClientRequest`:
+
+```java
+httpClient.post(
+    HttpClientRequest.request("/api/users", newUser)
+        .header("Authorization", "Bearer " + token)
+        .queryParam("notify", "true"),
+    UserResponse.class)
+```
+
+## Reading responses
+
+The client returns `LuxisAsync<HttpClientResponse<T>>`. Inside a pipeline's `asyncMap`, the framework unwraps this for you — `ctx.in()` gives you the `HttpClientResponse` directly:
+
+```java
+.asyncMap(ctx -> httpClient.get("/api/value", ValueResponse.class))
+.map(ctx -> {
+    int status = ctx.in().statusCode();
+    ValueResponse body = ctx.in().body();
+    String contentType = ctx.in().headers().get("Content-Type");
+    return new MyResponse(body.result());
+})
+```
+
+Outside a pipeline, resolve the future yourself:
+
+```java
+Result<HttpErrorResponse, HttpClientResponse<String>> result =
+    httpClient.get("/api/value").toCompletableFuture().join();
+```
+
+## Creating the client
+
+### In-memory (stub)
+
+Point the stub client at another `Luxis.test()` instance. Requests execute in-process with no network:
+
+```java
+// The service you want to call
+Luxis<UserState> userService = Luxis.test(UserApp::registerRoutes);
+
+// Create a client that talks to it in-memory
+LuxisHttpClient httpClient = StubLuxisHttpClient.create(userService);
+```
+
+### Real HTTP (Vert.x)
+
+```java
+LuxisHttpClient httpClient = new VertxLuxisHttpClient(vertx);
+```
+
+The handler code that uses the client doesn't change — it just calls `httpClient.get(...)` either way.
+
+## Injecting the client into handlers
+
+Pass the client to your handler's constructor. The handler doesn't know or care whether it's a stub or real:
+
+```java
+public static AppState registerRoutes(RoutesRegister routesRegister) {
+    AppState state = new AppState();
+
+    routesRegister.jsonRoute("/orders", Method.POST, state,
+        new CreateOrderHandler(httpClient));
+
+    return state;
+}
+```
+
+```java
+public class CreateOrderHandler extends VertxJsonRoute<OrderRequest, OrderResponse, AppState> {
+
+    private final LuxisHttpClient httpClient;
+
+    public CreateOrderHandler(LuxisHttpClient httpClient) {
+        this.httpClient = httpClient;
+    }
+
+    @Override
+    public RequestPipeline<OrderResponse> handle(HttpStream<OrderRequest, AppState> stream) {
+        return stream
+            .map(this::validateOrder)
+            .asyncMap(ctx -> httpClient.get(
+                "http://user-service:8080/api/users/" + ctx.in().userId(),
+                UserResponse.class))
+            .blockingMap(this::persistOrder)
+            .complete(ctx -> HttpResult.success(new OrderResponse(ctx.in())));
+    }
+}
+```
+
+In tests, wire up the stub:
+
+```java
+Luxis<UserState> userService = Luxis.test(UserApp::registerRoutes);
+LuxisHttpClient httpClient = StubLuxisHttpClient.create(userService);
+
+Luxis<AppState> orderService = Luxis.test(r -> {
+    AppState state = new AppState();
+    r.jsonRoute("/orders", Method.POST, state, new CreateOrderHandler(httpClient));
+    return state;
+});
+```
+
+Both services run in-memory. The order service calls the user service through the stub client — no network, no Docker, milliseconds.
+
+## Configuration
+
+Use `LuxisHttpClientConfig` to set a base URL or enable error-aware responses:
+
+```java
+LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
+    .baseUrl("http://user-service:8080");
+
+LuxisHttpClient httpClient = StubLuxisHttpClient.create(userService, config);
+// or
+LuxisHttpClient httpClient = new VertxLuxisHttpClient(vertx, config);
+```
+
+With a base URL configured, you can use relative paths:
+
+```java
+httpClient.get("/api/users/123", UserResponse.class)
+// resolves to http://user-service:8080/api/users/123
+```
+
+### Error-aware responses
+
+By default, 4xx and 5xx responses are returned as successful results — you check the status code yourself. Enable `errorAwareResponses` to have them returned as `Result.error()` instead:
+
+```java
+LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
+    .errorAwareResponses(true);
+```
+
+This changes how errors flow through the pipeline. With error-aware responses enabled, a 400 from the downstream service will short-circuit your `asyncMap` step automatically.
+
+## File uploads and downloads
+
+Upload files with `postFiles`:
+
+```java
+httpClient.postFiles(
+    HttpClientRequest.request("/api/upload")
+        .fileUpload("document", HttpBuffer.fromString("file contents")),
+    UploadResponse.class)
+```
+
+Download binary content with `download`:
+
+```java
+httpClient.download(HttpClientRequest.request("/api/report"))
+// returns LuxisAsync<HttpClientResponse<HttpBuffer>>
+```
