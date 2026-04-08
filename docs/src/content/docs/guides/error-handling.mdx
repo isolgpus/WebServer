@@ -1,0 +1,34 @@
+---
+title: Error Handling
+description: Short-circuit pipelines with typed errors using flatMap and HttpResult.
+---
+
+Use `flatMap` with `HttpResult.error()` to short-circuit the pipeline. When an error is returned, the remaining pipeline steps are skipped and the error response is sent to the client.
+
+```java
+.flatMap(ctx -> {
+    if (ctx.in() < 0) {
+        return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Number must be positive"));
+    }
+    return Result.success(ctx.in());
+})
+```
+
+`HttpResult.error()` takes:
+- An **error status code** (e.g., `ErrorStatusCode.BAD_REQUEST`, `ErrorStatusCode.NOT_FOUND`)
+- An **error body** that will be serialized as JSON
+
+`Result.success()` continues the pipeline with the given value.
+
+The same pattern works with `blockingFlatMap` for blocking operations that can fail:
+
+```java
+.blockingFlatMap(ctx -> {
+    try {
+        UserRecord user = database.findById(ctx.in().userId());
+        return Result.success(user);
+    } catch (NotFoundException e) {
+        return HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("User not found"));
+    }
+})
+```

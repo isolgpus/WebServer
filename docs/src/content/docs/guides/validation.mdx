@@ -1,0 +1,88 @@
+---
+title: Validation
+description: Declaratively validate JSON fields, query parameters, and path parameters.
+---
+
+`validate()` evaluates all field rules together and short-circuits with a `422` response if any fail. You can validate JSON body fields, query parameters, and path parameters.
+
+## Basic Validation
+
+```java
+v.jsonField("name", r -> r.name).required().minLength(2);
+v.jsonField("email", r -> r.email).required().email();
+v.jsonField("age", r -> r.age).required().min(0).max(150);
+v.queryParam("page").required().matches("[0-9]+");
+v.pathParam("userId").required().matches("[0-9]+");
+```
+
+## Nested Objects
+
+Nested objects use a `jsonField` overload with a validation block:
+
+```java
+v.jsonField("address", r -> r.address, a -> {
+    a.jsonField("city", x -> x.city).required();
+    a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
+});
+```
+
+## Lists
+
+Lists are validated with `listField`, which supports size constraints and per-element validation via `each()`:
+
+```java
+v.listField("addresses", r -> r.addresses)
+    .required()
+    .minSize(1)
+    .maxSize(10)
+    .each(a -> {
+        a.jsonField("city", x -> x.city).required();
+        a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
+    });
+```
+
+Element errors are keyed by index, e.g. `addresses[0].city`.
+
+## Error Response Format
+
+On failure the response body is:
+
+```json
+{
+  "message": "Validation failed",
+  "errors": {
+    "name": ["must not be blank"],
+    "email": ["must be a valid email address"],
+    "address.zip": ["must match pattern: [0-9]{5}"]
+  }
+}
+```
+
+## Available Rules
+
+### String Rules
+
+| Rule | Description |
+|---|---|
+| `required()` | Must not be null or blank |
+| `minLength(n)` | Minimum string length |
+| `maxLength(n)` | Maximum string length |
+| `email()` | Must be a valid email address |
+| `matches(regex)` | Must match the given regex pattern |
+
+### Numeric Rules
+
+| Rule | Description |
+|---|---|
+| `required()` | Must not be null |
+| `min(n)` | Minimum value |
+| `max(n)` | Maximum value |
+
+### List Rules
+
+| Rule | Description |
+|---|---|
+| `required()` | Must not be null |
+| `minSize(n)` | Minimum list size |
+| `maxSize(n)` | Maximum list size |
+| `each(block)` | Validate each element |

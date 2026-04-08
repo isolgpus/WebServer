@@ -1,0 +1,96 @@
+---
+title: Testing Your Handlers
+description: Test your handlers in-memory without starting a server.
+---
+
+Luxis provides an in-memory test layer that runs your handlers without Vert.x, giving you near-full coverage at unit-test speed.
+
+## Setting Up a Test Client
+
+Register the same routes against a `StubRouter` to run handlers in-memory:
+
+```java
+public class TestApplicationClient {
+
+    private List<Exception> seenExceptions = new ArrayList<>();
+    private final StubRouter router = new StubRouter(seenExceptions::add);
+
+    public TestApplicationClient() {
+        RoutesRegister routesRegister = new RoutesRegister(router);
+        registerRoutes(routesRegister);
+    }
+
+    public static MyState registerRoutes(RoutesRegister routesRegister) {
+        MyState state = new MyState();
+        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+        routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+        return state;
+    }
+
+    public TestHttpResponse post(StubRequest stubRequest) {
+        return router.handle(stubRequest, Method.POST);
+    }
+
+    public TestHttpResponse get(StubRequest stubRequest) {
+        return router.handle(stubRequest, Method.GET);
+    }
+
+    public void assertNoMoreExceptions() { /* ... */ }
+    public void assertException(String message) { /* ... */ }
+}
+```
+
+The same `registerRoutes` method can be used for both the real server and tests:
+
+```java
+// Production
+WebServer.start(TestApplicationClient::registerRoutes);
+
+// Test
+TestApplicationClient client = new TestApplicationClient();
+```
+
+## Building Requests
+
+Use `StubRequest` to build test requests fluently:
+
+```java
+StubRequest.request("/echo")
+    .body("{\"name\": \"test\"}")
+    .queryParam("search", "hello")
+    .headerParam("X-Request-Id", "abc")
+    .cookie("session", "xyz")
+    .fileUpload("document", "file contents")
+```
+
+## Building JSON Test Data
+
+`TestHelper.json()` returns a Jackson `ObjectNode` you can build fluently and convert to a string:
+
+```java
+String json = json()
+    .put("intExample", 17)
+    .put("stringExample", "hiya")
+    .putNull("optionalField")
+    .toString();
+// {"intExample":17,"stringExample":"hiya","optionalField":null}
+```
+
+Import it with:
+
+```java
+import static io.kiw.luxis.web.test.TestHelper.json;
+```
+
+## Asserting Responses
+
+`TestHttpResponse` supports equality checks on body, status code, headers, and cookies:
+
+```java
+TestHttpResponse expected = TestHttpResponse.response(expectedJson)
+    .withStatusCode(400)
+    .withHeader("X-Custom", "value")
+    .withCookie(new CookieImpl("session", "abc"));
+
+Assert.assertEquals(expected, actual);
+```

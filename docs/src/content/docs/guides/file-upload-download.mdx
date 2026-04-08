@@ -1,0 +1,48 @@
+---
+title: File Upload & Download
+description: Handle file uploads and downloads with typed routes.
+---
+
+## File Upload
+
+Upload routes receive a `Map<String, Buffer>` of uploaded files:
+
+```java
+public class UploadHandler extends VertxFileUploadRoute<UploadResponse, MyState> {
+
+    @Override
+    public RequestPipeline<UploadResponse> handle(HttpStream<Map<String, Buffer>, MyState> e) {
+        return e.complete(ctx -> {
+            int totalBytes = ctx.in().values().stream().mapToInt(b -> b.getBytes().length).sum();
+            return HttpResult.success(new UploadResponse(totalBytes));
+        });
+    }
+}
+```
+
+Register the upload route:
+
+```java
+routesRegister.uploadFileRoute("/upload", Method.POST, appState, new UploadHandler());
+```
+
+## File Download
+
+Download routes return a `DownloadFileResponse`:
+
+```java
+public class DownloadHandler implements VertxFileDownloadRoute<String, MyState> {
+
+    @Override
+    public RequestPipeline<DownloadFileResponse> handle(HttpStream<String, MyState> e) {
+        return e.complete(ctx ->
+            Result.success(new DownloadFileResponse(Buffer.buffer("file contents"), "report.csv")));
+    }
+}
+```
+
+Register the download route with a content type:
+
+```java
+routesRegister.downloadFileRoute("/download", Method.GET, appState, new DownloadHandler(), "text/csv");
+```

@@ -1,0 +1,40 @@
+---
+title: Getting Started
+description: Create your first Luxis handler and start the server.
+---
+
+## Create a Handler
+
+Create a handler by extending `VertxJsonRoute`:
+
+```java
+public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWorldResponse, AppState> {
+
+    @Override
+    public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, AppState> e) {
+        return e.complete(ctx -> HttpResult.success(new HelloWorldResponse()));
+    }
+}
+```
+
+## Start the Server
+
+Start the server and register your routes:
+
+```java
+WebServer.start(routesRegister -> {
+    AppState appState = new AppState();
+    routesRegister.jsonRoute("/hello/world", Method.POST, appState.helloWorldState, new HelloWorldHandler());
+    return appState;
+});
+```
+
+The `jsonRoute` method registers a typed JSON endpoint. It takes:
+- The **path** (`"/hello/world"`)
+- The **HTTP method** (`Method.POST`)
+- The **application state** for this route
+- The **handler** instance
+
+## Next Steps
+
+Learn how to build transformation pipelines in the [Handler Pipeline](/Luxis/guides/handler-pipeline/) guide.
