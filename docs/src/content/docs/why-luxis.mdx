@@ -1,0 +1,30 @@
+---
+title: Why Luxis?
+description: A type-safe, functional web framework built on Vert.x for Java 21.
+---
+
+Luxis is a type-safe, functional web framework built on Vert.x for Java 21.
+
+Build your application with fast feedback and high coverage — a combination that traditional testing strategies struggle to deliver.
+
+Unit tests are fast but test components in isolation, offering low coverage of real behaviour. End-to-end tests give you near-full coverage but are slow to set up and slow to run. You're always trading speed for confidence.
+
+Luxis eliminates that trade-off in two ways:
+
+1. **In-memory test layer** — Your application logic runs without any IO, network stack, or web server. The same route definitions you register in production plug straight into an in-memory stub router, giving you near-full coverage at unit-test speed. When you're ready to test against the real stack, swap in the real implementation with zero code changes to your tests.
+
+2. **Compiler-enforced concurrency safety** — The functional pipeline API forces you to declare whether each step is non-blocking, blocking, or async. Run the wrong kind of work on the wrong thread and the code won't compile. Concurrency bugs that would otherwise surface as confusing, hard-to-diagnose production errors become compiler-level feedback — the fastest feedback loop there is.
+
+## Installation
+
+Add the Luxis dependency to your `pom.xml`:
+
+```xml
+<dependency>
+    <groupId>io.kiw.luxis</groupId>
+    <artifactId>luxis</artifactId>
+    <version>0.1</version>
+</dependency>
+```
+
+Ready to get started? Head over to the [Getting Started](/Luxis/getting-started/) guide.

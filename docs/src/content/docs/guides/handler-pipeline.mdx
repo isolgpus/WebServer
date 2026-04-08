@@ -1,0 +1,60 @@
+---
+title: Handler Pipeline
+description: Build typed transformation chains with pipeline methods.
+---
+
+Handlers are typed transformation chains built by calling methods on `HttpStream`. Each step receives a context object (`ctx`) that provides access to the current value (`ctx.in()`), the HTTP context (`ctx.http()`), and — for non-blocking steps — the application state (`ctx.app()`).
+
+## Pipeline Methods
+
+| Method | Use when you need to… | Thread | Context |
+|---|---|---|---|
+| `map` | Transform a value without error handling | Event loop | `in()`, `http()`, `app()` |
+| `flatMap` | Transform a value and potentially short-circuit with an error | Event loop | `in()`, `http()`, `app()` |
+| `blockingMap` | Perform synchronous blocking I/O (DB reads, file I/O) | Worker | `in()`, `http()` |
+| `blockingFlatMap` | Perform synchronous blocking I/O that can fail | Worker | `in()`, `http()` |
+| `asyncMap` | Call an async API (Kafka, HTTP client) | Event loop | `in()`, `http()`, `app()` |
+| `asyncFlatMap` | Call an async API that can fail | Event loop | `in()`, `http()`, `app()` |
+| `asyncBlockingMap` | Blocking setup followed by an async result | Worker | `in()`, `http()` |
+| `asyncBlockingFlatMap` | Blocking setup followed by an async result that can fail | Worker | `in()`, `http()` |
+| `validate` | Declaratively validate fields (see [Validation](/Luxis/guides/validation/)) | Event loop | `in()`, `http()` |
+| `requireJwt` | Require and validate a JWT Bearer token | Event loop | `in()`, `http()` |
+| `complete` | **Terminal** — produce the final response | Event loop | `in()`, `http()`, `app()` |
+| `blockingComplete` | **Terminal** — produce the final response from a blocking operation | Worker | `in()`, `http()` |
+
+## Example
+
+Here's a handler that validates input, updates state, writes to a database, and publishes a Kafka event — all in a single typed pipeline:
+
+```java
+public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserResponse, AppState> {
+
+    private final UserDatabase database;
+    private final KafkaProducer kafka;
+
+    public AddUserHandler(UserDatabase database, KafkaProducer kafka) {
+        this.database = database;
+        this.kafka = kafka;
+    }
+
+    @Override
+    public RequestPipeline<AddUserResponse> handle(HttpStream<AddUserRequest, AppState> stream) {
+        return stream
+            .validate(v -> {
+                v.jsonField("name", r -> r.name).required().minLength(2);
+                v.jsonField("email", r -> r.email).required().email();
+            })
+            .map(this::updateApplicationState)
+            .blockingFlatMap(this::validateAgainstDatabase)
+            .blockingMap(this::writeToDatabase)
+            .asyncMap(this::sendKafkaEvent)
+            .flatMap(this::handleKafkaResponse)
+            .complete(this::toResponse);
+    }
+}
+```
+
+Each step in the pipeline is strongly typed. The compiler ensures that:
+- Non-blocking steps (`map`, `flatMap`) run on the event loop and have access to application state
+- Blocking steps (`blockingMap`, `blockingFlatMap`) run on a worker thread and cannot access shared state
+- Async steps (`asyncMap`, `asyncFlatMap`) return futures and run on the event loop

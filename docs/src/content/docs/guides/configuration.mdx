@@ -1,0 +1,37 @@
+---
+title: Configuration
+description: Customize the server with WebServiceConfigBuilder.
+---
+
+Customize the server with `WebServiceConfigBuilder`:
+
+```java
+WebServer.start(MyApp::registerRoutes, new WebServiceConfigBuilder()
+    .setPort(8080)
+    .setDefaultBlockingTimeoutMillis(5000)
+    .setExceptionHandler(Throwable::printStackTrace)
+    .setMaxBodySize(1_048_576)
+    .build());
+```
+
+## Available Options
+
+| Method | Description | Default |
+|---|---|---|
+| `setPort(int)` | The port the server listens on | `8080` |
+| `setDefaultBlockingTimeoutMillis(int)` | Timeout for blocking pipeline steps | `5000` |
+| `setExceptionHandler(Consumer<Throwable>)` | Handler for uncaught exceptions | — |
+| `setMaxBodySize(int)` | Maximum request body size in bytes | — |
+| `setCorsConfig(CorsConfig)` | CORS policy configuration | — |
+
+## CORS Configuration
+
+Use `CorsConfigBuilder` to configure CORS:
+
+```java
+new WebServiceConfigBuilder()
+    .setCorsConfig(new CorsConfigBuilder()
+        .allowOrigin("https://example.com")
+        .build())
+    .build();
+```

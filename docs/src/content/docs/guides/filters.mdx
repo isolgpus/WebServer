@@ -1,0 +1,32 @@
+---
+title: Filters
+description: Add middleware that runs before matching routes.
+---
+
+Filters are middleware that run before matching routes. Register them with wildcard paths.
+
+## Creating a Filter
+
+```java
+public class AuthFilter implements VertxJsonFilter<MyState> {
+
+    @Override
+    public RequestPipeline<Void> handle(HttpStream<Void, MyState> e) {
+        return e.complete(ctx -> {
+            ctx.http().addResponseCookie(new CookieImpl("visited", "true"));
+            return HttpResult.success();
+        });
+    }
+}
+```
+
+## Registering Filters
+
+Use wildcard paths to match multiple routes:
+
+```java
+// Applies to all routes under /api/
+routesRegister.jsonFilter("/api/*", appState, new AuthFilter());
+```
+
+Filters use the same pipeline API as handlers. You can use `flatMap` to short-circuit requests (e.g., return a `401` if authentication fails) before they reach the route handler.
