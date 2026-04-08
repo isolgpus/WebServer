@@ -34,7 +34,7 @@ When you're ready to test against the real stack, swap in the real implementatio
 
 ### Concurrency bugs caught at compile time
 
-The pipeline API forces you to declare whether each step is blocking, non-blocking, or async. Put blocking work on the event loop? **It won't compile.** The category of bug that causes 2am pages — thread starvation, blocked event loops, race conditions — becomes a red squiggle in your IDE.
+The pipeline API forces you to declare whether each step is blocking, non-blocking, or async. Attempt to access application state on a different thread? **It won't compile.** The category of bug that causes 2am pages — thread starvation, blocked event loops, race conditions — becomes a red squiggle in your IDE.
 
 ### Scales across your entire architecture
 
