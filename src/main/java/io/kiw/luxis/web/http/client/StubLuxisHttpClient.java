@@ -177,6 +177,11 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
         }
 
         @Override
+        public boolean writeQueueFull() {
+            return false;
+        }
+
+        @Override
         public void close() {
             serverWsClient.close();
         }
