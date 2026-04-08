@@ -1,60 +1,99 @@
 ---
 title: Handler Pipeline
-description: Build typed transformation chains with pipeline methods.
+description: Build typed transformation chains with full thread control.
 ---
 
-Handlers are typed transformation chains built by calling methods on `HttpStream`. Each step receives a context object (`ctx`) that provides access to the current value (`ctx.in()`), the HTTP context (`ctx.http()`), and — for non-blocking steps — the application state (`ctx.app()`).
+Handlers are typed transformation chains built by calling methods on `HttpStream`. Each step receives a context object (`ctx`) that gives you access to the current value (`ctx.in()`), the HTTP context (`ctx.http()`), and — on the event loop — the application state (`ctx.app()`).
 
-## Pipeline Methods
+## What a pipeline looks like
 
-| Method | Use when you need to… | Thread | Context |
-|---|---|---|---|
-| `map` | Transform a value without error handling | Event loop | `in()`, `http()`, `app()` |
-| `flatMap` | Transform a value and potentially short-circuit with an error | Event loop | `in()`, `http()`, `app()` |
-| `blockingMap` | Perform synchronous blocking I/O (DB reads, file I/O) | Worker | `in()`, `http()` |
-| `blockingFlatMap` | Perform synchronous blocking I/O that can fail | Worker | `in()`, `http()` |
-| `asyncMap` | Call an async API (Kafka, HTTP client) | Event loop | `in()`, `http()`, `app()` |
-| `asyncFlatMap` | Call an async API that can fail | Event loop | `in()`, `http()`, `app()` |
-| `asyncBlockingMap` | Blocking setup followed by an async result | Worker | `in()`, `http()` |
-| `asyncBlockingFlatMap` | Blocking setup followed by an async result that can fail | Worker | `in()`, `http()` |
-| `validate` | Declaratively validate fields (see [Validation](/Luxis/guides/validation/)) | Event loop | `in()`, `http()` |
-| `requireJwt` | Require and validate a JWT Bearer token | Event loop | `in()`, `http()` |
-| `complete` | **Terminal** — produce the final response | Event loop | `in()`, `http()`, `app()` |
-| `blockingComplete` | **Terminal** — produce the final response from a blocking operation | Worker | `in()`, `http()` |
-
-## Example
-
-Here's a handler that validates input, updates state, writes to a database, and publishes a Kafka event — all in a single typed pipeline:
+This pipeline validates input, updates application state, checks a database, writes to it, fetches data from another service, publishes a Kafka event, and produces a response. Each step declares exactly where it runs:
 
 ```java
-public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserResponse, AppState> {
-
-    private final UserDatabase database;
-    private final KafkaProducer kafka;
-
-    public AddUserHandler(UserDatabase database, KafkaProducer kafka) {
-        this.database = database;
-        this.kafka = kafka;
-    }
-
-    @Override
-    public RequestPipeline<AddUserResponse> handle(HttpStream<AddUserRequest, AppState> stream) {
-        return stream
-            .validate(v -> {
-                v.jsonField("name", r -> r.name).required().minLength(2);
-                v.jsonField("email", r -> r.email).required().email();
-            })
-            .map(this::updateApplicationState)
-            .blockingFlatMap(this::validateAgainstDatabase)
-            .blockingMap(this::writeToDatabase)
-            .asyncMap(this::sendKafkaEvent)
-            .flatMap(this::handleKafkaResponse)
-            .complete(this::toResponse);
-    }
-}
+return stream
+    .validate(v -> {
+        v.jsonField("name", r -> r.name).required().minLength(2);
+        v.jsonField("email", r -> r.email).required().email();
+    })
+    .map(this::updateApplicationState)               // event loop — access app state
+    .blockingFlatMap(this::validateAgainstDatabase)  // worker thread — can handle failure case
+    .blockingMap(this::writeToDatabase)              // worker thread — blocking I/O
+    .asyncMap(this::fetchFromUserService)            // event loop — async HTTP call and handle response
+    .asyncMap(this::sendKafkaEvent)                  // event loop — async Kafka publish and handle a correlated response with luxis.handleAsyncResponse() else where
+    .peek(this::emitMetrics)                         // event loop — no transformation, truly async, don't expect a response
+    .flatMap(this::handleKafkaResponse)              // event loop — can handle failure case
+    .complete(this::toResponse);                     // event loop — produce response
 ```
 
-Each step in the pipeline is strongly typed. The compiler ensures that:
-- Non-blocking steps (`map`, `flatMap`) run on the event loop and have access to application state
-- Blocking steps (`blockingMap`, `blockingFlatMap`) run on a worker thread and cannot access shared state
-- Async steps (`asyncMap`, `asyncFlatMap`) return futures and run on the event loop
+That's the entire handler logic. The compiler enforces the threading model.
+
+## Pipeline method groups
+
+Every pipeline method is a combination of three concepts: **where** it runs, **whether** it's async, and **whether** it handles error cases explicitly.
+
+Any step can still throw an exception — Luxis will catch it and return a `500`. The `flat` variants give you control over the error response, letting you return a specific status code and message when your application logic dictates a failure.
+
+### map — transform on the event loop
+
+Runs on the event loop with full access to application state.
+
+| Method | Error handling |
+|---|---|
+| `map` | Transform and continue |
+| `flatMap` | Return `HttpResult.error()` to short-circuit with a specific error response |
+
+### blocking — run on a worker thread
+
+Moves execution to a worker thread for synchronous I/O (database calls, file reads). Application state is not accessible — this is enforced by the compiler.
+
+| Method | Error handling |
+|---|---|
+| `blockingMap` | Transform and continue |
+| `blockingFlatMap` | Return `HttpResult.error()` to short-circuit with a specific error response |
+
+### async — start async work
+
+Kicks off asynchronous operations (HTTP calls to other services, Kafka publishes) and returns a future.
+
+| Method | Thread | Error handling |
+|---|---|---|
+| `asyncMap` | Event loop | Transform and continue |
+| `asyncFlatMap` | Event loop | Can short-circuit |
+| `asyncBlockingMap` | Worker | Transform and continue |
+| `asyncBlockingFlatMap` | Worker | Can short-circuit |
+
+### terminal — end the pipeline
+
+| Method | Thread |
+|---|---|
+| `complete` | Event loop |
+| `blockingComplete` | Worker |
+
+### validate — declarative field validation
+
+`validate` runs on the event loop and short-circuits with a `422` response if any rules fail. See [Validation](/Luxis/guides/validation/) for details.
+
+## The flat pattern
+
+Any method with `flat` in the name lets you explicitly handle error cases and control the response:
+
+```java
+.flatMap(ctx -> {
+    if (ctx.in().age() < 0) {
+        return HttpResult.error(ErrorStatusCode.BAD_REQUEST,
+            new ErrorMessageResponse("Age must be positive"));
+    }
+    return Result.success(ctx.in());
+})
+```
+
+Without `flat`, the step simply transforms the value and continues. If something unexpected goes wrong, Luxis catches the exception and returns a `500` — but `flat` lets you decide exactly what the client sees.
+
+## Context access
+
+| Thread | Available context |
+|---|---|
+| Event loop (`map`, `flatMap`, `asyncMap`, etc.) | `ctx.in()`, `ctx.http()`, `ctx.app()` |
+| Worker (`blockingMap`, `blockingFlatMap`, etc.) | `ctx.in()`, `ctx.http()` |
+
+Application state (`ctx.app()`) is only available on the event loop. This isn't a convention — it's a compile-time constraint. The type system won't let you access shared state from a worker thread.

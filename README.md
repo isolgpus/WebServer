@@ -69,54 +69,31 @@ Start the server and register your routes:
 
 ### Handler Pipeline
 
-Handlers are typed transformation chains built by calling methods on `HttpStream`. Each step receives a context object (`ctx`) that provides access to the current value (`ctx.in()`), the HTTP context (`ctx.http()`), and — for non-blocking steps — the application state (`ctx.app()`).
-
-#### Pipeline Methods
-
-| Method | Use when you need to… | Thread | Context |
-|---|---|---|---|
-| `map` | Transform a value without error handling | Event loop | `in()`, `http()`, `app()` |
-| `flatMap` | Transform a value and potentially short-circuit with an error | Event loop | `in()`, `http()`, `app()` |
-| `blockingMap` | Perform synchronous blocking I/O (DB reads, file I/O) | Worker | `in()`, `http()` |
-| `blockingFlatMap` | Perform synchronous blocking I/O that can fail | Worker | `in()`, `http()` |
-| `asyncMap` | Call an async API (Kafka, HTTP client) | Event loop | `in()`, `http()`, `app()` |
-| `asyncFlatMap` | Call an async API that can fail | Event loop | `in()`, `http()`, `app()` |
-| `asyncBlockingMap` | Blocking setup followed by an async result | Worker | `in()`, `http()` |
-| `asyncBlockingFlatMap` | Blocking setup followed by an async result that can fail | Worker | `in()`, `http()` |
-| `validate` | Declaratively validate fields (see [Validation](#validation)) | Event loop | `in()`, `http()` |
-| `requireJwt` | Require and validate a JWT Bearer token | Event loop | `in()`, `http()` |
-| `complete` | **Terminal** — produce the final response | Event loop | `in()`, `http()`, `app()` |
-| `blockingComplete` | **Terminal** — produce the final response from a blocking operation | Worker | `in()`, `http()` |
-
-#### Example
+Handlers are typed transformation chains built by calling methods on `HttpStream`. Each step declares exactly where it runs — the compiler enforces the threading model.
 
 ```java
-public class AddUserHandler extends VertxJsonRoute<AddUserRequest, AddUserResponse, AppState> {
-
-    private final UserDatabase database;
-    private final KafkaProducer kafka;
-
-    public AddUserHandler(UserDatabase database, KafkaProducer kafka) {
-        this.database = database;
-        this.kafka = kafka;
-    }
-
-    @Override
-    public RequestPipeline<AddUserResponse> handle(HttpStream<AddUserRequest, AppState> stream) {
-        return stream
-            .validate(v -> {
-                v.jsonField("name", r -> r.name).required().minLength(2);
-                v.jsonField("email", r -> r.email).required().email();
-            })
-            .map(this::updateApplicationState)
-            .blockingFlatMap(this::validateAgainstDatabase)
-            .blockingMap(this::writeToDatabase)
-            .asyncMap(this::sendKafkaEvent)
-            .flatMap(this::handleKafkaResponse)
-            .complete(this::toResponse);
-    }
-}
+return stream
+    .validate(v -> {
+        v.jsonField("name", r -> r.name).required().minLength(2);
+        v.jsonField("email", r -> r.email).required().email();
+    })
+    .map(this::updateApplicationState)              // event loop — access app state
+    .blockingFlatMap(this::validateAgainstDatabase)  // worker thread — can handle failure case
+    .blockingMap(this::writeToDatabase)              // worker thread — blocking I/O
+    .asyncMap(this::fetchFromUserService)            // event loop — async HTTP call
+    .asyncMap(this::sendKafkaEvent)                  // event loop — async Kafka publish
+    .flatMap(this::handleKafkaResponse)              // event loop — can handle failure case
+    .complete(this::toResponse);                     // event loop — produce response
 ```
+
+Every method is a combination of **where** it runs, **whether** it's async, and **whether** it handles error cases explicitly. Any step can still throw an exception (Luxis catches it and returns a `500`), but `flat` variants give you control — letting you return a specific status code and message when your application logic dictates a failure.
+
+- **`map` / `flatMap`** — event loop, with access to application state.
+- **`blockingMap` / `blockingFlatMap`** — worker thread for synchronous I/O. Application state is not accessible (compiler-enforced).
+- **`asyncMap` / `asyncFlatMap`** — event loop, returns a future for async operations (HTTP calls, Kafka).
+- **`asyncBlockingMap` / `asyncBlockingFlatMap`** — worker thread, returns a future.
+- **`complete` / `blockingComplete`** — terminal step that produces the response.
+- **`validate`** — declarative field validation, short-circuits with `422` on failure.
 
 ### Error Handling
 
