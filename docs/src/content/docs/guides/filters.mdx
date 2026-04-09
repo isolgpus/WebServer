@@ -5,28 +5,70 @@ description: Add middleware that runs before matching routes.
 
 Filters are middleware that run before matching routes. Register them with wildcard paths.
 
-## Creating a Filter
-
-```java
-public class AuthFilter implements VertxJsonFilter<MyState> {
-
-    @Override
-    public RequestPipeline<Void> handle(HttpStream<Void, MyState> e) {
-        return e.complete(ctx -> {
-            ctx.http().addResponseCookie(new CookieImpl("visited", "true"));
-            return HttpResult.success();
-        });
-    }
-}
-```
-
 ## Registering Filters
 
 Use wildcard paths to match multiple routes:
 
 ```java
 // Applies to all routes under /api/
-routesRegister.jsonFilter("/api/*", appState, new AuthFilter());
+routesRegister.jsonFilter("/api/*", appState, new JwtFilter(jwtProvider));
 ```
 
-Filters use the same pipeline API as handlers. You can use `flatMap` to short-circuit requests (e.g., return a `401` if authentication fails) before they reach the route handler.
+Filters run in registration order before the matching route handler. If any filter completes with an error result, the route handler is not invoked.
+
+## Creating a Filter
+
+A filter implements `VertxJsonFilter<APP>` and receives an `HttpStream<Void, APP>`:
+
+```java
+public class VisitedFilter implements VertxJsonFilter<MyState> {
+
+    @Override
+    public RequestPipeline<Void> handle(HttpStream<Void, MyState> e) {
+        return e.complete(ctx -> {
+            ctx.http().addResponseCookie(new HttpCookie("visited", "true"));
+            return HttpResult.success();
+        });
+    }
+}
+```
+
+## Full Pipeline, No Request Body
+
+A filter's stream is the **same `HttpStream` type** handlers receive, so the entire pipeline API is available: `validate()`, `requireJwt()`, `map()`, `flatMap()`, `blockingMap()`, `blockingFlatMap()`, `asyncMap()`, `peek()`, and so on. You can short-circuit a request (e.g. return `401` from `flatMap`) or enrich the downstream context before the route handler runs.
+
+The one thing filters **cannot** do is read the JSON request body. The stream's input type is `Void`, because a single filter can be registered against a wildcard path that matches many routes with different (or no) body types — there is no single type the framework can deserialize the body into. Calling `ctx.in()` inside a filter returns `null`.
+
+Everything else on the request is available through `ctx.http()` and `ctx.app()`:
+
+- Request headers — `ctx.http().getRequestHeader("...")`
+- Query parameters — `ctx.http().getQueryParam("...")` (and via `v.queryParam(...)` in `validate()`)
+- Path parameters — `ctx.http().getPathParam("...")` (and via `v.pathParam(...)` in `validate()`)
+- Cookies — read via `ctx.http()`, write via `addResponseCookie(...)`
+- Response headers — `ctx.http().addResponseHeader(...)`
+- Application state — `ctx.app()`
+- JWT — `requireJwt(jwtProvider)` works exactly as it does in a handler
+
+```java
+public class JwtFilter implements VertxJsonFilter<MyState> {
+
+    private final JwtProvider jwtProvider;
+
+    public JwtFilter(JwtProvider jwtProvider) {
+        this.jwtProvider = jwtProvider;
+    }
+
+    @Override
+    public RequestPipeline<Void> handle(HttpStream<Void, MyState> e) {
+        return e.requireJwt(jwtProvider).complete();
+    }
+}
+```
+
+Because `validate()` lives on `HttpStream`, filters can also validate query and path parameters before requests reach the route — but they cannot validate body fields (there is no body object to validate).
+
+```java
+return e
+    .validate(v -> v.queryParam("tenant").required().matches("[a-z0-9-]+"))
+    .complete();
+```
