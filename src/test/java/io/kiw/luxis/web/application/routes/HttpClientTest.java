@@ -40,6 +40,7 @@ import org.junit.runners.Parameterized;
 import java.util.Collection;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static io.kiw.luxis.web.application.routes.Eventually.eventually;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.createHttpClient;
@@ -682,7 +683,6 @@ public class HttpClientTest {
     }
 
     @Test
-    @Ignore
     public void shouldCreateWebsocketConnection() {
         serverB = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes());
@@ -708,9 +708,10 @@ public class HttpClientTest {
         request.message = "hello";
         session.send(request);
 
-
-        Assert.assertNotNull(received.get());
-        Assert.assertEquals("echo: hello", received.get().echo());
+        eventually(mode, () -> {
+            Assert.assertNotNull(received.get());
+            Assert.assertEquals("echo: hello", received.get().echo());
+        });
     }
 
     // FILE UPLOAD

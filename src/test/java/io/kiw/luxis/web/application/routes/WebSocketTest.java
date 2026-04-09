@@ -36,6 +36,7 @@ import org.junit.runners.Parameterized;
 
 import java.util.Collection;
 
+import static io.kiw.luxis.web.application.routes.Eventually.eventually;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.REAL_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.STUB_MODE;
 import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.assumeRealModeEnabled;
@@ -791,12 +792,12 @@ public class WebSocketTest {
         TestClient client = testClientAndServer.client();
 
         ws = client.webSocket(StubRequest.request("/ws/lifecycle"));
-        Assert.assertTrue(handler.onOpenCalled);
+        eventually(mode, () -> Assert.assertTrue(handler.onOpenCalled));
         Assert.assertFalse(handler.onCloseCalled);
 
         ws.close();
 
-        Assert.assertTrue(handler.onCloseCalled);
+        eventually(mode, () -> Assert.assertTrue(handler.onCloseCalled));
 
         ws = null;
         client.assertNoMoreExceptions();
