@@ -18,10 +18,10 @@ Filters run in registration order before the matching route handler. If any filt
 
 ## Creating a Filter
 
-A filter implements `VertxJsonFilter<APP>` and receives an `HttpStream<Void, APP>`:
+A filter implements `JsonFilter<APP>` and receives an `HttpStream<Void, APP>`:
 
 ```java
-public class VisitedFilter implements VertxJsonFilter<MyState> {
+public class VisitedFilter implements JsonFilter<MyState> {
 
     @Override
     public RequestPipeline<Void> handle(HttpStream<Void, MyState> e) {
@@ -50,7 +50,7 @@ Everything else on the request is available through `ctx.http()` and `ctx.app()`
 - JWT — `requireJwt(jwtProvider)` works exactly as it does in a handler
 
 ```java
-public class JwtFilter implements VertxJsonFilter<MyState> {
+public class JwtFilter implements JsonFilter<MyState> {
 
     private final JwtProvider jwtProvider;
 

@@ -1,12 +1,12 @@
 package io.kiw.luxis.web.test;
 
-import io.kiw.luxis.web.handler.VertxJsonFilter;
+import io.kiw.luxis.web.handler.JsonFilter;
 import io.kiw.luxis.web.http.HttpCookie;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 
-public class TestFilter implements VertxJsonFilter<MyApplicationState> {
+public class TestFilter implements JsonFilter<MyApplicationState> {
     private String cookieKey;
 
     public TestFilter(final String testFilter) {

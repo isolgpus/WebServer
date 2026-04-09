@@ -8,7 +8,7 @@ import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.handler.VertxFileDownloadRoute;
 import io.kiw.luxis.web.handler.VertxFileUploadRoute;
-import io.kiw.luxis.web.handler.VertxJsonFilter;
+import io.kiw.luxis.web.handler.JsonFilter;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.http.DownloadFileResponse;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
@@ -91,11 +91,11 @@ public class RoutesRegister {
         router.route(path, method, "*", "application/json", flow, routeConfig);
     }
 
-    public <APP> void jsonFilter(final String path, final APP applicationState, final VertxJsonFilter<APP> jsonFilter) {
+    public <APP> void jsonFilter(final String path, final APP applicationState, final JsonFilter<APP> jsonFilter) {
         jsonFilter(path, applicationState, jsonFilter, new RouteConfigBuilder().build());
     }
 
-    public <APP> void jsonFilter(final String path, final APP applicationState, final VertxJsonFilter<APP> jsonFilter, final RouteConfig routeConfig) {
+    public <APP> void jsonFilter(final String path, final APP applicationState, final JsonFilter<APP> jsonFilter, final RouteConfig routeConfig) {
         final ArrayList<MapInstruction> chain = new ArrayList<>();
         new HttpMapStream<>(chain, false, applicationState, null, pendingAsyncResponses)
                 .map(ctx -> {

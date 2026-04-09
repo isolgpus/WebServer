@@ -1,34 +1,146 @@
 ---
 title: Error Handling
-description: Short-circuit pipelines with typed errors using flatMap and HttpResult.
+description: How Result, HttpStream, and WebSocketStream cooperate to produce error responses.
 ---
 
-Use `flatMap` with `HttpResult.error()` to short-circuit the pipeline. When an error is returned, the remaining pipeline steps are skipped and the error response is sent to the client.
+Error handling is the cornerstone of the `HttpStream` / `WebSocketStream` pipeline. Every step in a pipeline evaluates to a `Result` — either a success that continues the pipeline or an error that short-circuits it. There are no exception-based control flow paths in handler code: you either return a success, return an error, or let an unexpected exception bubble out of the handler (which the framework translates into a 500 and hands to your configured exception handler).
+
+## The Result Contract
+
+Pipeline steps on `HttpStream` evaluate to `Result<HttpErrorResponse, T>`. An `HttpErrorResponse` pairs an `ErrorMessageResponse` with a status code, and it is always what the client sees when a pipeline errors:
 
 ```java
-.flatMap(ctx -> {
-    if (ctx.in() < 0) {
-        return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Number must be positive"));
-    }
-    return Result.success(ctx.in());
-})
+public record ErrorMessageResponse(String message, Map<String, List<String>> errors) { }
+public record HttpErrorResponse(ErrorMessageResponse errorMessageValue, int statusCode) { }
 ```
 
-`HttpResult.error()` takes:
-- An **error status code** (e.g., `ErrorStatusCode.BAD_REQUEST`, `ErrorStatusCode.NOT_FOUND`)
-- An **error body** that will be serialized as JSON
+Any error you produce must supply:
 
-`Result.success()` continues the pipeline with the given value.
+- A **status code** (`ErrorStatusCode` enum — `BAD_REQUEST`, `NOT_FOUND`, `UNPROCESSABLE_ENTITY`, etc.)
+- An **`ErrorMessageResponse`** with a required top-level `message` and an optional map of field-level messages
 
-The same pattern works with `blockingFlatMap` for blocking operations that can fail:
+Build one with `HttpResult.error(...)`:
 
 ```java
+// Just a message
+HttpResult.error(
+    ErrorStatusCode.NOT_FOUND,
+    new ErrorMessageResponse("User not found"));
+
+// Message plus field-level details
+HttpResult.error(
+    ErrorStatusCode.UNPROCESSABLE_ENTITY,
+    new ErrorMessageResponse("Validation failed", Map.of(
+        "email", List.of("must be a valid email address"),
+        "age", List.of("must be at least 0"))));
+```
+
+The response body is the serialized `ErrorMessageResponse`:
+
+```json
+{
+  "message": "Validation failed",
+  "errors": {
+    "email": ["must be a valid email address"],
+    "age": ["must be at least 0"]
+  }
+}
+```
+
+When the `errors` map is empty (the single-argument `ErrorMessageResponse` constructor) the field is still serialized, just as `{}`.
+
+## Which Steps Can Return Errors
+
+Not every pipeline step is allowed to short-circuit. Only the `flatMap`-style steps and the `complete` terminators take a callback returning a `Result`:
+
+| Step | Signature | Can return an error? |
+|---|---|---|
+| `map` | `ctx -> OUT` | No — returns a plain value |
+| `blockingMap` | `ctx -> OUT` | No |
+| `peek` / `blockingPeek` | `ctx -> void` | No |
+| `flatMap` | `ctx -> Result<HttpErrorResponse, OUT>` | **Yes** |
+| `blockingFlatMap` | `ctx -> Result<HttpErrorResponse, OUT>` | **Yes** |
+| `asyncMap` / `asyncBlockingMap` | `ctx -> LuxisAsync<OUT>` | **Yes** (via the async result) |
+| `complete` | `ctx -> Result<HttpErrorResponse, OUT>` | **Yes** |
+| `blockingComplete` | `ctx -> Result<HttpErrorResponse, OUT>` | **Yes** |
+
+If a step that *can* return an error does so, the remainder of the pipeline is skipped and the error response is written to the client immediately.
+
+```java
+return e
+    .validate(v -> v.field("id", r -> r.id).required())
+    .blockingFlatMap(ctx -> {
+        final UserRecord user = database.findById(ctx.in().id());
+        if (user == null) {
+            return HttpResult.error(
+                ErrorStatusCode.NOT_FOUND,
+                new ErrorMessageResponse("User not found"));
+        }
+        return HttpResult.success(user);
+    })
+    .map(ctx -> toUserResponse(ctx.in()))
+    .complete(ctx -> HttpResult.success(ctx.in()));
+```
+
+`map` cannot short-circuit because its signature returns `OUT` directly, not a `Result`. If you need to decide between success and error mid-pipeline, use `flatMap` (or `blockingFlatMap`).
+
+## Built-in Error Producers
+
+A few framework features already produce error results for you — they use the same `ErrorMessageResponse` contract, so clients see a consistent shape regardless of where the error came from:
+
+- **`validate()`** — short-circuits with `422 Unprocessable Entity` and an `errors` map populated from the failing field rules.
+- **`requireJwt()`** — short-circuits with `401 Unauthorized` and a message describing the failure (`Missing or invalid Authorization header`, `Invalid token signature`, `Token has expired`, …).
+- **JSON body deserialization** — if the request body is missing or cannot be parsed, the pipeline short-circuits with `400 Bad Request` and `{"message":"Invalid json request"}`.
+
+## Unexpected Exceptions
+
+Any exception thrown out of a pipeline step that is *not* wrapped in a `Result` is treated as a bug. The framework will:
+
+1. Stop the pipeline.
+2. Respond to the client with `500 Internal Server Error` and body `{"message":"Something went wrong"}`.
+3. Invoke the configured exception handler with the thrown exception.
+
+The exception handler is for observability only — logging, metrics, alerting. It does not change the response. Register it on the server config:
+
+```java
+final WebServerConfig config = new WebServiceConfigBuilder()
+    .setPort(8080)
+    .setExceptionHandler(e -> logger.error("Unhandled pipeline exception", e))
+    .build();
+```
+
+Because exceptions become opaque 500s, **prefer returning `HttpResult.error(...)` for any failure you want the client to see a meaningful message for**. Reserve thrown exceptions for genuinely unexpected conditions (programmer errors, bugs, infrastructure outages).
+
+```java
+// Preferred — the client gets a 404 and a useful message
 .blockingFlatMap(ctx -> {
     try {
-        UserRecord user = database.findById(ctx.in().userId());
-        return Result.success(user);
+        return HttpResult.success(database.findById(ctx.in().id()));
     } catch (NotFoundException e) {
-        return HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("User not found"));
+        return HttpResult.error(
+            ErrorStatusCode.NOT_FOUND,
+            new ErrorMessageResponse("User not found"));
     }
 })
+
+// Dangerous — the client gets 500 "Something went wrong"
+.blockingMap(ctx -> database.findById(ctx.in().id())) // throws on missing
 ```
+
+## WebSocket Errors
+
+`WebSocketStream` follows exactly the same pattern, with one difference: WebSocket frames have no HTTP status code, so errors are just an `ErrorMessageResponse` — no `HttpErrorResponse` wrapper. Build errors with `WebSocketResult`:
+
+```java
+return e
+    .validate(v -> v.field("value", r -> r.value).required().min(0))
+    .flatMap(ctx -> {
+        if (ctx.in().value() > 100) {
+            return WebSocketResult.error("value must be at most 100");
+        }
+        return WebSocketResult.success(ctx.in());
+    })
+    .complete(ctx -> WebSocketResult.success(process(ctx.in())));
+```
+
+Errors are delivered to the client as a framed error message (`{"type":"error","payload":{...}}`) whose `payload` is the serialized `ErrorMessageResponse`. Unexpected exceptions on a WebSocket pipeline produce the same `{"message":"Something went wrong","errors":{}}` payload and invoke the exception handler, exactly as on the HTTP side.

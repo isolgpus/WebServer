@@ -37,7 +37,7 @@ CI runs `mvn test` on PRs to `master` using JDK 21 (Temurin).
 - **Route handlers** are typed transformation chains built via `HttpResponseStream`
 - **Result monad** (`Result<S, F>`) propagates errors through pipelines without exceptions
 - **StubRouter** enables unit testing routes without starting an HTTP server
-- **Filters** (middleware) use `VertxJsonFilter` with wildcard path matching
+- **Filters** (middleware) use `JsonFilter` with wildcard path matching
 - **JWT auth** via `requireJwt()` in pipelines
 - **Application State** is only to ever be accessed within the non blocking HttpStream map methods of the pipelines. Or when calling a luxis method directly.
 - **Tests client tests** should only ever take the perspective of the client. Despite having access to the server, we continue to treat the server as a black box, only ever asserting the behaviour the client gives. The only exception to this is asserting the exceptionHandler.

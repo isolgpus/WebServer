@@ -154,13 +154,13 @@ public class AsyncTest {
 
     @Test
     public void shouldWorkWithPipelineStepsBeforeCorrelatedAsync() {
-        AsyncWithHttpContextTestHandler vertxJsonRoute = new AsyncWithHttpContextTestHandler();
+        AsyncWithHttpContextTestHandler jsonHandler = new AsyncWithHttpContextTestHandler();
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/withContext", Method.POST, state, vertxJsonRoute);
+            r.jsonRoute("/withContext", Method.POST, state, jsonHandler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
 
-        vertxJsonRoute.evillyReferenceLuxis(testClientAndServer.luxis());
+        jsonHandler.evillyReferenceLuxis(testClientAndServer.luxis());
 
         final TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/withContext")

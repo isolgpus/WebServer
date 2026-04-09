@@ -45,10 +45,10 @@ Luxis is built around one idea: **your tests should exercise real application be
 ### Getting Started
 
 
-Create a handler by extending `VertxJsonRoute`:
+Create a handler by extending `JsonHandler`:
 
 ```java
-public class HelloWorldHandler extends VertxJsonRoute<HelloWorldRequest, HelloWorldResponse, AppState> {
+public class HelloWorldHandler extends JsonHandler<HelloWorldRequest, HelloWorldResponse, AppState> {
 
     @Override
     public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, AppState> e) {
@@ -190,7 +190,7 @@ Element errors are keyed by index, e.g. `addresses[0].city`.
 Filters are middleware that run before matching routes. Register them with wildcard paths:
 
 ```java
-public class AuthFilter implements VertxJsonFilter<MyState> {
+public class AuthFilter implements JsonFilter<MyState> {
 
     @Override
     public RequestPipeline<Void> handle(HttpStream<Void, MyState> e) {
