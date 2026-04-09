@@ -32,15 +32,15 @@ CI runs `mvn test` on PRs to `master` using JDK 21 (Temurin).
 - JUnit 4 for tests
 - No linter configured; follow existing conventions
 
-## Key Patterns
+## Documentation
 
-- **Route handlers** are typed transformation chains built via `HttpResponseStream`
-- **Result monad** (`Result<S, F>`) propagates errors through pipelines without exceptions
-- **StubRouter** enables unit testing routes without starting an HTTP server
-- **Filters** (middleware) use `JsonFilter` with wildcard path matching
-- **JWT auth** via `requireJwt()` in pipelines
-- **Application State** is only to ever be accessed within the non blocking HttpStream map methods of the pipelines. Or when calling a luxis method directly.
-- **Tests client tests** should only ever take the perspective of the client. Despite having access to the server, we continue to treat the server as a black box, only ever asserting the behaviour the client gives. The only exception to this is asserting the exceptionHandler.
+Detailed framework docs live in `docs/src/content/docs/` as `.mdx` files. Treat these as authoritative. Before making non-trivial changes to pipelines, validation, filters, error handling, file upload/download, websockets, the HTTP client, or configuration, read the relevant guide in `docs/src/content/docs/guides/`. Testing behaviour is documented in `docs/src/content/docs/testing/index.mdx`.
+
+## Project-Specific Rules
+
+- **Application State** is only to ever be accessed within the non-blocking `HttpStream` map methods of the pipelines, or when calling a Luxis method directly.
+- **Test client tests** should only ever take the perspective of the client. Despite having access to the server, we continue to treat the server as a black box, only ever asserting the behaviour the client gives. The only exception to this is asserting the exceptionHandler.
+- **Documentation** should only ever refer to code in the main module. Both test-support and test are for the benefit of testing this framework, not for other who want to use the framework
 
 ## Dependencies
 
