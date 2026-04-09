@@ -6,6 +6,7 @@ usage() {
     echo ""
     echo "Commands:"
     echo "  commit    Pull with rebase, compile, test, and push"
+    echo "  docs    start the docs instance"
     exit 1
 }
 
@@ -19,11 +20,17 @@ cmd_commit() {
     echo "Done."
 }
 
+docs(){
+  echo "starting docs instance"
+  (cd docs && npm run build && npm run dev)
+}
+
 if [[ $# -lt 1 ]]; then
     usage
 fi
 
 case "$1" in
     commit) cmd_commit ;;
+    docs) docs ;;
     *) echo "Unknown command: $1"; usage ;;
 esac
