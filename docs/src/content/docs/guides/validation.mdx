@@ -5,24 +5,62 @@ description: Declaratively validate JSON fields, query parameters, and path para
 
 `validate()` evaluates all field rules together and short-circuits with a `422` response if any fail. You can validate JSON body fields, query parameters, and path parameters.
 
-## Basic Validation
+## Pipeline Position
+
+`validate()` is only available on `HttpStream` — the stream type you receive at the start of a handler. As soon as you call any transformation step (`map`, `flatMap`, `blockingMap`, `blockingFlatMap`, `asyncMap`, …), the stream is downgraded to an `HttpMapStream`, which does not expose `validate()`.
+
+In practice this means **validation must run before any other pipeline step**. It can only be used on the first step(s) of the pipeline. You may chain multiple `validate()` calls together, and you may combine them with `requireJwt()`, but once you transform the request you can no longer add validation.
 
 ```java
-v.jsonField("name", r -> r.name).required().minLength(2);
-v.jsonField("email", r -> r.email).required().email();
-v.jsonField("age", r -> r.age).required().min(0).max(150);
-v.queryParam("page").required().matches("[0-9]+");
-v.pathParam("userId").required().matches("[0-9]+");
+// OK — validate() is the first step
+return e
+    .validate(v -> {
+        v.field("name", r -> r.name).required().minLength(2);
+        v.field("email", r -> r.email).required().email();
+    })
+    .map(ctx -> buildUser(ctx.in()))
+    .complete(ctx -> HttpResult.success(ctx.in()));
+```
+
+```java
+// Also OK — validate() after requireJwt() (both live on HttpStream)
+return e
+    .requireJwt(jwtProvider)
+    .validate(v -> v.field("name", r -> r.name).required())
+    .map(ctx -> buildUser(ctx.in()))
+    .complete(ctx -> HttpResult.success(ctx.in()));
+```
+
+```java
+// Does not compile — validate() is not defined on HttpMapStream
+return e
+    .map(ctx -> ctx.in())
+    .validate(v -> v.field("name", r -> r.name).required()) // compile error
+    .complete(ctx -> HttpResult.success(ctx.in()));
+```
+
+## Basic Validation
+
+Inside a `validate()` block, use `field()` for body fields, `queryParam()` for query string parameters, and `pathParam()` for path parameters:
+
+```java
+.validate(v -> {
+    v.field("name", r -> r.name).required().minLength(2);
+    v.field("email", r -> r.email).required().email();
+    v.field("age", r -> r.age).required().min(0).max(150);
+    v.queryParam("page").required().matches("[0-9]+");
+    v.pathParam("userId").required().matches("[0-9]+");
+})
 ```
 
 ## Nested Objects
 
-Nested objects use a `jsonField` overload with a validation block:
+Nested objects use a `field` overload that takes a validation block for the nested type. The block is only evaluated when the nested value is non-null, and error keys are prefixed with the parent field name:
 
 ```java
-v.jsonField("address", r -> r.address, a -> {
-    a.jsonField("city", x -> x.city).required();
-    a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
+v.field("address", r -> r.address, a -> {
+    a.field("city", x -> x.city).required();
+    a.field("zip", x -> x.zip).required().matches("[0-9]{5}");
 });
 ```
 
@@ -36,8 +74,8 @@ v.listField("addresses", r -> r.addresses)
     .minSize(1)
     .maxSize(10)
     .each(a -> {
-        a.jsonField("city", x -> x.city).required();
-        a.jsonField("zip", x -> x.zip).required().matches("[0-9]{5}");
+        a.field("city", x -> x.city).required();
+        a.field("zip", x -> x.zip).required().matches("[0-9]{5}");
     });
 ```
 
@@ -45,7 +83,7 @@ Element errors are keyed by index, e.g. `addresses[0].city`.
 
 ## Error Response Format
 
-On failure the response body is:
+On failure the response status is `422 Unprocessable Entity` and the body is:
 
 ```json
 {
