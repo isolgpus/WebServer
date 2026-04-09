@@ -32,8 +32,33 @@ cmd_test() {
 
 
 docs(){
+  export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+
+  if [[ ! -s "$NVM_DIR/nvm.sh" ]]; then
+    echo "nvm not found, installing..."
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+  fi
+
+  # shellcheck disable=SC1091
+  . "$NVM_DIR/nvm.sh"
+
+  if ! nvm ls default >/dev/null 2>&1; then
+    echo "installing Node LTS via nvm..."
+    nvm install --lts
+    nvm alias default 'lts/*'
+  fi
+
+  nvm use default
+
   echo "starting docs instance"
-  (cd docs && npm run build && npm run dev)
+  (
+    cd docs
+    if [[ ! -d node_modules/astro ]]; then
+      echo "installing docs dependencies..."
+      npm install
+    fi
+    npm run dev
+  )
 }
 
 if [[ $# -lt 1 ]]; then

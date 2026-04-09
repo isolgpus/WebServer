@@ -33,6 +33,7 @@ export default defineConfig({
                         { label: 'File Upload & Download', slug: 'guides/file-upload-download' },
                         { label: 'WebSockets', slug: 'guides/websockets' },
                         { label: 'HTTP Client', slug: 'guides/http-client' },
+                        { label: 'WebSocket Client', slug: 'guides/websocket-client' },
                         { label: 'Configuration', slug: 'guides/configuration' },
                         { label: 'Claude Code Skill', slug: 'guides/claude-code-skill' },
                     ],

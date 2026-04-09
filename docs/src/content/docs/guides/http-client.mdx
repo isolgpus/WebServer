@@ -173,6 +173,10 @@ LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
 
 This changes how errors flow through the pipeline. With error-aware responses enabled, a 400 from the downstream service will short-circuit your `asyncMap` step automatically.
 
+## WebSockets
+
+The client can also open a WebSocket connection to another service. See the [WebSocket Client guide](/Luxis/guides/websocket-client/) for details — the client is a mirror image of a server-side WebSocket route, with inbound and outbound flipped.
+
 ## File uploads and downloads
 
 Upload files with `postFiles`:
