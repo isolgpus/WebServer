@@ -7,13 +7,14 @@ Luxis — a type-safe, functional web framework built on Vert.x (Java 21). Provi
 ## Build & Test Commands
 
 ```bash
-mvn test          # Run all tests
-mvn clean compile # Build without tests
+./lux test # compile and test
 ```
 
 CI runs `mvn test` on PRs to `master` using JDK 21 (Temurin).
 
-> **Cloud mode:** Do NOT run `mvn test` (or `mvn verify`/`mvn integration-test`) in cloud mode — Maven cannot download JARs due to restricted network access. A PreToolUse hook automatically blocks these commands when `CLAUDE_CODE_REMOTE=1`. Tests will run via GitHub Actions CI when the PR is raised.
+> **Cloud mode:** Do NOT run `mvn test` (or `mvn verify`/`mvn integration-test`) or ./lux test in cloud mode — Maven cannot download JARs due to restricted network access. A PreToolUse hook automatically blocks these commands when `CLAUDE_CODE_REMOTE=1`. Tests will run via GitHub Actions CI when the PR is raised.
+When running locally to get feedback on changes, just run `./lux test`. It will run the whole suite but it will be quick 
+
 
 ## Project Structure
 
