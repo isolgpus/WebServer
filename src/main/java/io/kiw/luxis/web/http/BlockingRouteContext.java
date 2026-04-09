@@ -1,20 +1,17 @@
 package io.kiw.luxis.web.http;
 
-public class BlockingRouteContext<IN> {
-    private final IN in;
+import io.kiw.luxis.web.internal.AbstractBlockingRouteContext;
+
+public class BlockingRouteContext<IN> extends AbstractBlockingRouteContext<IN> {
     private final HttpContext http;
 
-    public BlockingRouteContext(final IN in, final HttpContext http) {
-        this.in = in;
-        this.http = http;
-    }
 
-    public IN in() {
-        return in;
+    public BlockingRouteContext(final IN in, final HttpContext http) {
+        super(in);
+        this.http = http;
     }
 
     public HttpContext http() {
         return http;
     }
-
 }

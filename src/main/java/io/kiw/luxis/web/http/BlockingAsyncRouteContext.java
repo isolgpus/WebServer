@@ -17,5 +17,4 @@ public final class BlockingAsyncRouteContext<IN> extends BlockingRouteContext<IN
         return CorrelatedUtil.correlated(pendingAsyncResponses);
     }
 
-
 }

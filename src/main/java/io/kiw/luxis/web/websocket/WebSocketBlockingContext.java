@@ -1,15 +1,11 @@
 package io.kiw.luxis.web.websocket;
 
-public class WebSocketBlockingContext<IN> {
-    private final IN in;
+import io.kiw.luxis.web.internal.AbstractBlockingRouteContext;
+
+public class WebSocketBlockingContext<IN> extends AbstractBlockingRouteContext<IN> {
+
 
     public WebSocketBlockingContext(final IN in) {
-        this.in = in;
+        super(in);
     }
-
-    public IN in() {
-        return in;
-    }
-
-
 }

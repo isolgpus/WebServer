@@ -1,27 +1,16 @@
 package io.kiw.luxis.web.websocket;
 
-public class WebSocketContext<IN, APP, RESP> {
-    private final IN in;
+import io.kiw.luxis.web.internal.AbstractRouteContext;
+
+public class WebSocketContext<IN, APP, RESP> extends AbstractRouteContext<IN, APP> {
     private final WebSocketSession<RESP> connection;
-    private final APP app;
 
     public WebSocketContext(final IN in, final WebSocketSession<RESP> connection, final APP app) {
-        this.in = in;
+        super(in, app);
         this.connection = connection;
-        this.app = app;
-    }
-
-    public IN in() {
-        return in;
     }
 
     public WebSocketSession<RESP> connection() {
         return connection;
     }
-
-    public APP app() {
-        return app;
-    }
-
-
 }

@@ -6,7 +6,6 @@ import io.kiw.luxis.web.internal.PendingAsyncResponses;
 
 public final class WebSocketAsyncContext<IN, APP, RESP> extends WebSocketContext<IN, APP, RESP> {
 
-
     private final PendingAsyncResponses pendingAsyncResponses;
 
     public WebSocketAsyncContext(final IN in, final WebSocketSession<RESP> connection, final APP app, final PendingAsyncResponses pendingAsyncResponses) {
@@ -16,6 +15,6 @@ public final class WebSocketAsyncContext<IN, APP, RESP> extends WebSocketContext
 
     public <T> CorrelatedAsync<T> correlated() {
         return CorrelatedUtil.correlated(pendingAsyncResponses);
-
     }
+
 }

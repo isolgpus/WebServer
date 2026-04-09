@@ -2,26 +2,15 @@ package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.http.HttpContext;
 
-public class RouteContext<IN, APP> {
-    private final IN in;
+public class RouteContext<IN, APP> extends AbstractRouteContext<IN, APP> {
     private final HttpContext http;
-    private final APP app;
 
-    public RouteContext(final IN in, final HttpContext http, final APP app) {
-        this.in = in;
+    protected RouteContext(final IN in, final HttpContext http, final APP app) {
+        super(in, app);
         this.http = http;
-        this.app = app;
-    }
-
-    public IN in() {
-        return in;
     }
 
     public HttpContext http() {
         return http;
-    }
-
-    public APP app() {
-        return app;
     }
 }
