@@ -6,8 +6,8 @@ import io.kiw.luxis.web.WebSocketRouteConfig;
 import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.handler.JsonHandler;
-import io.kiw.luxis.web.handler.VertxFileDownloadRoute;
-import io.kiw.luxis.web.handler.VertxFileUploadRoute;
+import io.kiw.luxis.web.handler.FileDownloadRoute;
+import io.kiw.luxis.web.handler.FileUploadRoute;
 import io.kiw.luxis.web.handler.JsonFilter;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.http.DownloadFileResponse;
@@ -109,7 +109,7 @@ public class RoutesRegister {
         router.route(path, "*", "application/json", flow, routeConfig);
     }
 
-    public <OUT, APP> void uploadFileRoute(final String path, final Method method, final APP applicationState, final VertxFileUploadRoute<OUT, APP> fileUploaderHandler) {
+    public <OUT, APP> void uploadFileRoute(final String path, final Method method, final APP applicationState, final FileUploadRoute<OUT, APP> fileUploaderHandler) {
 
         final HttpMapStream<Map<String, HttpBuffer>, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses);
 
@@ -121,7 +121,7 @@ public class RoutesRegister {
         });
         final RequestPipeline<OUT> flow = fileUploaderHandler.handle(fileUploadStream);
 
-        final Type[] typeArgs = TypeResolver.resolveTypeArguments(fileUploaderHandler.getClass(), VertxFileUploadRoute.class);
+        final Type[] typeArgs = TypeResolver.resolveTypeArguments(fileUploaderHandler.getClass(), FileUploadRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(
                 path, method,
                 null,
@@ -143,7 +143,7 @@ public class RoutesRegister {
         router.webSocketRoute(path, handler);
     }
 
-    public <IN, APP> void downloadFileRoute(final String path, final Method method, final APP applicationState, final VertxFileDownloadRoute<IN, APP> fileDownloadHandler, final String contentType) {
+    public <IN, APP> void downloadFileRoute(final String path, final Method method, final APP applicationState, final FileDownloadRoute<IN, APP> fileDownloadHandler, final String contentType) {
         final HttpMapStream<IN, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new FileEnder(), pendingAsyncResponses);
 
         final HttpMapStream<IN, APP> fileDownloadStream = httpStream.flatMap(ctx -> {
@@ -153,7 +153,7 @@ public class RoutesRegister {
         });
         final RequestPipeline<?> flow = fileDownloadHandler.handle(fileDownloadStream);
 
-        final Type[] typeArgs = TypeResolver.resolveTypeArguments(fileDownloadHandler.getClass(), VertxFileDownloadRoute.class);
+        final Type[] typeArgs = TypeResolver.resolveTypeArguments(fileDownloadHandler.getClass(), FileDownloadRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(
                 path, method,
                 typeArgs != null ? typeArgs[0] : null,

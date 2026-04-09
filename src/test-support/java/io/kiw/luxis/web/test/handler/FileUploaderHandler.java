@@ -1,6 +1,6 @@
 package io.kiw.luxis.web.test.handler;
 
-import io.kiw.luxis.web.handler.VertxFileUploadRoute;
+import io.kiw.luxis.web.handler.FileUploadRoute;
 import io.kiw.luxis.web.http.HttpBuffer;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.RequestPipeline;
@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class FileUploaderHandler extends VertxFileUploadRoute<FileUploadResponse, MyApplicationState> {
+public class FileUploaderHandler extends FileUploadRoute<FileUploadResponse, MyApplicationState> {
     @Override
     public RequestPipeline<FileUploadResponse> handle(final HttpMapStream<Map<String, HttpBuffer>, MyApplicationState> e) {
         return e.complete(ctx -> {

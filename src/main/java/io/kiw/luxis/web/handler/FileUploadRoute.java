@@ -6,7 +6,7 @@ import io.kiw.luxis.web.pipeline.HttpMapStream;
 
 import java.util.Map;
 
-public abstract class VertxFileUploadRoute<OUT, APP> {
+public abstract class FileUploadRoute<OUT, APP> {
 
     public abstract RequestPipeline<OUT> handle(HttpMapStream<Map<String, HttpBuffer>, APP> e);
 

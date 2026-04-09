@@ -212,7 +212,7 @@ routesRegister.jsonFilter("/api/*", appState, new AuthFilter());
 Upload routes receive a `Map<String, Buffer>` of uploaded files:
 
 ```java
-public class UploadHandler extends VertxFileUploadRoute<UploadResponse, MyState> {
+public class UploadHandler extends FileUploadRoute<UploadResponse, MyState> {
 
     @Override
     public RequestPipeline<UploadResponse> handle(HttpStream<Map<String, Buffer>, MyState> e) {
@@ -229,7 +229,7 @@ routesRegister.uploadFileRoute("/upload", Method.POST, appState, new UploadHandl
 Download routes return a `DownloadFileResponse`:
 
 ```java
-public class DownloadHandler implements VertxFileDownloadRoute<String, MyState> {
+public class DownloadHandler implements FileDownloadRoute<String, MyState> {
 
     @Override
     public RequestPipeline<DownloadFileResponse> handle(HttpStream<String, MyState> e) {
