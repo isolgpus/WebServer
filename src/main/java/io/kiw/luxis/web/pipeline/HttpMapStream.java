@@ -1,12 +1,16 @@
 package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.http.BlockingAsyncRouteContext;
+import io.kiw.luxis.web.http.BlockingRouteContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.client.LuxisAsync;
+import io.kiw.luxis.web.internal.AsyncRouteContext;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.RouteContext;
 import io.kiw.luxis.web.internal.ScheduleType;
 import io.kiw.luxis.web.internal.ender.Ender;
 
@@ -28,47 +32,47 @@ public class HttpMapStream<IN, APP> {
         this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
-    public <OUT> HttpMapStream<OUT, APP> map(final HttpControlStreamMapper<IN, OUT, APP> flowHandler) {
+    public <OUT> HttpMapStream<OUT, APP> map(final StreamMapper<RouteContext<IN, APP>, OUT> flowHandler) {
 
         return flatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public <OUT> HttpMapStream<OUT, APP> flatMap(final HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper) {
-        instructionChain.add(new MapInstruction<>(false, httpControlStreamFlatMapper, false));
+    public <OUT> HttpMapStream<OUT, APP> flatMap(final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, OUT> mapper) {
+        instructionChain.add(MapInstruction.nonBlocking(mapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
 
-    public HttpMapStream<IN, APP> peek(final HttpControlStreamPeeker<IN, APP> peeker) {
+    public HttpMapStream<IN, APP> peek(final StreamPeeker<RouteContext<IN, APP>> peeker) {
         return map(ctx -> {
             peeker.handle(ctx);
             return ctx.in();
         });
     }
 
-    public HttpMapStream<IN, APP> blockingPeek(final HttpControlStreamBlockingPeeker<IN> peeker) {
+    public HttpMapStream<IN, APP> blockingPeek(final StreamPeeker<BlockingRouteContext<IN>> peeker) {
         return blockingMap(ctx -> {
             peeker.handle(ctx);
             return ctx.in();
         });
     }
 
-    public <OUT> HttpMapStream<OUT, APP> blockingMap(final HttpControlStreamBlockingMapper<IN, OUT> flowHandler) {
+    public <OUT> HttpMapStream<OUT, APP> blockingMap(final StreamMapper<BlockingRouteContext<IN>, OUT> flowHandler) {
 
         return blockingFlatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public <OUT> HttpMapStream<OUT, APP> blockingFlatMap(final HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper) {
-        instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, false));
+    public <OUT> HttpMapStream<OUT, APP> blockingFlatMap(final StreamFlatMapper<BlockingRouteContext<IN>, HttpErrorResponse, OUT> mapper) {
+        instructionChain.add(MapInstruction.blocking(mapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncMapper<IN, OUT, APP> handler) {
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP>, OUT> handler) {
         return asyncMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncMap(final HttpControlStreamAsyncMapper<IN, OUT, APP> handler, final AsyncMapConfig config) {
-        final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> wrapper = ctx -> {
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP>, OUT> handler, final AsyncMapConfig config) {
+        final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP>, HttpErrorResponse, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
                 AsyncRetryExecutor.executeWithRetry(
@@ -96,16 +100,16 @@ public class HttpMapStream<IN, APP> {
             }
             return resultFuture;
         };
-        instructionChain.add(new MapInstruction<>(wrapper, false));
+        instructionChain.add(MapInstruction.nonBlockingAsync(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingMapper<IN, OUT> handler) {
+    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final StreamAsyncMapper<BlockingAsyncRouteContext<IN>, OUT> handler) {
         return asyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final HttpControlStreamAsyncBlockingMapper<IN, OUT> handler, final AsyncMapConfig config) {
-        final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> wrapper = ctx -> {
+    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final StreamAsyncMapper<BlockingAsyncRouteContext<IN>, OUT> handler, final AsyncMapConfig config) {
+        final StreamAsyncFlatMapper<BlockingAsyncRouteContext<IN>, HttpErrorResponse, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
                 AsyncRetryExecutor.executeWithRetry(
@@ -133,12 +137,12 @@ public class HttpMapStream<IN, APP> {
             }
             return resultFuture;
         };
-        instructionChain.add(new MapInstruction<>(wrapper, false));
+        instructionChain.add(MapInstruction.blockingAsync(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> RequestPipeline<OUT> complete(final HttpControlStreamFlatMapper<IN, OUT, APP> httpControlStreamFlatMapper) {
-        instructionChain.add(new MapInstruction<>(false, httpControlStreamFlatMapper, canFinishSuccessfully));
+    public <OUT> RequestPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, OUT> mapper) {
+        instructionChain.add(MapInstruction.nonBlocking(mapper, canFinishSuccessfully));
         return new RequestPipeline<>(instructionChain, applicationState, ender);
     }
 
@@ -147,8 +151,8 @@ public class HttpMapStream<IN, APP> {
     }
 
 
-    public <OUT> RequestPipeline<OUT> blockingComplete(final HttpControlStreamBlockingFlatMapper<IN, OUT> httpControlStreamFlatMapper) {
-        instructionChain.add(new MapInstruction<>(true, httpControlStreamFlatMapper, canFinishSuccessfully));
+    public <OUT> RequestPipeline<OUT> blockingComplete(final StreamFlatMapper<BlockingRouteContext<IN>, HttpErrorResponse, OUT> mapper) {
+        instructionChain.add(MapInstruction.blocking(mapper, canFinishSuccessfully));
         return new RequestPipeline<>(instructionChain, applicationState, ender);
     }
 }

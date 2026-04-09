@@ -2,10 +2,8 @@ package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
-import io.kiw.luxis.web.pipeline.WebSocketStreamAsyncBlockingFlatMapper;
-import io.kiw.luxis.web.pipeline.WebSocketStreamAsyncFlatMapper;
-import io.kiw.luxis.web.pipeline.WebSocketStreamBlockingFlatMapper;
-import io.kiw.luxis.web.pipeline.WebSocketStreamFlatMapper;
+import io.kiw.luxis.web.pipeline.StreamAsyncFlatMapper;
+import io.kiw.luxis.web.pipeline.StreamFlatMapper;
 import io.kiw.luxis.web.websocket.WebSocketAsyncContext;
 import io.kiw.luxis.web.websocket.WebSocketBlockingAsyncContext;
 import io.kiw.luxis.web.websocket.WebSocketBlockingContext;
@@ -15,55 +13,52 @@ import io.kiw.luxis.web.websocket.WebSocketSession;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
-public class WebSocketMapInstruction<IN, OUT, APP, RESP> {
+public final class WebSocketMapInstruction<IN, OUT, APP, RESP> {
     public final boolean isBlocking;
     public final boolean isAsync;
-    private final WebSocketStreamFlatMapper<IN, OUT, APP, RESP> consumer;
-    private final WebSocketStreamBlockingFlatMapper<IN, OUT> blockingConsumer;
-    private final WebSocketStreamAsyncFlatMapper<IN, OUT, APP, RESP> asyncConsumer;
-    private final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer;
+    private final StreamFlatMapper<WebSocketContext<IN, APP, RESP>, ErrorMessageResponse, OUT> consumer;
+    private final StreamFlatMapper<WebSocketBlockingContext<IN>, ErrorMessageResponse, OUT> blockingConsumer;
+    private final StreamAsyncFlatMapper<WebSocketAsyncContext<IN, APP, RESP>, ErrorMessageResponse, OUT> asyncConsumer;
+    private final StreamAsyncFlatMapper<WebSocketBlockingAsyncContext<IN>, ErrorMessageResponse, OUT> asyncBlockingConsumer;
     public final boolean lastStep;
     private boolean isValidation;
     private Optional<WebSocketMapInstruction<?, ?, ?, ?>> next = Optional.empty();
 
-    public WebSocketMapInstruction(final boolean isBlocking, final WebSocketStreamFlatMapper<IN, OUT, APP, RESP> consumer, final boolean lastStep) {
+    private WebSocketMapInstruction(
+            final boolean isBlocking,
+            final boolean isAsync,
+            final StreamFlatMapper<WebSocketContext<IN, APP, RESP>, ErrorMessageResponse, OUT> consumer,
+            final StreamFlatMapper<WebSocketBlockingContext<IN>, ErrorMessageResponse, OUT> blockingConsumer,
+            final StreamAsyncFlatMapper<WebSocketAsyncContext<IN, APP, RESP>, ErrorMessageResponse, OUT> asyncConsumer,
+            final StreamAsyncFlatMapper<WebSocketBlockingAsyncContext<IN>, ErrorMessageResponse, OUT> asyncBlockingConsumer,
+            final boolean lastStep) {
         this.isBlocking = isBlocking;
-        this.isAsync = false;
+        this.isAsync = isAsync;
         this.consumer = consumer;
-        this.blockingConsumer = null;
-        this.asyncConsumer = null;
-        this.asyncBlockingConsumer = null;
-        this.lastStep = lastStep;
-    }
-
-    public WebSocketMapInstruction(final boolean isBlocking, final WebSocketStreamBlockingFlatMapper<IN, OUT> consumer, final boolean lastStep) {
-        this.isBlocking = isBlocking;
-        this.isAsync = false;
-        this.consumer = null;
-        this.blockingConsumer = consumer;
-        this.asyncConsumer = null;
-        this.asyncBlockingConsumer = null;
-        this.lastStep = lastStep;
-    }
-
-    public WebSocketMapInstruction(final WebSocketStreamAsyncFlatMapper<IN, OUT, APP, RESP> asyncConsumer, final boolean lastStep) {
-        this.isBlocking = false;
-        this.isAsync = true;
-        this.consumer = null;
-        this.blockingConsumer = null;
+        this.blockingConsumer = blockingConsumer;
         this.asyncConsumer = asyncConsumer;
-        this.asyncBlockingConsumer = null;
-        this.lastStep = lastStep;
-    }
-
-    public WebSocketMapInstruction(final WebSocketStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer, final boolean lastStep) {
-        this.isBlocking = true;
-        this.isAsync = true;
-        this.consumer = null;
-        this.blockingConsumer = null;
-        this.asyncConsumer = null;
         this.asyncBlockingConsumer = asyncBlockingConsumer;
         this.lastStep = lastStep;
+    }
+
+    public static <IN, OUT, APP, RESP> WebSocketMapInstruction<IN, OUT, APP, RESP> nonBlocking(
+            final StreamFlatMapper<WebSocketContext<IN, APP, RESP>, ErrorMessageResponse, OUT> consumer, final boolean lastStep) {
+        return new WebSocketMapInstruction<>(false, false, consumer, null, null, null, lastStep);
+    }
+
+    public static <IN, OUT, APP, RESP> WebSocketMapInstruction<IN, OUT, APP, RESP> blocking(
+            final StreamFlatMapper<WebSocketBlockingContext<IN>, ErrorMessageResponse, OUT> consumer, final boolean lastStep) {
+        return new WebSocketMapInstruction<>(true, false, null, consumer, null, null, lastStep);
+    }
+
+    public static <IN, OUT, APP, RESP> WebSocketMapInstruction<IN, OUT, APP, RESP> nonBlockingAsync(
+            final StreamAsyncFlatMapper<WebSocketAsyncContext<IN, APP, RESP>, ErrorMessageResponse, OUT> asyncConsumer, final boolean lastStep) {
+        return new WebSocketMapInstruction<>(false, true, null, null, asyncConsumer, null, lastStep);
+    }
+
+    public static <IN, OUT, APP, RESP> WebSocketMapInstruction<IN, OUT, APP, RESP> blockingAsync(
+            final StreamAsyncFlatMapper<WebSocketBlockingAsyncContext<IN>, ErrorMessageResponse, OUT> asyncBlockingConsumer, final boolean lastStep) {
+        return new WebSocketMapInstruction<>(true, true, null, null, null, asyncBlockingConsumer, lastStep);
     }
 
     public void markAsValidation() {

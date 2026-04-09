@@ -5,60 +5,55 @@ import io.kiw.luxis.web.http.BlockingAsyncRouteContext;
 import io.kiw.luxis.web.http.BlockingRouteContext;
 import io.kiw.luxis.web.http.HttpContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
-import io.kiw.luxis.web.pipeline.HttpControlStreamAsyncBlockingFlatMapper;
-import io.kiw.luxis.web.pipeline.HttpControlStreamAsyncFlatMapper;
-import io.kiw.luxis.web.pipeline.HttpControlStreamBlockingFlatMapper;
-import io.kiw.luxis.web.pipeline.HttpControlStreamFlatMapper;
+import io.kiw.luxis.web.pipeline.StreamAsyncFlatMapper;
+import io.kiw.luxis.web.pipeline.StreamFlatMapper;
 
 import java.util.concurrent.CompletableFuture;
 
-public class MapInstruction<IN, OUT, APP> {
+public final class MapInstruction<IN, OUT, APP> {
     public final boolean isBlocking;
     public final boolean isAsync;
-    private final HttpControlStreamFlatMapper<IN, OUT, APP> consumer;
-    private final HttpControlStreamBlockingFlatMapper<IN, OUT> blockingConsumer;
-    private final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer;
-    private final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer;
+    private final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, OUT> consumer;
+    private final StreamFlatMapper<BlockingRouteContext<IN>, HttpErrorResponse, OUT> blockingConsumer;
+    private final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP>, HttpErrorResponse, OUT> asyncConsumer;
+    private final StreamAsyncFlatMapper<BlockingAsyncRouteContext<IN>, HttpErrorResponse, OUT> asyncBlockingConsumer;
     public final boolean lastStep;
 
-    public MapInstruction(final boolean isBlocking, final HttpControlStreamFlatMapper<IN, OUT, APP> consumer, final boolean lastStep) {
+    private MapInstruction(
+            final boolean isBlocking,
+            final boolean isAsync,
+            final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, OUT> consumer,
+            final StreamFlatMapper<BlockingRouteContext<IN>, HttpErrorResponse, OUT> blockingConsumer,
+            final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP>, HttpErrorResponse, OUT> asyncConsumer,
+            final StreamAsyncFlatMapper<BlockingAsyncRouteContext<IN>, HttpErrorResponse, OUT> asyncBlockingConsumer,
+            final boolean lastStep) {
         this.isBlocking = isBlocking;
-        this.isAsync = false;
+        this.isAsync = isAsync;
         this.consumer = consumer;
-        this.blockingConsumer = null;
-        this.asyncConsumer = null;
-        this.asyncBlockingConsumer = null;
-        this.lastStep = lastStep;
-    }
-
-    public MapInstruction(final boolean isBlocking, final HttpControlStreamBlockingFlatMapper<IN, OUT> consumer, final boolean lastStep) {
-        this.isBlocking = isBlocking;
-        this.isAsync = false;
-        this.consumer = null;
-        this.blockingConsumer = consumer;
-        this.asyncConsumer = null;
-        this.asyncBlockingConsumer = null;
-        this.lastStep = lastStep;
-    }
-
-    public MapInstruction(final HttpControlStreamAsyncFlatMapper<IN, OUT, APP> asyncConsumer, final boolean lastStep) {
-        this.isBlocking = false;
-        this.isAsync = true;
-        this.consumer = null;
-        this.blockingConsumer = null;
+        this.blockingConsumer = blockingConsumer;
         this.asyncConsumer = asyncConsumer;
-        this.asyncBlockingConsumer = null;
-        this.lastStep = lastStep;
-    }
-
-    public MapInstruction(final HttpControlStreamAsyncBlockingFlatMapper<IN, OUT> asyncBlockingConsumer, final boolean lastStep) {
-        this.isBlocking = true;
-        this.isAsync = true;
-        this.consumer = null;
-        this.blockingConsumer = null;
-        this.asyncConsumer = null;
         this.asyncBlockingConsumer = asyncBlockingConsumer;
         this.lastStep = lastStep;
+    }
+
+    public static <IN, OUT, APP> MapInstruction<IN, OUT, APP> nonBlocking(
+            final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, OUT> consumer, final boolean lastStep) {
+        return new MapInstruction<>(false, false, consumer, null, null, null, lastStep);
+    }
+
+    public static <IN, OUT, APP> MapInstruction<IN, OUT, APP> blocking(
+            final StreamFlatMapper<BlockingRouteContext<IN>, HttpErrorResponse, OUT> consumer, final boolean lastStep) {
+        return new MapInstruction<>(true, false, null, consumer, null, null, lastStep);
+    }
+
+    public static <IN, OUT, APP> MapInstruction<IN, OUT, APP> nonBlockingAsync(
+            final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP>, HttpErrorResponse, OUT> asyncConsumer, final boolean lastStep) {
+        return new MapInstruction<>(false, true, null, null, asyncConsumer, null, lastStep);
+    }
+
+    public static <IN, OUT, APP> MapInstruction<IN, OUT, APP> blockingAsync(
+            final StreamAsyncFlatMapper<BlockingAsyncRouteContext<IN>, HttpErrorResponse, OUT> asyncBlockingConsumer, final boolean lastStep) {
+        return new MapInstruction<>(true, true, null, null, null, asyncBlockingConsumer, lastStep);
     }
 
     public Result<HttpErrorResponse, OUT> handle(final IN state, final HttpContext httpContext, final APP applicationState) {
