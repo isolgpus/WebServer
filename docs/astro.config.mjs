@@ -34,6 +34,7 @@ export default defineConfig({
                         { label: 'WebSockets', slug: 'guides/websockets' },
                         { label: 'HTTP Client', slug: 'guides/http-client' },
                         { label: 'Configuration', slug: 'guides/configuration' },
+                        { label: 'Claude Code Skill', slug: 'guides/claude-code-skill' },
                     ],
                 },
                 {

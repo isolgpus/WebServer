@@ -1,0 +1,38 @@
+---
+title: Claude Code Skill
+description: Give Claude Code upfront context about Luxis so it follows the framework's conventions without being told every time.
+---
+
+If you use [Claude Code](https://claude.com/claude-code) to build applications with Luxis, you can install a **skill** that teaches it the framework's core rules, pipeline model, and where to find authoritative documentation. Claude will load the skill only when it detects Luxis code — so it costs nothing in contexts where you're not using the framework.
+
+## What the skill does
+
+- Tells Claude the non-negotiable rules: when application state is accessible, which pipeline step to use for blocking vs async I/O, how error handling works, how validation works, and how tests should be written.
+- Gives Claude a pipeline cheat sheet so it picks the right step (`map` / `blockingMap` / `asyncMap` / …) without guessing.
+- Points Claude at this documentation site, so it fetches the relevant guide on demand instead of hallucinating API details.
+
+## Install it
+
+The skill template lives at [`/SKILL.md`](/Luxis/SKILL.md) on this site. Install it as a user-level skill so it applies to every project where you use Luxis:
+
+```bash
+mkdir -p ~/.claude/skills/luxis
+curl -o ~/.claude/skills/luxis/SKILL.md https://isolgpus.github.io/Luxis/SKILL.md
+```
+
+That's it. The next time you open Claude Code in a project that imports `io.kiw.luxis.*`, uses `HttpStream`, `JsonHandler`, `Luxis.test`, or similar, the skill will activate and Claude will follow Luxis conventions automatically.
+
+If you'd rather scope it to a single project, install it under the project instead:
+
+```bash
+mkdir -p .claude/skills/luxis
+curl -o .claude/skills/luxis/SKILL.md https://isolgpus.github.io/Luxis/SKILL.md
+```
+
+## Customise it
+
+The file is just markdown with frontmatter. Open `~/.claude/skills/luxis/SKILL.md` and edit it — add project-specific rules, remove sections you don't care about, or change the trigger description. Claude will pick up the changes on the next conversation.
+
+## Keeping it up to date
+
+When Luxis changes, re-run the `curl` command to pull the latest version. The skill intentionally delegates to the live documentation for detailed API information, so you only need to refresh it when the core rules or pipeline model change.
