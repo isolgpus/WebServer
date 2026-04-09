@@ -1,0 +1,69 @@
+---
+title: WebSocket Client
+description: Open WebSocket connections to other services using the same pipeline you already know.
+---
+
+`LuxisHttpClient` can also open a WebSocket connection to another service. Creating a WebSocket client is a **mirror image** of defining a [WebSocket server route](/Luxis/guides/websockets/) — same `WebSocketRoutesRegister`, same typed pipelines, same `registerInbound` / `registerOutbound` calls. The only difference is that inbound and outbound are **flipped**: what the server *receives* is what the client *sends*, and what the server *sends* is what the client *receives*.
+
+## The mirror
+
+Given this server-side route:
+
+```java
+public class EchoWebSocketRoutes extends WebSocketRoutes<AppState, EchoResponse> {
+
+    @Override
+    public void registerRoutes(WebSocketRoutesRegister<AppState, EchoResponse> routes) {
+        // Server receives "echo" messages
+        routes.registerInbound("echo", EchoRequest.class, stream ->
+            stream.map(ctx -> "echo: " + ctx.in().message)
+                  .map(ctx -> new EchoResponse(ctx.in()))
+                  .complete());
+
+        // Server sends "echoResponse" messages
+        routes.registerOutbound("echoResponse", EchoResponse.class);
+    }
+}
+```
+
+The matching client is the same shape, with inbound and outbound swapped:
+
+```java
+public class EchoClientRoutes extends ClientWebSocketRoutes<ClientState, EchoRequest> {
+
+    @Override
+    public void registerRoutes(WebSocketRoutesRegister<ClientState, EchoRequest> routes) {
+        // Client sends "echo" messages — outbound on this side
+        routes.registerOutbound("echo", EchoRequest.class);
+
+        // Client receives "echoResponse" messages — inbound on this side
+        routes.registerInbound("echoResponse", EchoResponse.class, stream ->
+            stream.peek(ctx -> System.out.println("got: " + ctx.in().echo()))
+                  .completeWithNoResponse());
+    }
+}
+```
+
+Every pipeline operator you use server-side (`map`, `flatMap`, `blockingMap`, `asyncMap`, `validate`, `peek`, `complete`, `completeWithNoResponse`) is available here too, with the same threading rules.
+
+## Connecting and sending
+
+Call `connectToWebSocket` with the path and your `ClientWebSocketRoutes`. You get back a `WebSocketSession` that you use to send outbound messages:
+
+```java
+WebSocketSession<EchoRequest> session = httpClient.connectToWebSocket(
+    "/ws/echo",
+    new EchoClientRoutes());
+
+EchoRequest request = new EchoRequest();
+request.message = "hello";
+session.send(request);
+```
+
+`session.send()` wraps the object in the `{"type": "echo", "payload": {...}}` envelope using the outbound registration — just like it does on the server. Inbound messages from the server flow into the pipelines you registered with `registerInbound`.
+
+## Stub vs. real
+
+WebSocket clients honour the same stub-or-real split as the rest of the HTTP client. `StubLuxisHttpClient` connects to the target `Luxis.test()` instance in-process with no network, while `VertxLuxisHttpClient` opens a real WebSocket — the client code is identical either way.
+
+See the [WebSockets guide](/Luxis/guides/websockets/) for the full reference on pipelines, lifecycle hooks, validation, error handling, and configuration — everything there applies on the client side too.
