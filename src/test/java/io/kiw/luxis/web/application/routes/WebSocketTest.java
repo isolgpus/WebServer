@@ -17,6 +17,7 @@ import io.kiw.luxis.web.test.handler.AsyncMapWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.BlockingFlatMapFailWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.BlockingMapWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ContextAssertingAsyncWebSocketRoutes;
+import io.kiw.luxis.web.test.handler.ContextAssertingBlockingCompleteWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ContextAssertingPeekWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.ContextAssertingWebSocketRoutes;
 import io.kiw.luxis.web.test.handler.EchoWebSocketRoutes;
@@ -714,6 +715,27 @@ public class WebSocketTest {
                     received.get(0));
 
             Assert.assertTrue(ws.isClosed());
+            client.assertNoMoreExceptions();
+        });
+    }
+
+    @Test
+    public void shouldRunBlockingCompleteOnWorkerContext() {
+        final ContextAsserter asserter = TestApplicationClientCreator.createContextAsserter(mode);
+        testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/blocking-complete", state, new ContextAssertingBlockingCompleteWebSocketRoutes(asserter));
+        });
+        TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/blocking-complete"));
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(1, received.size());
+            Assert.assertEquals(
+                    json().put("type", "echoResponse").set("payload", json().put("echo", "echo: hello")).toString(),
+                    received.get(0));
+
             client.assertNoMoreExceptions();
         });
     }
