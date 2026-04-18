@@ -6,16 +6,17 @@ import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.pipeline.WebSocketStream;
 import io.kiw.luxis.web.test.MyApplicationState;
+import io.kiw.luxis.web.websocket.WebSocketSession;
 
 public class SplitWebSocketRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {
 
-    private static WebSocketPipeline<WebSocketEchoResponse> handleEcho(WebSocketStream<WebSocketEchoRequest, MyApplicationState, TestWebSocketResponse, ErrorMessageResponse> stream) {
+    private static WebSocketPipeline<WebSocketEchoResponse> handleEcho(WebSocketStream<WebSocketEchoRequest, MyApplicationState, TestWebSocketResponse, ErrorMessageResponse, WebSocketSession<TestWebSocketResponse>> stream) {
         return stream
                 .map(ctx -> new WebSocketEchoResponse("echo: " + ctx.in().message))
                 .complete();
     }
 
-    private static WebSocketPipeline<WebSocketNumberResponse> handleNumber(WebSocketStream<WebSocketNumberRequest, MyApplicationState, TestWebSocketResponse, ErrorMessageResponse> stream) {
+    private static WebSocketPipeline<WebSocketNumberResponse> handleNumber(WebSocketStream<WebSocketNumberRequest, MyApplicationState, TestWebSocketResponse, ErrorMessageResponse, WebSocketSession<TestWebSocketResponse>> stream) {
         return stream.map(ctx -> new WebSocketNumberResponse(ctx.in().value * 2))
                 .complete();
     }

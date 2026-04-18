@@ -12,14 +12,13 @@ import io.kiw.luxis.web.internal.RouteContext;
 import io.kiw.luxis.web.internal.ScheduleType;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.validation.Validator;
-import io.kiw.luxis.web.websocket.WebSocketSession;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
-public class WebSocketStream<IN, APP, RESP, ERR> {
+public class WebSocketStream<IN, APP, RESP, ERR, SESSION> {
     private final List<MapInstruction> instructionChain;
     private final APP applicationState;
     private final PendingAsyncResponses pendingAsyncResponses;
@@ -32,13 +31,13 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
         this.errorMessageResponseMapper = errorMessageResponseMapper;
     }
 
-    public WebSocketStream<IN, APP, RESP, ERR> validate(final Consumer<Validator<IN>> config) {
-        final StreamFlatMapper<RouteContext<IN, APP, WebSocketSession<RESP>>, ERR, IN> mapper = ctx -> {
+    public WebSocketStream<IN, APP, RESP, ERR, SESSION> validate(final Consumer<Validator<IN>> config) {
+        final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, IN> mapper = ctx -> {
             final Validator<IN> v = new Validator<>(ctx.in(), "");
             config.accept(v);
             return v.toResult().mapError(errorMessageResponseMapper::map);
         };
-        final MapInstruction<IN, IN, APP, WebSocketSession<RESP>, ERR> e = MapInstruction.nonBlocking(mapper, false);
+        final MapInstruction<IN, IN, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, false);
         e.markAsValidation();
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
@@ -47,12 +46,12 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR>  map(final StreamMapper<RouteContext<IN, APP, WebSocketSession<RESP>>, OUT> flowHandler) {
+    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  map(final StreamMapper<RouteContext<IN, APP, SESSION>, OUT> flowHandler) {
         return flatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR>  flatMap(final StreamFlatMapper<RouteContext<IN, APP, WebSocketSession<RESP>>, ERR, OUT> mapper) {
-        final MapInstruction<IN, OUT, APP, WebSocketSession<RESP>, ERR> e = MapInstruction.nonBlocking(mapper, false);
+    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  flatMap(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, OUT> mapper) {
+        final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, false);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
@@ -61,26 +60,26 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public WebSocketStream<IN, APP, RESP, ERR> peek(final StreamPeeker<RouteContext<IN, APP, WebSocketSession<RESP>>> peeker) {
+    public WebSocketStream<IN, APP, RESP, ERR, SESSION> peek(final StreamPeeker<RouteContext<IN, APP, SESSION>> peeker) {
         return map(ctx -> {
             peeker.handle(ctx);
             return ctx.in();
         });
     }
 
-    public WebSocketStream<IN, APP, RESP, ERR> blockingPeek(final StreamPeeker<RestrictedBlockingRouteContext<IN>> peeker) {
+    public WebSocketStream<IN, APP, RESP, ERR, SESSION> blockingPeek(final StreamPeeker<RestrictedBlockingRouteContext<IN>> peeker) {
         return blockingMap(ctx -> {
             peeker.handle(ctx);
             return ctx.in();
         });
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR>  blockingMap(final StreamMapper<RestrictedBlockingRouteContext<IN>, OUT> flowHandler) {
+    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  blockingMap(final StreamMapper<RestrictedBlockingRouteContext<IN>, OUT> flowHandler) {
         return blockingFlatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR>  blockingFlatMap(final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ERR, OUT> mapper) {
-        final MapInstruction<IN, OUT, Object, WebSocketSession<RESP>, ERR> e =
+    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  blockingFlatMap(final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ERR, OUT> mapper) {
+        final MapInstruction<IN, OUT, Object, SESSION, ERR> e =
                 MapInstruction.blocking(mapper, (in, session) -> new RestrictedBlockingRouteContext<>(in), false);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
@@ -89,12 +88,12 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR>  asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, WebSocketSession<RESP>, ERR>, OUT, ERR> handler) {
+    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, OUT, ERR> handler) {
         return asyncMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR>  asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, WebSocketSession<RESP>, ERR>, OUT, ERR> handler, final AsyncMapConfig config) {
-        final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP, WebSocketSession<RESP>, ERR>, ERR, OUT> wrapper = ctx -> {
+    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, OUT, ERR> handler, final AsyncMapConfig config) {
+        final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, ERR, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<ERR, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
                 AsyncRetryExecutor.executeWithRetry(
@@ -127,7 +126,7 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
                 return Result.error(errorMessageResponseMapper.map(new ErrorMessageResponse("Something went wrong")));
             });
         };
-        final MapInstruction<IN, OUT, APP, WebSocketSession<RESP>, ERR> e = MapInstruction.nonBlockingAsync(wrapper, false, httpErr -> errorMessageResponseMapper.map(httpErr.errorMessageValue()));
+        final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlockingAsync(wrapper, false, httpErr -> errorMessageResponseMapper.map(httpErr.errorMessageValue()));
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
@@ -135,11 +134,11 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR>  asyncBlockingMap(final StreamAsyncMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, OUT, ERR> handler) {
+    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  asyncBlockingMap(final StreamAsyncMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, OUT, ERR> handler) {
         return asyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR>  asyncBlockingMap(final StreamAsyncMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, OUT, ERR> handler, final AsyncMapConfig config) {
+    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  asyncBlockingMap(final StreamAsyncMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, OUT, ERR> handler, final AsyncMapConfig config) {
         final StreamAsyncFlatMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, ERR, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<ERR, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
@@ -174,7 +173,7 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
                 return Result.error(errorMessageResponseMapper.map(new ErrorMessageResponse("Something went wrong")));
             });
         };
-        final MapInstruction<IN, OUT, Object, WebSocketSession<RESP>, ERR> e =
+        final MapInstruction<IN, OUT, Object, SESSION, ERR> e =
                 MapInstruction.blockingAsync(wrapper, (in, session, par) -> new RestrictedBlockingAsyncRouteContext<>(in, par, httpErr -> errorMessageResponseMapper.map(httpErr.errorMessageValue())), false);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
@@ -183,8 +182,8 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public <OUT> WebSocketPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP, WebSocketSession<RESP>>, ERR, OUT> mapper) {
-        final MapInstruction<IN, OUT, APP, WebSocketSession<RESP>, ERR> e = MapInstruction.nonBlocking(mapper, true);
+    public <OUT> WebSocketPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, OUT> mapper) {
+        final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, true);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
@@ -193,9 +192,9 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
     }
 
     public WebSocketPipeline<IN> complete() {
-        final StreamFlatMapper<RouteContext<IN, APP, WebSocketSession<RESP>>, ERR, IN> mapper =
+        final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, IN> mapper =
                 ctx -> Result.success(ctx.in());
-        final MapInstruction<IN, IN, APP, WebSocketSession<RESP>, ERR> e = MapInstruction.nonBlocking(mapper, true);
+        final MapInstruction<IN, IN, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, true);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
@@ -208,7 +207,7 @@ public class WebSocketStream<IN, APP, RESP, ERR> {
     }
 
     public <OUT> WebSocketPipeline<OUT> blockingComplete(final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ERR, OUT> mapper) {
-        final MapInstruction<IN, OUT, Object, WebSocketSession<RESP>, ERR> e =
+        final MapInstruction<IN, OUT, Object, SESSION, ERR> e =
                 MapInstruction.blocking(mapper, (in, session) -> new RestrictedBlockingRouteContext<>(in), true);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
