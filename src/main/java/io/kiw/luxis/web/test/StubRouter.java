@@ -4,7 +4,7 @@ import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.HttpWebSocketRouteHandler;
-import io.kiw.luxis.web.internal.MapInstruction;
+import io.kiw.luxis.web.internal.HttpMapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.internal.RouterWrapper;
@@ -76,7 +76,7 @@ public class StubRouter extends RouterWrapper {
         context.setPathParams(matchResult.getPathParams());
 
         for (final RequestPipeline<?> flow : matchResult.getFlows()) {
-            for (final MapInstruction applicationInstruction : flow.getApplicationInstructions()) {
+            for (final HttpMapInstruction applicationInstruction : flow.getApplicationInstructions()) {
                 if (applicationInstruction.isBlocking) {
                     Thread.currentThread().setName("Worker");
                 } else {

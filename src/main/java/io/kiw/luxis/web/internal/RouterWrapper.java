@@ -38,7 +38,7 @@ public abstract class RouterWrapper {
 
     protected abstract void webSocketRoute(final String path, final HttpWebSocketRouteHandler handler);
 
-    public <T> void handle(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
+    public <T> void handle(final HttpMapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
         final HttpSession httpSession = new HttpSession(vertxContext);
         final Result<HttpErrorResponse, T> result;
         try {
@@ -51,7 +51,7 @@ public abstract class RouterWrapper {
         processResult(result, applicationInstruction, vertxContext, ender);
     }
 
-    protected <T> void handleAsync(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext requestContext, final Object applicationState, final Ender ender) {
+    protected <T> void handleAsync(final HttpMapInstruction<Object, T, Object> applicationInstruction, final RequestContext requestContext, final Object applicationState, final Ender ender) {
         final HttpSession httpSession = new HttpSession(requestContext);
         final CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
@@ -76,7 +76,7 @@ public abstract class RouterWrapper {
     }
 
     @SuppressWarnings("IllegalCatch")
-    private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext requestContext, final Ender ender) {
+    private <T> void processResult(final Result<HttpErrorResponse, T> result, final HttpMapInstruction<Object, T, Object> applicationInstruction, final RequestContext requestContext, final Ender ender) {
         result.consume(httpErrorResponse -> {
                     requestContext.setStatusCode(httpErrorResponse.statusCode());
                     requestContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue()));

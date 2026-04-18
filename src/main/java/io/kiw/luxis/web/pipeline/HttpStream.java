@@ -6,7 +6,7 @@ import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.HttpSession;
-import io.kiw.luxis.web.internal.MapInstruction;
+import io.kiw.luxis.web.internal.HttpMapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RouteContext;
 import io.kiw.luxis.web.internal.ender.Ender;
@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 
 public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
 
-    public HttpStream(final List<MapInstruction> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender, final PendingAsyncResponses pendingAsyncResponses) {
+    public HttpStream(final List<HttpMapInstruction> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender, final PendingAsyncResponses pendingAsyncResponses) {
         super(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
@@ -29,7 +29,7 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
             config.accept(v);
             return v.toHttpResult();
         };
-        instructionChain.add(MapInstruction.nonBlocking(mapper, false));
+        instructionChain.add(HttpMapInstruction.nonBlocking(mapper, false));
         return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
@@ -49,7 +49,7 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
                     }
             );
         };
-        instructionChain.add(MapInstruction.nonBlocking(mapper, false));
+        instructionChain.add(HttpMapInstruction.nonBlocking(mapper, false));
         return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 }
