@@ -8,7 +8,7 @@ public final class BlockingAsyncRouteContext<IN> extends BlockingRouteContext<IN
 
     private final PendingAsyncResponses pendingAsyncResponses;
 
-    public BlockingAsyncRouteContext(final IN in, final HttpContext http, final PendingAsyncResponses pendingAsyncResponses) {
+    public BlockingAsyncRouteContext(final IN in, final HttpSession http, final PendingAsyncResponses pendingAsyncResponses) {
         super(in, http);
         this.pendingAsyncResponses = pendingAsyncResponses;
     }

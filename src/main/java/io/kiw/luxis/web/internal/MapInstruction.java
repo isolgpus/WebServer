@@ -3,7 +3,7 @@ package io.kiw.luxis.web.internal;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.BlockingAsyncRouteContext;
 import io.kiw.luxis.web.http.BlockingRouteContext;
-import io.kiw.luxis.web.http.HttpContext;
+import io.kiw.luxis.web.http.HttpSession;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.pipeline.StreamAsyncFlatMapper;
 import io.kiw.luxis.web.pipeline.StreamFlatMapper;
@@ -56,21 +56,21 @@ public final class MapInstruction<IN, OUT, APP> {
         return new MapInstruction<>(true, true, null, null, null, asyncBlockingConsumer, lastStep);
     }
 
-    public Result<HttpErrorResponse, OUT> handle(final IN state, final HttpContext httpContext, final APP applicationState) {
+    public Result<HttpErrorResponse, OUT> handle(final IN state, final HttpSession httpSession, final APP applicationState) {
         if (consumer != null) {
-            return consumer.handle(new RouteContext<>(state, httpContext, applicationState));
+            return consumer.handle(new RouteContext<>(state, httpSession, applicationState));
         } else if (blockingConsumer != null) {
-            return blockingConsumer.handle(new BlockingRouteContext<>(state, httpContext));
+            return blockingConsumer.handle(new BlockingRouteContext<>(state, httpSession));
         }
 
         throw new UnsupportedOperationException("Unknown consumer");
     }
 
-    public CompletableFuture<Result<HttpErrorResponse, OUT>> handleAsync(final IN state, final HttpContext httpContext, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses) {
+    public CompletableFuture<Result<HttpErrorResponse, OUT>> handleAsync(final IN state, final HttpSession httpSession, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses) {
         if (asyncConsumer != null) {
-            return asyncConsumer.handle(new AsyncRouteContext<>(state, httpContext, applicationState, pendingAsyncResponses));
+            return asyncConsumer.handle(new AsyncRouteContext<>(state, httpSession, applicationState, pendingAsyncResponses));
         } else if (asyncBlockingConsumer != null) {
-            return asyncBlockingConsumer.handle(new BlockingAsyncRouteContext<>(state, httpContext, pendingAsyncResponses));
+            return asyncBlockingConsumer.handle(new BlockingAsyncRouteContext<>(state, httpSession, pendingAsyncResponses));
         }
 
         throw new UnsupportedOperationException("Unknown async consumer");

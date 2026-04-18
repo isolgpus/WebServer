@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.validation;
 
 import io.kiw.luxis.result.Result;
-import io.kiw.luxis.web.http.HttpContext;
+import io.kiw.luxis.web.http.HttpSession;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.test.StubRequestContext;
 import org.junit.Test;
@@ -58,7 +58,7 @@ public class ValidatorTest {
     private HttpValidator<Body> validatorWithHttp(Body body, Map<String, String> queryParams, Map<String, String> pathParams) {
         StubRequestContext ctx = new StubRequestContext("{}", queryParams, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
         ctx.setPathParams(pathParams);
-        return new HttpValidator<>(body, new HttpContext(ctx), "");
+        return new HttpValidator<>(body, new HttpSession(ctx), "");
     }
 
     // --- required ---

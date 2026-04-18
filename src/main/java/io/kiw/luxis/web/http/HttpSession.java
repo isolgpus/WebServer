@@ -4,10 +4,10 @@ import io.kiw.luxis.web.jwt.JwtClaims;
 
 import java.util.Map;
 
-public class HttpContext {
+public class HttpSession {
     public final RequestContext ctx;
 
-    public HttpContext(final RequestContext ctx) {
+    public HttpSession(final RequestContext ctx) {
         this.ctx = ctx;
     }
 

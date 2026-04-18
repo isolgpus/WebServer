@@ -3,7 +3,7 @@ package io.kiw.luxis.web.internal;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.cors.CorsConfig;
-import io.kiw.luxis.web.http.HttpContext;
+import io.kiw.luxis.web.http.HttpSession;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpSuccessResponse;
 import io.kiw.luxis.web.http.Method;
@@ -39,10 +39,10 @@ public abstract class RouterWrapper {
     protected abstract void webSocketRoute(final String path, final HttpWebSocketRouteHandler handler);
 
     public <T> void handle(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext vertxContext, final Object applicationState, final Ender ender) {
-        final HttpContext httpContext = new HttpContext(vertxContext);
+        final HttpSession httpSession = new HttpSession(vertxContext);
         final Result<HttpErrorResponse, T> result;
         try {
-            result = applicationInstruction.handle(vertxContext.get("state"), httpContext, applicationState);
+            result = applicationInstruction.handle(vertxContext.get("state"), httpSession, applicationState);
         } catch (final Exception e) {
             handleException(vertxContext, e);
             return;
@@ -52,10 +52,10 @@ public abstract class RouterWrapper {
     }
 
     protected <T> void handleAsync(final MapInstruction<Object, T, Object> applicationInstruction, final RequestContext requestContext, final Object applicationState, final Ender ender) {
-        final HttpContext httpContext = new HttpContext(requestContext);
+        final HttpSession httpSession = new HttpSession(requestContext);
         final CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
-            future = applicationInstruction.handleAsync(requestContext.get("state"), httpContext, applicationState, pendingAsyncResponses);
+            future = applicationInstruction.handleAsync(requestContext.get("state"), httpSession, applicationState, pendingAsyncResponses);
         } catch (final Exception e) {
             handleException(requestContext, e);
             return;

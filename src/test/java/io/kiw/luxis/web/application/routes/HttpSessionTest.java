@@ -24,7 +24,7 @@ import static io.kiw.luxis.web.application.routes.TestApplicationClientCreator.c
 import static io.kiw.luxis.web.test.TestHelper.json;
 
 @RunWith(Parameterized.class)
-public class HttpContextTest {
+public class HttpSessionTest {
 
     @Parameterized.Parameters(name = "{0}")
     public static Collection<Object[]> modes() {
@@ -34,7 +34,7 @@ public class HttpContextTest {
     private final String mode;
     private TestClientAndServer testClientAndServer;
 
-    public HttpContextTest(String mode) {
+    public HttpSessionTest(String mode) {
         this.mode = mode;
     }
 

@@ -3,15 +3,15 @@ package io.kiw.luxis.web.http;
 import io.kiw.luxis.web.internal.AbstractBlockingRouteContext;
 
 public class BlockingRouteContext<IN> extends AbstractBlockingRouteContext<IN> {
-    private final HttpContext http;
+    private final HttpSession http;
 
 
-    public BlockingRouteContext(final IN in, final HttpContext http) {
+    public BlockingRouteContext(final IN in, final HttpSession http) {
         super(in);
         this.http = http;
     }
 
-    public HttpContext http() {
+    public HttpSession http() {
         return http;
     }
 }

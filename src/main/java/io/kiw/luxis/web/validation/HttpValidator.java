@@ -2,13 +2,13 @@ package io.kiw.luxis.web.validation;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorStatusCode;
-import io.kiw.luxis.web.http.HttpContext;
+import io.kiw.luxis.web.http.HttpSession;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 
 public class HttpValidator<T> extends Validator<T> {
-    private final HttpContext http;
+    private final HttpSession http;
 
-    public HttpValidator(final T value, final HttpContext http, final String prefix) {
+    public HttpValidator(final T value, final HttpSession http, final String prefix) {
         super(value, prefix);
         this.http = http;
     }
