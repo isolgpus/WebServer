@@ -45,37 +45,37 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> get(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> get(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, r -> stubTestClient.get(r), responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> post(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> post(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, r -> stubTestClient.post(r), responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> put(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> put(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, r -> stubTestClient.put(r), responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> delete(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> delete(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, r -> stubTestClient.delete(r), responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> patch(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> patch(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, r -> stubTestClient.patch(r), responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> postFiles(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> postFiles(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, r -> stubTestClient.post(r), responseType);
     }
 
     @Override
-    public LuxisAsync<HttpClientResponse<HttpBuffer>> download(final HttpClientRequest request) {
+    public LuxisAsync<HttpClientResponse<HttpBuffer>, HttpErrorResponse> download(final HttpClientRequest request) {
         final String resolvedUrl = resolveUrl(request.getUrl());
         final URI uri = URI.create(resolvedUrl);
         final String path = uri.getPath();
@@ -127,7 +127,7 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
             headers.put("Transfer-Encoding", transferEncoding);
         }
 
-        return LuxisAsync.completed(new HttpClientResponse<>(statusCode, HttpBuffer.fromString(rawBody), headers));
+        return new LuxisAsync<>(CompletableFuture.completedFuture(Result.success(new HttpClientResponse<>(statusCode, HttpBuffer.fromString(rawBody), headers))));
     }
 
     @Override
@@ -188,7 +188,7 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
     }
 
     @SuppressWarnings("unchecked")
-    private <T> LuxisAsync<HttpClientResponse<T>> send(final HttpClientRequest request, final java.util.function.Function<StubRequest, TestHttpResponse> method, final Class<T> responseType) {
+    private <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> send(final HttpClientRequest request, final java.util.function.Function<StubRequest, TestHttpResponse> method, final Class<T> responseType) {
         final String resolvedUrl = resolveUrl(request.getUrl());
         final URI uri = URI.create(resolvedUrl);
         final String path = uri.getPath();
@@ -244,7 +244,7 @@ public final class StubLuxisHttpClient implements LuxisHttpClient {
             typedBody = mapper.readValue(rawBody, responseType);
         }
 
-        return LuxisAsync.completed(new HttpClientResponse<>(statusCode, typedBody, headers));
+        return new LuxisAsync<>(CompletableFuture.completedFuture(Result.success(new HttpClientResponse<>(statusCode, typedBody, headers))));
     }
 
     private String resolveUrl(final String url) {

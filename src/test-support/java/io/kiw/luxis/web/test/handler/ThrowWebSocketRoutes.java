@@ -3,6 +3,7 @@ package io.kiw.luxis.web.test.handler;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
+import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.client.CorrelatedAsync;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
@@ -35,7 +36,7 @@ public class ThrowWebSocketRoutes extends WebSocketRoutes<MyApplicationState, Te
                                     if ("asyncMap".equals(ctx.in())) {
                                         throw new RuntimeException("app error in asyncMap");
                                     }
-                                    final CorrelatedAsync<String> correlated = ctx.correlated();
+                                    final CorrelatedAsync<String, ErrorMessageResponse> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in()));
                                     return correlated.async();
                                 })
@@ -43,7 +44,7 @@ public class ThrowWebSocketRoutes extends WebSocketRoutes<MyApplicationState, Te
                                     if ("asyncBlockingMap".equals(ctx.in())) {
                                         throw new RuntimeException("app error in asyncBlockingMap");
                                     }
-                                    final CorrelatedAsync<String> correlated = ctx.correlated();
+                                    final CorrelatedAsync<String, ErrorMessageResponse> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in()));
                                     return correlated.async();
                                 })

@@ -6,6 +6,7 @@ import io.kiw.luxis.web.http.client.CorrelatedAsync;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.function.Function;
 
 public final class CorrelatedUtil {
 
@@ -13,10 +14,11 @@ public final class CorrelatedUtil {
 
     }
 
-    public static <T> CorrelatedAsync<T> correlated(final PendingAsyncResponses pendingAsyncResponses) {
+    public static <T, ERR> CorrelatedAsync<T, ERR> correlated(final PendingAsyncResponses pendingAsyncResponses, final Function<HttpErrorResponse, ERR> errorMapper) {
         final CompletableFuture<Result<HttpErrorResponse, T>> future = new CompletableFuture<>();
         final long correlationId = pendingAsyncResponses.register(future, 30_000);
-        final LuxisAsync<T> luxisAsync = new LuxisAsync<>(future);
+        final CompletableFuture<Result<ERR, T>> mappedFuture = future.thenApply(r -> r.mapError(errorMapper));
+        final LuxisAsync<T, ERR> luxisAsync = new LuxisAsync<>(mappedFuture);
         return new CorrelatedAsync<>(correlationId, luxisAsync);
     }
 }

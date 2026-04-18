@@ -3,6 +3,7 @@ package io.kiw.luxis.web.test.handler;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.JsonHandler;
+import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.client.CorrelatedAsync;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
@@ -29,7 +30,7 @@ public class ContextAssertingAsyncHttpHandler extends JsonHandler<ContextRequest
                 })
                 .<String>asyncMap(ctx -> {
                     asserter.assertInApplicationContext();
-                    final CorrelatedAsync<String> correlated = ctx.correlated();
+                    final CorrelatedAsync<String, HttpErrorResponse> correlated = ctx.correlated();
                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async"));
                     return correlated.async();
                 })
@@ -39,7 +40,7 @@ public class ContextAssertingAsyncHttpHandler extends JsonHandler<ContextRequest
                 })
                 .<String>asyncBlockingMap(ctx -> {
                     asserter.assertInWorkerContext();
-                    final CorrelatedAsync<String> correlated = ctx.correlated();
+                    final CorrelatedAsync<String, HttpErrorResponse> correlated = ctx.correlated();
                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " asyncBlocking"));
                     return correlated.async();
                 })

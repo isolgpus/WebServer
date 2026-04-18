@@ -30,11 +30,11 @@ public class AsyncRetryWebSocketRoutes extends WebSocketRoutes<MyApplicationStat
                 .registerInbound("number", WebSocketNumberRequest.class, s ->
                         s.<Integer>asyncMap(ctx -> {
                                     int attempt = (int) counter.getAndIncrement();
-                                    CompletableFuture<Result<HttpErrorResponse, Integer>> future = new CompletableFuture<>();
+                                    CompletableFuture<Result<ErrorMessageResponse, Integer>> future = new CompletableFuture<>();
                                     switch (testRetryBehaviour.getAction(attempt)) {
                                         case SUCCESS -> future.complete(Result.success(ctx.in().value));
                                         case ERROR ->
-                                                future.complete(Result.error(new HttpErrorResponse(new ErrorMessageResponse("Failed running async"), 500)));
+                                                future.complete(Result.error(new ErrorMessageResponse("Failed running async")));
                                         case EXCEPTION ->
                                                 future.completeExceptionally(new RuntimeException("Async exception on attempt " + attempt));
                                         case TIMEOUT -> {

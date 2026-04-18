@@ -3,6 +3,7 @@ package io.kiw.luxis.web.test.handler;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
+import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.client.CorrelatedAsync;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.ContextAsserter;
@@ -29,7 +30,7 @@ public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyAppl
                                 })
                                 .<String>asyncMap(ctx -> {
                                     asserter.assertInApplicationContext();
-                                    final CorrelatedAsync<String> correlated = ctx.correlated();
+                                    final CorrelatedAsync<String, ErrorMessageResponse> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async"));
                                     return correlated.async();
                                 })
@@ -39,13 +40,13 @@ public class ContextAssertingAsyncWebSocketRoutes extends WebSocketRoutes<MyAppl
                                 })
                                 .<String>asyncMap(ctx -> {
                                     asserter.assertInApplicationContext();
-                                    final CorrelatedAsync<String> correlated = ctx.correlated();
+                                    final CorrelatedAsync<String, ErrorMessageResponse> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async2"));
                                     return correlated.async();
                                 })
                                 .<String>asyncBlockingMap(ctx -> {
                                     asserter.assertInWorkerContext();
-                                    final CorrelatedAsync<String> correlated = ctx.correlated();
+                                    final CorrelatedAsync<String, ErrorMessageResponse> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), Result.success(ctx.in() + " async3"));
                                     return correlated.async();
                                 })

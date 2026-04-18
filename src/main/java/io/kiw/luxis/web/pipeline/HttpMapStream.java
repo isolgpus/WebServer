@@ -68,18 +68,18 @@ public class HttpMapStream<IN, APP> {
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, HttpSession>, OUT> handler) {
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, HttpSession, HttpErrorResponse>, OUT, HttpErrorResponse> handler) {
         return asyncMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, HttpSession>, OUT> handler, final AsyncMapConfig config) {
-        final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP, HttpSession>, HttpErrorResponse, OUT> wrapper = ctx -> {
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, HttpSession, HttpErrorResponse>, OUT, HttpErrorResponse> handler, final AsyncMapConfig config) {
+        final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP, HttpSession, HttpErrorResponse>, HttpErrorResponse, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
                 AsyncRetryExecutor.executeWithRetry(
                         resultFuture,
                         () -> {
-                            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+                            final LuxisAsync<OUT, HttpErrorResponse> luxisAsync = handler.handle(ctx);
                             return luxisAsync.toCompletableFuture();
                         },
                         config,
@@ -90,7 +90,7 @@ public class HttpMapStream<IN, APP> {
                 pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
                     resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
                 }, ScheduleType.TIMEOUT);
-                final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+                final LuxisAsync<OUT, HttpErrorResponse> luxisAsync = handler.handle(ctx);
                 luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         resultFuture.completeExceptionally(throwable);
@@ -101,22 +101,22 @@ public class HttpMapStream<IN, APP> {
             }
             return resultFuture;
         };
-        instructionChain.add(MapInstruction.nonBlockingAsync(wrapper, false));
+        instructionChain.add(MapInstruction.nonBlockingAsync(wrapper, false, e -> e));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final StreamAsyncMapper<BlockingAsyncRouteContext<IN, HttpSession>, OUT> handler) {
+    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final StreamAsyncMapper<BlockingAsyncRouteContext<IN, HttpSession, HttpErrorResponse>, OUT, HttpErrorResponse> handler) {
         return asyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final StreamAsyncMapper<BlockingAsyncRouteContext<IN, HttpSession>, OUT> handler, final AsyncMapConfig config) {
-        final StreamAsyncFlatMapper<BlockingAsyncRouteContext<IN, HttpSession>, HttpErrorResponse, OUT> wrapper = ctx -> {
+    public <OUT> HttpMapStream<OUT, APP> asyncBlockingMap(final StreamAsyncMapper<BlockingAsyncRouteContext<IN, HttpSession, HttpErrorResponse>, OUT, HttpErrorResponse> handler, final AsyncMapConfig config) {
+        final StreamAsyncFlatMapper<BlockingAsyncRouteContext<IN, HttpSession, HttpErrorResponse>, HttpErrorResponse, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
                 AsyncRetryExecutor.executeWithRetry(
                         resultFuture,
                         () -> {
-                            final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+                            final LuxisAsync<OUT, HttpErrorResponse> luxisAsync = handler.handle(ctx);
                             return luxisAsync.toCompletableFuture();
                         },
                         config,
@@ -127,7 +127,7 @@ public class HttpMapStream<IN, APP> {
                 pendingAsyncResponses.scheduleTimeout(config.timeoutMillis, () -> {
                     resultFuture.completeExceptionally(new RuntimeException("Correlated async response timed out"));
                 }, ScheduleType.TIMEOUT);
-                final LuxisAsync<OUT> luxisAsync = handler.handle(ctx);
+                final LuxisAsync<OUT, HttpErrorResponse> luxisAsync = handler.handle(ctx);
                 luxisAsync.toCompletableFuture().whenComplete((result, throwable) -> {
                     if (throwable != null) {
                         resultFuture.completeExceptionally(throwable);
@@ -138,7 +138,7 @@ public class HttpMapStream<IN, APP> {
             }
             return resultFuture;
         };
-        instructionChain.add(MapInstruction.blockingAsync(wrapper, (in, session, par) -> new BlockingAsyncRouteContext<>(in, session, par), false));
+        instructionChain.add(MapInstruction.blockingAsync(wrapper, (in, session, par) -> new BlockingAsyncRouteContext<>(in, session, par, (HttpErrorResponse e) -> e), false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 

@@ -51,32 +51,32 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> get(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> get(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, HttpMethod.GET, responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> post(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> post(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, HttpMethod.POST, responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> put(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> put(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, HttpMethod.PUT, responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> delete(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> delete(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, HttpMethod.DELETE, responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> patch(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> patch(final HttpClientRequest request, final Class<T> responseType) {
         return send(request, HttpMethod.PATCH, responseType);
     }
 
     @Override
-    public <T> LuxisAsync<HttpClientResponse<T>> postFiles(final HttpClientRequest request, final Class<T> responseType) {
+    public <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> postFiles(final HttpClientRequest request, final Class<T> responseType) {
         final CompletableFuture<Result<HttpErrorResponse, HttpClientResponse<T>>> future = new CompletableFuture<>();
         final String resolvedUrl = resolveUrl(request.getUrl());
         final URI uri = URI.create(resolvedUrl);
@@ -116,7 +116,7 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
     }
 
     @Override
-    public LuxisAsync<HttpClientResponse<HttpBuffer>> download(final HttpClientRequest request) {
+    public LuxisAsync<HttpClientResponse<HttpBuffer>, HttpErrorResponse> download(final HttpClientRequest request) {
         final CompletableFuture<Result<HttpErrorResponse, HttpClientResponse<HttpBuffer>>> future = new CompletableFuture<>();
         final String resolvedUrl = resolveUrl(request.getUrl());
         final URI uri = URI.create(resolvedUrl);
@@ -160,7 +160,7 @@ public final class VertxLuxisHttpClient implements LuxisHttpClient {
                 .onFailure(future::completeExceptionally);
     }
 
-    private <T> LuxisAsync<HttpClientResponse<T>> send(final HttpClientRequest request, final HttpMethod method, final Class<T> responseType) {
+    private <T> LuxisAsync<HttpClientResponse<T>, HttpErrorResponse> send(final HttpClientRequest request, final HttpMethod method, final Class<T> responseType) {
         final CompletableFuture<Result<HttpErrorResponse, HttpClientResponse<T>>> future = new CompletableFuture<>();
         final String resolvedUrl = resolveUrl(request.getUrl());
         final URI uri = URI.create(resolvedUrl);

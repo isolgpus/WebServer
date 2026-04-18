@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.pipeline;
 
+import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.internal.WebSocketRoute;
@@ -28,11 +29,11 @@ public class WebSocketRoutesRegister<APP, RESP> {
         responseTypeRegistry.put(responseClass, typeKey);
     }
 
-    public <IN, OUT> void registerInbound(final String typeKey, final Class<IN> messageType, final WebSocketHandler<IN, OUT, APP, RESP> webSocketHandler) {
+    public <IN, OUT> void registerInbound(final String typeKey, final Class<IN> messageType, final WebSocketHandler<IN, OUT, APP, RESP, ErrorMessageResponse> webSocketHandler) {
         if (routes.containsKey(typeKey)) {
             throw new IllegalArgumentException("Duplicate type key: " + typeKey);
         }
-        final WebSocketStream<IN, APP, RESP> stream = new WebSocketStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses);
+        final WebSocketStream<IN, APP, RESP, ErrorMessageResponse> stream = new WebSocketStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, e -> e);
         final WebSocketPipeline<?> pipeline = webSocketHandler.handle(stream);
         routes.put(typeKey, new WebSocketRoute<>(messageType, pipeline));
     }

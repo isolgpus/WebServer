@@ -30,7 +30,7 @@ public class AsyncMapTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapRe
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .<Integer>asyncMap(ctx -> {
-                    final CorrelatedAsync<Integer> correlated = ctx.correlated();
+                    final CorrelatedAsync<Integer, HttpErrorResponse> correlated = ctx.correlated();
                     luxis.handleAsyncResponse(correlated.correlationId(), responder.apply(ctx.in().value));
                     return correlated.async();
                 })

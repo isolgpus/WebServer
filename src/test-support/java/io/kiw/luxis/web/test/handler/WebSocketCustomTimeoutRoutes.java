@@ -2,7 +2,7 @@ package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
-import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
@@ -31,7 +31,7 @@ public class WebSocketCustomTimeoutRoutes extends WebSocketRoutes<MyApplicationS
                         s.<Integer>asyncMap(ctx -> {
                                     // Deliberately do NOT complete — simulates missing response
                                     onRegistered.run();
-                                    return new LuxisAsync<>(new CompletableFuture<Result<HttpErrorResponse, Integer>>());
+                                    return new LuxisAsync<>(new CompletableFuture<Result<ErrorMessageResponse, Integer>>());
                                 }, new AsyncMapConfigBuilder().setTimeoutMillis(1_000).build())
                                 .map(ctx -> new WebSocketNumberResponse(ctx.in()))
                                 .complete());

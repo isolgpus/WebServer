@@ -20,7 +20,7 @@ public class AsyncFlatMapFailWebSocketRoutes extends WebSocketRoutes<MyApplicati
         routesRegister
                 .registerInbound("echo", WebSocketEchoRequest.class, s ->
                         s.<WebSocketEchoResponse>asyncMap(ctx -> {
-                                    final CorrelatedAsync<WebSocketEchoResponse> correlated = ctx.correlated();
+                                    final CorrelatedAsync<WebSocketEchoResponse, ErrorMessageResponse> correlated = ctx.correlated();
                                     luxis.handleAsyncResponse(correlated.correlationId(), HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async flatMap failed")));
                                     return correlated.async();
                                 })
