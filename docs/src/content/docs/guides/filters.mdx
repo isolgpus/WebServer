@@ -26,7 +26,7 @@ public class VisitedFilter implements JsonFilter<MyState> {
     @Override
     public RequestPipeline<Void> handle(HttpStream<Void, MyState> e) {
         return e.complete(ctx -> {
-            ctx.http().addResponseCookie(new HttpCookie("visited", "true"));
+            ctx.session().addResponseCookie(new HttpCookie("visited", "true"));
             return HttpResult.success();
         });
     }
@@ -39,13 +39,13 @@ A filter's stream is the **same `HttpStream` type** handlers receive, so the ent
 
 The one thing filters **cannot** do is read the JSON request body. The stream's input type is `Void`, because a single filter can be registered against a wildcard path that matches many routes with different (or no) body types — there is no single type the framework can deserialize the body into. Calling `ctx.in()` inside a filter returns `null`.
 
-Everything else on the request is available through `ctx.http()` and `ctx.app()`:
+Everything else on the request is available through `ctx.session()` and `ctx.app()`:
 
-- Request headers — `ctx.http().getRequestHeader("...")`
-- Query parameters — `ctx.http().getQueryParam("...")` (and via `v.queryParam(...)` in `validate()`)
-- Path parameters — `ctx.http().getPathParam("...")` (and via `v.pathParam(...)` in `validate()`)
-- Cookies — read via `ctx.http()`, write via `addResponseCookie(...)`
-- Response headers — `ctx.http().addResponseHeader(...)`
+- Request headers — `ctx.session().getRequestHeader("...")`
+- Query parameters — `ctx.session().getQueryParam("...")` (and via `v.queryParam(...)` in `validate()`)
+- Path parameters — `ctx.session().getPathParam("...")` (and via `v.pathParam(...)` in `validate()`)
+- Cookies — read via `ctx.session()`, write via `addResponseCookie(...)`
+- Response headers — `ctx.session().addResponseHeader(...)`
 - Application state — `ctx.app()`
 - JWT — `requireJwt(jwtProvider)` works exactly as it does in a handler
 

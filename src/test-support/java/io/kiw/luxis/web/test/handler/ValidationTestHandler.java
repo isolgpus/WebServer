@@ -25,8 +25,8 @@ public class ValidationTestHandler extends JsonHandler<ValidationRequest, Valida
                 })
                 .complete(ctx -> {
                     final ValidationRequest r = ctx.in();
-                    final String page = ctx.http().getQueryParam("page");
-                    final String userId = ctx.http().getPathParam("userId");
+                    final String page = ctx.session().getQueryParam("page");
+                    final String userId = ctx.session().getPathParam("userId");
                     return success(new ValidationResponse(r.name, r.email, r.age, r.address.city, page, userId));
                 });
     }

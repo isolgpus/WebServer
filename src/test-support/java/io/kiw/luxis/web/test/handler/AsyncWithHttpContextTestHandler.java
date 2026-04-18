@@ -19,7 +19,7 @@ public class AsyncWithHttpContextTestHandler extends JsonHandler<AsyncMapRequest
     public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .map(ctx -> {
-                    final String multiplier = ctx.http().getQueryParam("multiplier");
+                    final String multiplier = ctx.session().getQueryParam("multiplier");
                     return multiplier != null ? Integer.parseInt(multiplier) : 1;
                 })
                 .<Integer>asyncMap(ctx -> {

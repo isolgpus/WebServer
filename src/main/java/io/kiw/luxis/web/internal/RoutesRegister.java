@@ -61,14 +61,14 @@ public class RoutesRegister {
         final ArrayList<MapInstruction> chain = new ArrayList<>();
         new HttpMapStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses)
                 .flatMap(ctx -> {
-                    ctx.http().addResponseHeader("Content-Type", "application/json");
+                    ctx.session().addResponseHeader("Content-Type", "application/json");
 
-                    if (method.canHaveABody() && ctx.http().ctx.getRequestBody() == null && !jsonHandler.getType().equals(Void.class)) {
+                    if (method.canHaveABody() && ctx.session().ctx.getRequestBody() == null && !jsonHandler.getType().equals(Void.class)) {
                         return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
                     }
 
                     try {
-                        final IN jsonRequest = method.canHaveABody() && !jsonHandler.getType().equals(Void.class) ? objectMapper.readValue(ctx.http().ctx.getRequestBody(), jsonHandler) : null;
+                        final IN jsonRequest = method.canHaveABody() && !jsonHandler.getType().equals(Void.class) ? objectMapper.readValue(ctx.session().ctx.getRequestBody(), jsonHandler) : null;
                         return HttpResult.success(jsonRequest);
                     } catch (final Exception e) {
                         return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
@@ -99,7 +99,7 @@ public class RoutesRegister {
         final ArrayList<MapInstruction> chain = new ArrayList<>();
         new HttpMapStream<>(chain, false, applicationState, null, pendingAsyncResponses)
                 .map(ctx -> {
-                    ctx.http().addResponseHeader("Content-Type", "application/json");
+                    ctx.session().addResponseHeader("Content-Type", "application/json");
                     return null;
                 });
         final HttpStream<Void, APP> httpStream = new HttpStream<>(chain, false, applicationState, null, pendingAsyncResponses);
@@ -114,9 +114,9 @@ public class RoutesRegister {
         final HttpMapStream<Map<String, HttpBuffer>, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses);
 
         final HttpMapStream<Map<String, HttpBuffer>, APP> fileUploadStream = httpStream.flatMap(ctx -> {
-            ctx.http().addResponseHeader("Content-Type", "application/json");
+            ctx.session().addResponseHeader("Content-Type", "application/json");
 
-            final Map<String, HttpBuffer> uploadedFile = ctx.http().resolveUploadedFiles();
+            final Map<String, HttpBuffer> uploadedFile = ctx.session().resolveUploadedFiles();
             return HttpResult.success(uploadedFile);
         });
         final RequestPipeline<OUT> flow = fileUploaderHandler.handle(fileUploadStream);
@@ -147,8 +147,8 @@ public class RoutesRegister {
         final HttpMapStream<IN, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new FileEnder(), pendingAsyncResponses);
 
         final HttpMapStream<IN, APP> fileDownloadStream = httpStream.flatMap(ctx -> {
-            ctx.http().addResponseHeader("Content-Type", contentType);
-            ctx.http().addResponseHeader(TRANSFER_ENCODING, "chunked");
+            ctx.session().addResponseHeader("Content-Type", contentType);
+            ctx.session().addResponseHeader(TRANSFER_ENCODING, "chunked");
             return HttpResult.success(ctx.in());
         });
         final RequestPipeline<?> flow = fileDownloadHandler.handle(fileDownloadStream);

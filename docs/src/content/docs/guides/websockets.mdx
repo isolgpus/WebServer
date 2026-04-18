@@ -68,19 +68,19 @@ Every `registerInbound` handler is a pipeline — the same one you use for HTTP.
 
 | Thread | Available context |
 |---|---|
-| Event loop (`map`, `flatMap`, `asyncMap`, etc.) | `ctx.in()`, `ctx.connection()`, `ctx.app()` |
+| Event loop (`map`, `flatMap`, `asyncMap`, etc.) | `ctx.in()`, `ctx.session()`, `ctx.app()` |
 | Worker (`blockingMap`, `blockingFlatMap`, etc.) | `ctx.in()` |
 
-Unlike HTTP pipelines where `ctx.http()` is available on worker threads, WebSocket pipelines do **not** expose `ctx.connection()` in blocking methods. This is because WebSocket write operations (such as sending messages) are not safe to call from a worker thread — they must run on the event loop that owns the connection. HTTP response metadata like headers and cookies can be safely buffered from a worker thread because Vert.x's blocking handler mechanism supports this, but WebSocket writes go directly to the network and must stay on the event loop.
+Unlike HTTP pipelines where `ctx.session()` is available on worker threads, WebSocket pipelines do **not** expose `ctx.session()` in blocking methods. This is because WebSocket write operations (such as sending messages) are not safe to call from a worker thread — they must run on the event loop that owns the connection. HTTP response metadata like headers and cookies can be safely buffered from a worker thread because Vert.x's blocking handler mechanism supports this, but WebSocket writes go directly to the network and must stay on the event loop.
 
-To send a message after a blocking operation, return your result and use `ctx.connection()` in a subsequent `map` step, which runs back on the event loop:
+To send a message after a blocking operation, return your result and use `ctx.session()` in a subsequent `map` step, which runs back on the event loop:
 
 ```java
 routes.registerInbound("query", QueryRequest.class, stream ->
     stream
         .blockingMap(ctx -> queryDatabase(ctx.in()))  // worker thread — no session
         .map(ctx -> {                                  // event loop — session available
-            ctx.connection().send(new StatusUpdate("query complete"));
+            ctx.session().send(new StatusUpdate("query complete"));
             return new QueryResponse(ctx.in());
         })
         .complete());
@@ -139,7 +139,7 @@ Use `completeWithNoResponse()` when the handler should process the message but n
 routes.registerInbound("heartbeat", HeartbeatRequest.class, stream ->
     stream
         .map(ctx -> {
-            ctx.app().recordHeartbeat(ctx.connection());
+            ctx.app().recordHeartbeat(ctx.session());
             return ctx.in();
         })
         .completeWithNoResponse());

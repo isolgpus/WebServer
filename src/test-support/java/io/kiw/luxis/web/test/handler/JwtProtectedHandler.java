@@ -20,6 +20,6 @@ public class JwtProtectedHandler extends JsonHandler<Void, SubjectResponse, MyAp
         return stream
                 .requireJwt(jwtProvider)
                 .complete(ctx ->
-                        HttpResult.success(new SubjectResponse(ctx.http().getJwtClaims().getSubject())));
+                        HttpResult.success(new SubjectResponse(ctx.session().getJwtClaims().getSubject())));
     }
 }

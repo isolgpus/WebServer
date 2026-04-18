@@ -3,20 +3,20 @@ title: HTTP Context
 description: Access query parameters, headers, and cookies from your handlers.
 ---
 
-Use `ctx.http()` to access query parameters, headers, and cookies within any pipeline step:
+Use `ctx.session()` to access query parameters, headers, and cookies within any pipeline step:
 
 ```java
 @Override
 public RequestPipeline<EchoResponse> handle(HttpStream<EchoRequest, MyState> e) {
     return e.complete(ctx -> {
         // Read from request
-        String query = ctx.http().getQueryParam("search");
-        String header = ctx.http().getRequestHeader("X-Request-Id");
-        Cookie cookie = ctx.http().getRequestCookie("session");
+        String query = ctx.session().getQueryParam("search");
+        String header = ctx.session().getRequestHeader("X-Request-Id");
+        Cookie cookie = ctx.session().getRequestCookie("session");
 
         // Write to response
-        ctx.http().addResponseHeader("X-Response-Id", "abc");
-        ctx.http().addResponseCookie(new CookieImpl("session", "new-value"));
+        ctx.session().addResponseHeader("X-Response-Id", "abc");
+        ctx.session().addResponseCookie(new CookieImpl("session", "new-value"));
 
         return HttpResult.success(new EchoResponse(query, header));
     });

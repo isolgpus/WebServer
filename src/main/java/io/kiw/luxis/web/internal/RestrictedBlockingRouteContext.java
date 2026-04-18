@@ -1,14 +1,13 @@
 package io.kiw.luxis.web.internal;
 
-public abstract class AbstractBlockingRouteContext<IN> {
+public class RestrictedBlockingRouteContext<IN> {
     private final IN in;
 
-    protected AbstractBlockingRouteContext(final IN in) {
+    public RestrictedBlockingRouteContext(final IN in) {
         this.in = in;
     }
 
     public IN in() {
         return in;
     }
-
 }

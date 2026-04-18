@@ -16,7 +16,7 @@ public class TestFilter implements JsonFilter<MyApplicationState> {
     @Override
     public RequestPipeline<Void> handle(final HttpStream<Void, MyApplicationState> e) {
         return e.complete(ctx -> {
-            ctx.http().addResponseCookie(new HttpCookie(cookieKey, "hitfilter"));
+            ctx.session().addResponseCookie(new HttpCookie(cookieKey, "hitfilter"));
             return HttpResult.success();
         });
     }

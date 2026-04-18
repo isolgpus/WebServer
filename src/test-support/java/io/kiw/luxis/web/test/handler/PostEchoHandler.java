@@ -13,19 +13,19 @@ public class PostEchoHandler extends JsonHandler<EchoRequest, EchoResponse, MyAp
     public RequestPipeline<EchoResponse> handle(final HttpStream<EchoRequest, MyApplicationState> e) {
         return e.complete(ctx -> {
             if (ctx.in().responseHeaderExample != null) {
-                ctx.http().addResponseHeader("responseHeaderExample", ctx.in().responseHeaderExample);
+                ctx.session().addResponseHeader("responseHeaderExample", ctx.in().responseHeaderExample);
             }
 
             if (ctx.in().responseCookieExample != null) {
-                ctx.http().addResponseCookie(new HttpCookie("responseCookieExample", ctx.in().responseCookieExample));
+                ctx.session().addResponseCookie(new HttpCookie("responseCookieExample", ctx.in().responseCookieExample));
             }
-            final HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
+            final HttpCookie requestCookieExample = ctx.session().getRequestCookie("requestCookieExample");
             return HttpResult.success(new EchoResponse(
                     ctx.in().intExample,
                     ctx.in().stringExample,
-                    ctx.http().getPathParam("pathExample"),
-                    ctx.http().getQueryParam("queryExample"),
-                    ctx.http().getRequestHeader("requestHeaderExample"),
+                    ctx.session().getPathParam("pathExample"),
+                    ctx.session().getQueryParam("queryExample"),
+                    ctx.session().getRequestHeader("requestHeaderExample"),
                     requestCookieExample != null ? requestCookieExample.value() : null));
         });
     }

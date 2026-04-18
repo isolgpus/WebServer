@@ -4,10 +4,6 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.pipeline.StreamAsyncFlatMapper;
 import io.kiw.luxis.web.pipeline.StreamFlatMapper;
-import io.kiw.luxis.web.websocket.WebSocketAsyncRouteContext;
-import io.kiw.luxis.web.websocket.WebSocketBlockingAsyncContext;
-import io.kiw.luxis.web.websocket.WebSocketBlockingContext;
-import io.kiw.luxis.web.websocket.WebSocketRouteContext;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 
 import java.util.Optional;
@@ -16,10 +12,10 @@ import java.util.concurrent.CompletableFuture;
 public final class WebSocketMapInstruction<IN, OUT, APP, RESP> {
     public final boolean isBlocking;
     public final boolean isAsync;
-    private final StreamFlatMapper<WebSocketRouteContext<IN, APP, RESP>, ErrorMessageResponse, OUT> consumer;
-    private final StreamFlatMapper<WebSocketBlockingContext<IN>, ErrorMessageResponse, OUT> blockingConsumer;
-    private final StreamAsyncFlatMapper<WebSocketAsyncRouteContext<IN, APP, RESP>, ErrorMessageResponse, OUT> asyncConsumer;
-    private final StreamAsyncFlatMapper<WebSocketBlockingAsyncContext<IN>, ErrorMessageResponse, OUT> asyncBlockingConsumer;
+    private final StreamFlatMapper<RouteContext<IN, APP, WebSocketSession<RESP>>, ErrorMessageResponse, OUT> consumer;
+    private final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ErrorMessageResponse, OUT> blockingConsumer;
+    private final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP, WebSocketSession<RESP>>, ErrorMessageResponse, OUT> asyncConsumer;
+    private final StreamAsyncFlatMapper<RestrictedBlockingAsyncRouteContext<IN>, ErrorMessageResponse, OUT> asyncBlockingConsumer;
     public final boolean lastStep;
     private boolean isValidation;
     private Optional<WebSocketMapInstruction<?, ?, ?, ?>> next = Optional.empty();
@@ -27,10 +23,10 @@ public final class WebSocketMapInstruction<IN, OUT, APP, RESP> {
     private WebSocketMapInstruction(
             final boolean isBlocking,
             final boolean isAsync,
-            final StreamFlatMapper<WebSocketRouteContext<IN, APP, RESP>, ErrorMessageResponse, OUT> consumer,
-            final StreamFlatMapper<WebSocketBlockingContext<IN>, ErrorMessageResponse, OUT> blockingConsumer,
-            final StreamAsyncFlatMapper<WebSocketAsyncRouteContext<IN, APP, RESP>, ErrorMessageResponse, OUT> asyncConsumer,
-            final StreamAsyncFlatMapper<WebSocketBlockingAsyncContext<IN>, ErrorMessageResponse, OUT> asyncBlockingConsumer,
+            final StreamFlatMapper<RouteContext<IN, APP, WebSocketSession<RESP>>, ErrorMessageResponse, OUT> consumer,
+            final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ErrorMessageResponse, OUT> blockingConsumer,
+            final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP, WebSocketSession<RESP>>, ErrorMessageResponse, OUT> asyncConsumer,
+            final StreamAsyncFlatMapper<RestrictedBlockingAsyncRouteContext<IN>, ErrorMessageResponse, OUT> asyncBlockingConsumer,
             final boolean lastStep) {
         this.isBlocking = isBlocking;
         this.isAsync = isAsync;
@@ -42,22 +38,22 @@ public final class WebSocketMapInstruction<IN, OUT, APP, RESP> {
     }
 
     public static <IN, OUT, APP, RESP> WebSocketMapInstruction<IN, OUT, APP, RESP> nonBlocking(
-            final StreamFlatMapper<WebSocketRouteContext<IN, APP, RESP>, ErrorMessageResponse, OUT> consumer, final boolean lastStep) {
+            final StreamFlatMapper<RouteContext<IN, APP, WebSocketSession<RESP>>, ErrorMessageResponse, OUT> consumer, final boolean lastStep) {
         return new WebSocketMapInstruction<>(false, false, consumer, null, null, null, lastStep);
     }
 
     public static <IN, OUT, APP, RESP> WebSocketMapInstruction<IN, OUT, APP, RESP> blocking(
-            final StreamFlatMapper<WebSocketBlockingContext<IN>, ErrorMessageResponse, OUT> consumer, final boolean lastStep) {
+            final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ErrorMessageResponse, OUT> consumer, final boolean lastStep) {
         return new WebSocketMapInstruction<>(true, false, null, consumer, null, null, lastStep);
     }
 
     public static <IN, OUT, APP, RESP> WebSocketMapInstruction<IN, OUT, APP, RESP> nonBlockingAsync(
-            final StreamAsyncFlatMapper<WebSocketAsyncRouteContext<IN, APP, RESP>, ErrorMessageResponse, OUT> asyncConsumer, final boolean lastStep) {
+            final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP, WebSocketSession<RESP>>, ErrorMessageResponse, OUT> asyncConsumer, final boolean lastStep) {
         return new WebSocketMapInstruction<>(false, true, null, null, asyncConsumer, null, lastStep);
     }
 
     public static <IN, OUT, APP, RESP> WebSocketMapInstruction<IN, OUT, APP, RESP> blockingAsync(
-            final StreamAsyncFlatMapper<WebSocketBlockingAsyncContext<IN>, ErrorMessageResponse, OUT> asyncBlockingConsumer, final boolean lastStep) {
+            final StreamAsyncFlatMapper<RestrictedBlockingAsyncRouteContext<IN>, ErrorMessageResponse, OUT> asyncBlockingConsumer, final boolean lastStep) {
         return new WebSocketMapInstruction<>(true, true, null, null, null, asyncBlockingConsumer, lastStep);
     }
 
@@ -79,9 +75,9 @@ public final class WebSocketMapInstruction<IN, OUT, APP, RESP> {
 
     public Result<ErrorMessageResponse, OUT> handle(final IN state, final WebSocketSession<RESP> connection, final APP applicationState) {
         if (consumer != null) {
-            return consumer.handle(new WebSocketRouteContext<>(state, connection, applicationState));
+            return consumer.handle(new RouteContext<>(state, connection, applicationState));
         } else if (blockingConsumer != null) {
-            return blockingConsumer.handle(new WebSocketBlockingContext<>(state));
+            return blockingConsumer.handle(new RestrictedBlockingRouteContext<>(state));
         }
 
         throw new UnsupportedOperationException("Unknown consumer");
@@ -89,9 +85,9 @@ public final class WebSocketMapInstruction<IN, OUT, APP, RESP> {
 
     public CompletableFuture<Result<ErrorMessageResponse, OUT>> handleAsync(final IN state, final WebSocketSession<RESP> connection, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses) {
         if (asyncConsumer != null) {
-            return asyncConsumer.handle(new WebSocketAsyncRouteContext<>(state, connection, applicationState, pendingAsyncResponses));
+            return asyncConsumer.handle(new AsyncRouteContext<>(state, connection, applicationState, pendingAsyncResponses));
         } else if (asyncBlockingConsumer != null) {
-            return asyncBlockingConsumer.handle(new WebSocketBlockingAsyncContext<>(state, pendingAsyncResponses));
+            return asyncBlockingConsumer.handle(new RestrictedBlockingAsyncRouteContext<>(state, pendingAsyncResponses));
         }
 
         throw new UnsupportedOperationException("Unknown async consumer");

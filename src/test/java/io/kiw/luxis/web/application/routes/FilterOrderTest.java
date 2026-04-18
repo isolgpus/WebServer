@@ -63,12 +63,12 @@ public class FilterOrderTest {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonFilter("/ordered/*", state, e -> e.complete(ctx -> {
                 executionOrder.add("first");
-                ctx.http().addResponseCookie(new HttpCookie("filter-first", "hit"));
+                ctx.session().addResponseCookie(new HttpCookie("filter-first", "hit"));
                 return HttpResult.success();
             }));
             r.jsonFilter("/ordered/*", state, e -> e.complete(ctx -> {
                 executionOrder.add("second");
-                ctx.http().addResponseCookie(new HttpCookie("filter-second", "hit"));
+                ctx.session().addResponseCookie(new HttpCookie("filter-second", "hit"));
                 return HttpResult.success();
             }));
             r.jsonRoute("/ordered/test", Method.POST, state, new TestFilterHandler());
@@ -87,12 +87,12 @@ public class FilterOrderTest {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonFilter("/a/*", state, e -> e.complete(ctx -> {
                 executionOrder.add("broad");
-                ctx.http().addResponseCookie(new HttpCookie("broad", "hit"));
+                ctx.session().addResponseCookie(new HttpCookie("broad", "hit"));
                 return HttpResult.success();
             }));
             r.jsonFilter("/a/b/*", state, e -> e.complete(ctx -> {
                 executionOrder.add("narrow");
-                ctx.http().addResponseCookie(new HttpCookie("narrow", "hit"));
+                ctx.session().addResponseCookie(new HttpCookie("narrow", "hit"));
                 return HttpResult.success();
             }));
             r.jsonRoute("/a/b/test", Method.GET, state, new GetTestFilterHandler());

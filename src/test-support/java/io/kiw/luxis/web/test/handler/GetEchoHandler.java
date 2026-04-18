@@ -14,13 +14,13 @@ public class GetEchoHandler extends JsonHandler<Void, EchoResponse, MyApplicatio
         return
                 httpStream
                         .complete(ctx -> {
-                            final HttpCookie requestCookieExample = ctx.http().getRequestCookie("requestCookieExample");
+                            final HttpCookie requestCookieExample = ctx.session().getRequestCookie("requestCookieExample");
 
                             return HttpResult.success(new EchoResponse(188,
                                     "You invoked a GET",
-                                    ctx.http().getPathParam("pathExample"),
-                                    ctx.http().getQueryParam("queryExample"),
-                                    ctx.http().getRequestHeader("requestHeaderExample"),
+                                    ctx.session().getPathParam("pathExample"),
+                                    ctx.session().getQueryParam("queryExample"),
+                                    ctx.session().getRequestHeader("requestHeaderExample"),
                                     requestCookieExample != null ? requestCookieExample.value() : null));
                         });
     }

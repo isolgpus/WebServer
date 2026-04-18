@@ -3,7 +3,7 @@ title: Handler Pipeline
 description: Build typed transformation chains with full thread control.
 ---
 
-Handlers are typed transformation chains built by calling methods on `HttpStream`. Each step receives a context object (`ctx`) that gives you access to the current value (`ctx.in()`), the HTTP context (`ctx.http()`), and — on the event loop — the application state (`ctx.app()`).
+Handlers are typed transformation chains built by calling methods on `HttpStream`. Each step receives a context object (`ctx`) that gives you access to the current value (`ctx.in()`), the session (`ctx.session()`), and — on the event loop — the application state (`ctx.app()`).
 
 ## What a pipeline looks like
 
@@ -93,7 +93,7 @@ Without `flat`, the step simply transforms the value and continues. If something
 
 | Thread | Available context |
 |---|---|
-| Event loop (`map`, `flatMap`, `asyncMap`, etc.) | `ctx.in()`, `ctx.http()`, `ctx.app()` |
-| Worker (`blockingMap`, `blockingFlatMap`, etc.) | `ctx.in()`, `ctx.http()` |
+| Event loop (`map`, `flatMap`, `asyncMap`, etc.) | `ctx.in()`, `ctx.session()`, `ctx.app()` |
+| Worker (`blockingMap`, `blockingFlatMap`, etc.) | `ctx.in()`, `ctx.session()` |
 
 Application state (`ctx.app()`) is only available on the event loop. This isn't a convention — it's a compile-time constraint. The type system won't let you access shared state from a worker thread.
