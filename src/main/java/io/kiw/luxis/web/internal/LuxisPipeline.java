@@ -2,16 +2,16 @@ package io.kiw.luxis.web.internal;
 
 import java.util.List;
 
-public class WebSocketPipeline<T> {
+public class LuxisPipeline<T> {
     private final List<MapInstruction> instructions;
     private final Object applicationState;
     private final boolean sendResponse;
 
-    public WebSocketPipeline(final List<MapInstruction> instructions, final Object applicationState) {
+    public LuxisPipeline(final List<MapInstruction> instructions, final Object applicationState) {
         this(instructions, applicationState, true);
     }
 
-    public WebSocketPipeline(final List<MapInstruction> instructions, final Object applicationState, final boolean sendResponse) {
+    public LuxisPipeline(final List<MapInstruction> instructions, final Object applicationState, final boolean sendResponse) {
         this.instructions = instructions;
         this.applicationState = applicationState;
         this.sendResponse = sendResponse;

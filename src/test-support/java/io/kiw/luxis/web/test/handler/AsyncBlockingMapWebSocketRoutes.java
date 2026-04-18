@@ -6,7 +6,6 @@ import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.client.CorrelatedAsync;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
-import io.kiw.luxis.web.pipeline.WebSocketStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
 public class AsyncBlockingMapWebSocketRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {

@@ -2,7 +2,7 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
-import io.kiw.luxis.web.internal.WebSocketPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.WebSocketRoute;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 
@@ -34,8 +34,8 @@ public class WebSocketRoutesRegister<APP, RESP> {
         if (routes.containsKey(typeKey)) {
             throw new IllegalArgumentException("Duplicate type key: " + typeKey);
         }
-        final WebSocketStream<IN, APP, RESP, ErrorMessageResponse, WebSocketSession<RESP>> stream = new WebSocketStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, e -> e);
-        final WebSocketPipeline<?> pipeline = webSocketHandler.handle(stream);
+        final LuxisStream<IN, APP, RESP, ErrorMessageResponse, WebSocketSession<RESP>> stream = new LuxisStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, e -> e);
+        final LuxisPipeline<?> pipeline = webSocketHandler.handle(stream);
         routes.put(typeKey, new WebSocketRoute<>(messageType, pipeline));
     }
 }

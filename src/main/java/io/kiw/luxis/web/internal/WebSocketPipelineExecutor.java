@@ -38,7 +38,7 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    public void execute(final WebSocketSession<?> session, final WebSocketPipeline<?> pipeline, final Object message) {
+    public void execute(final WebSocketSession<?> session, final LuxisPipeline<?> pipeline, final Object message) {
         final MapInstruction webSocketMapInstruction = pipeline.getApplicationInstructions().getFirst();
         executeInstruction(session, pipeline, webSocketMapInstruction, message, ThreadContext.APPLICATION_CONTEXT);
     }
@@ -51,7 +51,7 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private <IN, OUT, APP, RESP> void executeInstruction(final WebSocketSession<RESP> session, final WebSocketPipeline<?> pipeline, final MapInstruction<IN, OUT, APP, WebSocketSession<RESP>, ErrorMessageResponse> instruction, final IN message, final ThreadContext currentThread) {
+    private <IN, OUT, APP, RESP> void executeInstruction(final WebSocketSession<RESP> session, final LuxisPipeline<?> pipeline, final MapInstruction<IN, OUT, APP, WebSocketSession<RESP>, ErrorMessageResponse> instruction, final IN message, final ThreadContext currentThread) {
         final ThreadContext requiredThread = instruction.isBlocking ? ThreadContext.BLOCKING : ThreadContext.APPLICATION_CONTEXT;
 
         runOnThread(requiredThread, currentThread, () -> {
@@ -60,7 +60,7 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private <IN, OUT, APP, RESP> void handleAndContinue(final WebSocketSession<RESP> session, final WebSocketPipeline<?> pipeline, final MapInstruction<IN, OUT, APP, WebSocketSession<RESP>, ErrorMessageResponse> instruction, final IN message) {
+    private <IN, OUT, APP, RESP> void handleAndContinue(final WebSocketSession<RESP> session, final LuxisPipeline<?> pipeline, final MapInstruction<IN, OUT, APP, WebSocketSession<RESP>, ErrorMessageResponse> instruction, final IN message) {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future;
             try {
@@ -118,7 +118,7 @@ public class WebSocketPipelineExecutor {
     }
 
     @SuppressWarnings("unchecked")
-    private void continueChain(final WebSocketSession<?> session, final WebSocketPipeline<?> pipeline, final MapInstruction<?, ?, ?, ?, ?> instruction, final Object result, final ThreadContext currentThread) {
+    private void continueChain(final WebSocketSession<?> session, final LuxisPipeline<?> pipeline, final MapInstruction<?, ?, ?, ?, ?> instruction, final Object result, final ThreadContext currentThread) {
         if (instruction.next().isPresent()) {
             final MapInstruction next = instruction.next().get();
             executeInstruction(session, pipeline, next, result, currentThread);

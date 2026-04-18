@@ -10,7 +10,7 @@ import io.kiw.luxis.web.internal.RestrictedBlockingAsyncRouteContext;
 import io.kiw.luxis.web.internal.RestrictedBlockingRouteContext;
 import io.kiw.luxis.web.internal.RouteContext;
 import io.kiw.luxis.web.internal.ScheduleType;
-import io.kiw.luxis.web.internal.WebSocketPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.validation.Validator;
 
 import java.util.List;
@@ -18,20 +18,20 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
-public class WebSocketStream<IN, APP, RESP, ERR, SESSION> {
+public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
     private final List<MapInstruction> instructionChain;
     private final APP applicationState;
     private final PendingAsyncResponses pendingAsyncResponses;
     private final ErrorMessageResponseMapper<ERR> errorMessageResponseMapper;
 
-    public WebSocketStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final ErrorMessageResponseMapper<ERR> errorMessageResponseMapper) {
+    public LuxisStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final ErrorMessageResponseMapper<ERR> errorMessageResponseMapper) {
         this.instructionChain = instructionChain;
         this.applicationState = applicationState;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.errorMessageResponseMapper = errorMessageResponseMapper;
     }
 
-    public WebSocketStream<IN, APP, RESP, ERR, SESSION> validate(final Consumer<Validator<IN>> config) {
+    public LuxisStream<IN, APP, RESP, ERR, SESSION> validate(final Consumer<Validator<IN>> config) {
         final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, IN> mapper = ctx -> {
             final Validator<IN> v = new Validator<>(ctx.in(), "");
             config.accept(v);
@@ -43,56 +43,56 @@ public class WebSocketStream<IN, APP, RESP, ERR, SESSION> {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  map(final StreamMapper<RouteContext<IN, APP, SESSION>, OUT> flowHandler) {
+    public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> map(final StreamMapper<RouteContext<IN, APP, SESSION>, OUT> flowHandler) {
         return flatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  flatMap(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, OUT> mapper) {
+    public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> flatMap(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, OUT> mapper) {
         final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, false);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
 
         instructionChain.add(e);
-        return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public WebSocketStream<IN, APP, RESP, ERR, SESSION> peek(final StreamPeeker<RouteContext<IN, APP, SESSION>> peeker) {
+    public LuxisStream<IN, APP, RESP, ERR, SESSION> peek(final StreamPeeker<RouteContext<IN, APP, SESSION>> peeker) {
         return map(ctx -> {
             peeker.handle(ctx);
             return ctx.in();
         });
     }
 
-    public WebSocketStream<IN, APP, RESP, ERR, SESSION> blockingPeek(final StreamPeeker<RestrictedBlockingRouteContext<IN>> peeker) {
+    public LuxisStream<IN, APP, RESP, ERR, SESSION> blockingPeek(final StreamPeeker<RestrictedBlockingRouteContext<IN>> peeker) {
         return blockingMap(ctx -> {
             peeker.handle(ctx);
             return ctx.in();
         });
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  blockingMap(final StreamMapper<RestrictedBlockingRouteContext<IN>, OUT> flowHandler) {
+    public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> blockingMap(final StreamMapper<RestrictedBlockingRouteContext<IN>, OUT> flowHandler) {
         return blockingFlatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  blockingFlatMap(final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ERR, OUT> mapper) {
+    public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> blockingFlatMap(final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ERR, OUT> mapper) {
         final MapInstruction<IN, OUT, Object, SESSION, ERR> e =
                 MapInstruction.blocking(mapper, (in, session) -> new RestrictedBlockingRouteContext<>(in), false);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, OUT, ERR> handler) {
+    public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, OUT, ERR> handler) {
         return asyncMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, OUT, ERR> handler, final AsyncMapConfig config) {
+    public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, OUT, ERR> handler, final AsyncMapConfig config) {
         final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, ERR, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<ERR, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
@@ -131,14 +131,14 @@ public class WebSocketStream<IN, APP, RESP, ERR, SESSION> {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  asyncBlockingMap(final StreamAsyncMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, OUT, ERR> handler) {
+    public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> asyncBlockingMap(final StreamAsyncMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, OUT, ERR> handler) {
         return asyncBlockingMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP, ERR, SESSION>  asyncBlockingMap(final StreamAsyncMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, OUT, ERR> handler, final AsyncMapConfig config) {
+    public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> asyncBlockingMap(final StreamAsyncMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, OUT, ERR> handler, final AsyncMapConfig config) {
         final StreamAsyncFlatMapper<RestrictedBlockingAsyncRouteContext<IN, ERR>, ERR, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<ERR, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
@@ -179,19 +179,19 @@ public class WebSocketStream<IN, APP, RESP, ERR, SESSION> {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper);
     }
 
-    public <OUT> WebSocketPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, OUT> mapper) {
+    public <OUT> LuxisPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, OUT> mapper) {
         final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, true);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new WebSocketPipeline<>(instructionChain, applicationState);
+        return new LuxisPipeline<>(instructionChain, applicationState);
     }
 
-    public WebSocketPipeline<IN> complete() {
+    public LuxisPipeline<IN> complete() {
         final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, IN> mapper =
                 ctx -> Result.success(ctx.in());
         final MapInstruction<IN, IN, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, true);
@@ -199,20 +199,20 @@ public class WebSocketStream<IN, APP, RESP, ERR, SESSION> {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new WebSocketPipeline<>(instructionChain, applicationState);
+        return new LuxisPipeline<>(instructionChain, applicationState);
     }
 
-    public WebSocketPipeline<Void> completeWithNoResponse() {
-        return new WebSocketPipeline<>(instructionChain, applicationState, false);
+    public LuxisPipeline<Void> completeWithNoResponse() {
+        return new LuxisPipeline<>(instructionChain, applicationState, false);
     }
 
-    public <OUT> WebSocketPipeline<OUT> blockingComplete(final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ERR, OUT> mapper) {
+    public <OUT> LuxisPipeline<OUT> blockingComplete(final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ERR, OUT> mapper) {
         final MapInstruction<IN, OUT, Object, SESSION, ERR> e =
                 MapInstruction.blocking(mapper, (in, session) -> new RestrictedBlockingRouteContext<>(in), true);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
         instructionChain.add(e);
-        return new WebSocketPipeline<>(instructionChain, applicationState);
+        return new LuxisPipeline<>(instructionChain, applicationState);
     }
 }
