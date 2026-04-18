@@ -321,7 +321,7 @@ public class ValidatorTest {
         Body body = new Body("Alice", "a@b.com", 25, null);
         HttpValidator<Body> v = new HttpValidator<>(body, null, "");
         v.field("name", r -> r.name).required();
-        Result<HttpErrorResponse, Body> result = v.toResult();
+        Result<HttpErrorResponse, Body> result = v.toHttpResult();
         boolean[] isSuccess = {false};
         result.consume(err -> {
         }, val -> isSuccess[0] = true);
@@ -332,7 +332,7 @@ public class ValidatorTest {
     public void shouldReturnErrorFromToResultWhenErrors() {
         HttpValidator<Body> v = new HttpValidator<>(new Body(null, null, null, null), null, "");
         v.field("name", r -> r.name).required();
-        Result<HttpErrorResponse, Body> result = v.toResult();
+        Result<HttpErrorResponse, Body> result = v.toHttpResult();
         boolean[] isError = {false};
         int[] statusCode = {0};
         result.consume(err -> {

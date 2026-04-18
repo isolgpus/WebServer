@@ -8,7 +8,7 @@ import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.ScheduleType;
 import io.kiw.luxis.web.internal.WebSocketMapInstruction;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
-import io.kiw.luxis.web.validation.WebSocketValidator;
+import io.kiw.luxis.web.validation.Validator;
 import io.kiw.luxis.web.websocket.WebSocketAsyncContext;
 import io.kiw.luxis.web.websocket.WebSocketBlockingAsyncContext;
 import io.kiw.luxis.web.websocket.WebSocketBlockingContext;
@@ -31,9 +31,9 @@ public class WebSocketStream<IN, APP, RESP> {
         this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
-    public WebSocketStream<IN, APP, RESP> validate(final Consumer<WebSocketValidator<IN>> config) {
+    public WebSocketStream<IN, APP, RESP> validate(final Consumer<Validator<IN>> config) {
         final StreamFlatMapper<WebSocketContext<IN, APP, RESP>, ErrorMessageResponse, IN> mapper = ctx -> {
-            final WebSocketValidator<IN> v = new WebSocketValidator<>(ctx.in(), "");
+            final Validator<IN> v = new Validator<>(ctx.in(), "");
             config.accept(v);
             return v.toResult();
         };

@@ -1,5 +1,8 @@
 package io.kiw.luxis.web.validation;
 
+import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.http.ErrorMessageResponse;
+
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -54,5 +57,12 @@ public class Validator<T> {
 
     void addError(final String field, final String message) {
         errors.computeIfAbsent(field, k -> new ArrayList<>()).add(message);
+    }
+
+    public Result<ErrorMessageResponse, T> toResult() {
+        if (errors.isEmpty()) {
+            return Result.success(value);
+        }
+        return Result.error(new ErrorMessageResponse("Validation failed", errors));
     }
 }

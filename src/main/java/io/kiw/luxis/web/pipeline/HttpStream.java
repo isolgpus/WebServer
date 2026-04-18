@@ -26,7 +26,7 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
         final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, IN> mapper = ctx -> {
             final HttpValidator<IN> v = new HttpValidator<>(ctx.in(), ctx.http(), "");
             config.accept(v);
-            return v.toResult();
+            return v.toHttpResult();
         };
         instructionChain.add(MapInstruction.nonBlocking(mapper, false));
         return new HttpStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
