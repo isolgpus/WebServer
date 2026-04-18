@@ -9,10 +9,10 @@ import io.kiw.luxis.web.internal.ScheduleType;
 import io.kiw.luxis.web.internal.WebSocketMapInstruction;
 import io.kiw.luxis.web.internal.WebSocketPipeline;
 import io.kiw.luxis.web.validation.Validator;
-import io.kiw.luxis.web.websocket.WebSocketAsyncContext;
+import io.kiw.luxis.web.websocket.WebSocketAsyncRouteContext;
 import io.kiw.luxis.web.websocket.WebSocketBlockingAsyncContext;
 import io.kiw.luxis.web.websocket.WebSocketBlockingContext;
-import io.kiw.luxis.web.websocket.WebSocketContext;
+import io.kiw.luxis.web.websocket.WebSocketRouteContext;
 import io.kiw.luxis.web.websocket.WebSocketResult;
 
 import java.util.List;
@@ -32,7 +32,7 @@ public class WebSocketStream<IN, APP, RESP> {
     }
 
     public WebSocketStream<IN, APP, RESP> validate(final Consumer<Validator<IN>> config) {
-        final StreamFlatMapper<WebSocketContext<IN, APP, RESP>, ErrorMessageResponse, IN> mapper = ctx -> {
+        final StreamFlatMapper<WebSocketRouteContext<IN, APP, RESP>, ErrorMessageResponse, IN> mapper = ctx -> {
             final Validator<IN> v = new Validator<>(ctx.in(), "");
             config.accept(v);
             return v.toResult();
@@ -46,11 +46,11 @@ public class WebSocketStream<IN, APP, RESP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP> map(final StreamMapper<WebSocketContext<IN, APP, RESP>, OUT> flowHandler) {
+    public <OUT> WebSocketStream<OUT, APP, RESP> map(final StreamMapper<WebSocketRouteContext<IN, APP, RESP>, OUT> flowHandler) {
         return flatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP> flatMap(final StreamFlatMapper<WebSocketContext<IN, APP, RESP>, ErrorMessageResponse, OUT> mapper) {
+    public <OUT> WebSocketStream<OUT, APP, RESP> flatMap(final StreamFlatMapper<WebSocketRouteContext<IN, APP, RESP>, ErrorMessageResponse, OUT> mapper) {
         final WebSocketMapInstruction<IN, OUT, APP, RESP> e = WebSocketMapInstruction.nonBlocking(mapper, false);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
@@ -60,7 +60,7 @@ public class WebSocketStream<IN, APP, RESP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public WebSocketStream<IN, APP, RESP> peek(final StreamPeeker<WebSocketContext<IN, APP, RESP>> peeker) {
+    public WebSocketStream<IN, APP, RESP> peek(final StreamPeeker<WebSocketRouteContext<IN, APP, RESP>> peeker) {
         return map(ctx -> {
             peeker.handle(ctx);
             return ctx.in();
@@ -87,12 +87,12 @@ public class WebSocketStream<IN, APP, RESP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final StreamAsyncMapper<WebSocketAsyncContext<IN, APP, RESP>, OUT> handler) {
+    public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final StreamAsyncMapper<WebSocketAsyncRouteContext<IN, APP, RESP>, OUT> handler) {
         return asyncMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final StreamAsyncMapper<WebSocketAsyncContext<IN, APP, RESP>, OUT> handler, final AsyncMapConfig config) {
-        final StreamAsyncFlatMapper<WebSocketAsyncContext<IN, APP, RESP>, ErrorMessageResponse, OUT> wrapper = ctx -> {
+    public <OUT> WebSocketStream<OUT, APP, RESP> asyncMap(final StreamAsyncMapper<WebSocketAsyncRouteContext<IN, APP, RESP>, OUT> handler, final AsyncMapConfig config) {
+        final StreamAsyncFlatMapper<WebSocketAsyncRouteContext<IN, APP, RESP>, ErrorMessageResponse, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
                 AsyncRetryExecutor.executeWithRetry(
@@ -181,7 +181,7 @@ public class WebSocketStream<IN, APP, RESP> {
         return new WebSocketStream<>(instructionChain, applicationState, pendingAsyncResponses);
     }
 
-    public <OUT> WebSocketPipeline<OUT> complete(final StreamFlatMapper<WebSocketContext<IN, APP, RESP>, ErrorMessageResponse, OUT> mapper) {
+    public <OUT> WebSocketPipeline<OUT> complete(final StreamFlatMapper<WebSocketRouteContext<IN, APP, RESP>, ErrorMessageResponse, OUT> mapper) {
         final WebSocketMapInstruction<IN, OUT, APP, RESP> e = WebSocketMapInstruction.nonBlocking(mapper, true);
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
@@ -191,7 +191,7 @@ public class WebSocketStream<IN, APP, RESP> {
     }
 
     public WebSocketPipeline<IN> complete() {
-        final StreamFlatMapper<WebSocketContext<IN, APP, RESP>, ErrorMessageResponse, IN> mapper =
+        final StreamFlatMapper<WebSocketRouteContext<IN, APP, RESP>, ErrorMessageResponse, IN> mapper =
                 ctx -> WebSocketResult.success(ctx.in());
         final WebSocketMapInstruction<IN, IN, APP, RESP> e = WebSocketMapInstruction.nonBlocking(mapper, true);
         if (!instructionChain.isEmpty()) {

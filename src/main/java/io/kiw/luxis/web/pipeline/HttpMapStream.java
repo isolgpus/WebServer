@@ -6,11 +6,11 @@ import io.kiw.luxis.web.http.BlockingRouteContext;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.client.LuxisAsync;
-import io.kiw.luxis.web.internal.AsyncRouteContext;
+import io.kiw.luxis.web.internal.AsyncHttpRouteContext;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RequestPipeline;
-import io.kiw.luxis.web.internal.RouteContext;
+import io.kiw.luxis.web.internal.HttpRouteContext;
 import io.kiw.luxis.web.internal.ScheduleType;
 import io.kiw.luxis.web.internal.ender.Ender;
 
@@ -32,18 +32,18 @@ public class HttpMapStream<IN, APP> {
         this.pendingAsyncResponses = pendingAsyncResponses;
     }
 
-    public <OUT> HttpMapStream<OUT, APP> map(final StreamMapper<RouteContext<IN, APP>, OUT> flowHandler) {
+    public <OUT> HttpMapStream<OUT, APP> map(final StreamMapper<HttpRouteContext<IN, APP>, OUT> flowHandler) {
 
         return flatMap(ctx -> Result.success(flowHandler.handle(ctx)));
     }
 
-    public <OUT> HttpMapStream<OUT, APP> flatMap(final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, OUT> mapper) {
+    public <OUT> HttpMapStream<OUT, APP> flatMap(final StreamFlatMapper<HttpRouteContext<IN, APP>, HttpErrorResponse, OUT> mapper) {
         instructionChain.add(MapInstruction.nonBlocking(mapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
 
-    public HttpMapStream<IN, APP> peek(final StreamPeeker<RouteContext<IN, APP>> peeker) {
+    public HttpMapStream<IN, APP> peek(final StreamPeeker<HttpRouteContext<IN, APP>> peeker) {
         return map(ctx -> {
             peeker.handle(ctx);
             return ctx.in();
@@ -67,12 +67,12 @@ public class HttpMapStream<IN, APP> {
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP>, OUT> handler) {
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncHttpRouteContext<IN, APP>, OUT> handler) {
         return asyncMap(handler, AsyncMapConfig.defaultConfig());
     }
 
-    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP>, OUT> handler, final AsyncMapConfig config) {
-        final StreamAsyncFlatMapper<AsyncRouteContext<IN, APP>, HttpErrorResponse, OUT> wrapper = ctx -> {
+    public <OUT> HttpMapStream<OUT, APP> asyncMap(final StreamAsyncMapper<AsyncHttpRouteContext<IN, APP>, OUT> handler, final AsyncMapConfig config) {
+        final StreamAsyncFlatMapper<AsyncHttpRouteContext<IN, APP>, HttpErrorResponse, OUT> wrapper = ctx -> {
             final CompletableFuture<Result<HttpErrorResponse, OUT>> resultFuture = new CompletableFuture<>();
             if (config.maxRetries > 0) {
                 AsyncRetryExecutor.executeWithRetry(
@@ -141,7 +141,7 @@ public class HttpMapStream<IN, APP> {
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
-    public <OUT> RequestPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, OUT> mapper) {
+    public <OUT> RequestPipeline<OUT> complete(final StreamFlatMapper<HttpRouteContext<IN, APP>, HttpErrorResponse, OUT> mapper) {
         instructionChain.add(MapInstruction.nonBlocking(mapper, canFinishSuccessfully));
         return new RequestPipeline<>(instructionChain, applicationState, ender);
     }

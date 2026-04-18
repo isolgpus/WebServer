@@ -7,7 +7,7 @@ import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
-import io.kiw.luxis.web.internal.RouteContext;
+import io.kiw.luxis.web.internal.HttpRouteContext;
 import io.kiw.luxis.web.internal.ender.Ender;
 import io.kiw.luxis.web.jwt.JwtClaims;
 import io.kiw.luxis.web.jwt.JwtProvider;
@@ -23,7 +23,7 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
     }
 
     public HttpStream<IN, APP> validate(final Consumer<HttpValidator<IN>> config) {
-        final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, IN> mapper = ctx -> {
+        final StreamFlatMapper<HttpRouteContext<IN, APP>, HttpErrorResponse, IN> mapper = ctx -> {
             final HttpValidator<IN> v = new HttpValidator<>(ctx.in(), ctx.http(), "");
             config.accept(v);
             return v.toHttpResult();
@@ -33,7 +33,7 @@ public class HttpStream<IN, APP> extends HttpMapStream<IN, APP> {
     }
 
     public HttpStream<IN, APP> requireJwt(final JwtProvider jwtProvider) {
-        final StreamFlatMapper<RouteContext<IN, APP>, HttpErrorResponse, IN> mapper = ctx -> {
+        final StreamFlatMapper<HttpRouteContext<IN, APP>, HttpErrorResponse, IN> mapper = ctx -> {
             final String authHeader = ctx.http().getRequestHeader("Authorization");
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 return HttpResult.error(ErrorStatusCode.UNAUTHORIZED, new ErrorMessageResponse("Missing or invalid Authorization header"));

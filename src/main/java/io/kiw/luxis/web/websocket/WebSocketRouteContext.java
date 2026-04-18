@@ -2,10 +2,10 @@ package io.kiw.luxis.web.websocket;
 
 import io.kiw.luxis.web.internal.AbstractRouteContext;
 
-public class WebSocketContext<IN, APP, RESP> extends AbstractRouteContext<IN, APP> {
+public class WebSocketRouteContext<IN, APP, RESP> extends AbstractRouteContext<IN, APP> {
     private final WebSocketSession<RESP> connection;
 
-    public WebSocketContext(final IN in, final WebSocketSession<RESP> connection, final APP app) {
+    public WebSocketRouteContext(final IN in, final WebSocketSession<RESP> connection, final APP app) {
         super(in, app);
         this.connection = connection;
     }
