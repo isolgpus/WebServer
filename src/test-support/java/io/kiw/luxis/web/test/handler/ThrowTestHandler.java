@@ -2,13 +2,13 @@ package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.HttpResult;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
 public class ThrowTestHandler extends JsonHandler<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
-    public RequestPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
+    public LuxisPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
         return e.map(ctx -> ctx.in().where).map(ctx -> {
             if ("map".equals(ctx.in())) {
                 throw new RuntimeException("app error in map");

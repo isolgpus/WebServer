@@ -22,7 +22,6 @@ import io.kiw.luxis.web.openapi.OpenApiCollector;
 import io.kiw.luxis.web.openapi.OpenApiHandler;
 import io.kiw.luxis.web.openapi.RouteDescriptor;
 import io.kiw.luxis.web.openapi.TypeResolver;
-import io.kiw.luxis.web.pipeline.HttpMapStream;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import tools.jackson.databind.ObjectMapper;
 
@@ -59,7 +58,7 @@ public class RoutesRegister {
     public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final JsonHandler<IN, OUT, APP> jsonHandler, final RouteConfig routeConfig) {
 
         final ArrayList<MapInstruction> chain = new ArrayList<>();
-        new HttpMapStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses)
+        new HttpStream<>(chain, applicationState, pendingAsyncResponses, new JsonEnder(objectMapper))
                 .flatMap(ctx -> {
                     ctx.session().addResponseHeader("Content-Type", "application/json");
 
@@ -75,8 +74,8 @@ public class RoutesRegister {
                     }
                 }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
-        final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses);
-        final RequestPipeline<?> flow = jsonHandler.handle(httpStream);
+        final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, applicationState, pendingAsyncResponses, new JsonEnder(objectMapper));
+        final LuxisPipeline<?> flow = jsonHandler.handle(httpStream);
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(jsonHandler.getClass(), JsonHandler.class);
         openApiCollector.addRoute(new RouteDescriptor(
@@ -97,13 +96,13 @@ public class RoutesRegister {
 
     public <APP> void jsonFilter(final String path, final APP applicationState, final JsonFilter<APP> jsonFilter, final RouteConfig routeConfig) {
         final ArrayList<MapInstruction> chain = new ArrayList<>();
-        new HttpMapStream<>(chain, false, applicationState, null, pendingAsyncResponses)
+        new HttpStream<Void, APP>(chain, applicationState, pendingAsyncResponses, null)
                 .map(ctx -> {
                     ctx.session().addResponseHeader("Content-Type", "application/json");
                     return null;
                 });
-        final HttpStream<Void, APP> httpStream = new HttpStream<>(chain, false, applicationState, null, pendingAsyncResponses);
-        final RequestPipeline<Void> flow = jsonFilter.handle(httpStream);
+        final HttpStream<Void, APP> httpStream = new HttpStream<>(chain, applicationState, pendingAsyncResponses, null);
+        final LuxisPipeline<Void> flow = jsonFilter.handle(httpStream);
 
 
         router.route(path, "*", "application/json", flow, routeConfig);
@@ -111,15 +110,15 @@ public class RoutesRegister {
 
     public <OUT, APP> void uploadFileRoute(final String path, final Method method, final APP applicationState, final FileUploadRoute<OUT, APP> fileUploaderHandler) {
 
-        final HttpMapStream<Map<String, HttpBuffer>, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses);
+        final HttpStream<Map<String, HttpBuffer>, APP> httpStream = new HttpStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, new JsonEnder(objectMapper));
 
-        final HttpMapStream<Map<String, HttpBuffer>, APP> fileUploadStream = httpStream.flatMap(ctx -> {
+        httpStream.flatMap(ctx -> {
             ctx.session().addResponseHeader("Content-Type", "application/json");
 
             final Map<String, HttpBuffer> uploadedFile = ctx.session().resolveUploadedFiles();
             return HttpResult.success(uploadedFile);
         });
-        final RequestPipeline<OUT> flow = fileUploaderHandler.handle(fileUploadStream);
+        final LuxisPipeline<OUT> flow = fileUploaderHandler.handle(httpStream);
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(fileUploaderHandler.getClass(), FileUploadRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(
@@ -144,14 +143,14 @@ public class RoutesRegister {
     }
 
     public <IN, APP> void downloadFileRoute(final String path, final Method method, final APP applicationState, final FileDownloadRoute<IN, APP> fileDownloadHandler, final String contentType) {
-        final HttpMapStream<IN, APP> httpStream = new HttpMapStream<>(new ArrayList<>(), true, applicationState, new FileEnder(), pendingAsyncResponses);
+        final HttpStream<IN, APP> httpStream = new HttpStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, new FileEnder());
 
-        final HttpMapStream<IN, APP> fileDownloadStream = httpStream.flatMap(ctx -> {
+        httpStream.flatMap(ctx -> {
             ctx.session().addResponseHeader("Content-Type", contentType);
             ctx.session().addResponseHeader(TRANSFER_ENCODING, "chunked");
             return HttpResult.success(ctx.in());
         });
-        final RequestPipeline<?> flow = fileDownloadHandler.handle(fileDownloadStream);
+        final LuxisPipeline<?> flow = fileDownloadHandler.handle(httpStream);
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(fileDownloadHandler.getClass(), FileDownloadRoute.class);
         openApiCollector.addRoute(new RouteDescriptor(

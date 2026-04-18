@@ -6,7 +6,7 @@ import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.client.LuxisAsync;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.AsyncMapConfigBuilder;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
@@ -25,7 +25,7 @@ public class AsyncRetryTestHandler extends JsonHandler<AsyncMapRequest, AsyncMap
     }
 
     @Override
-    public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .<Integer>asyncMap(ctx -> {
                     int attempt = (int) counter.getAndIncrement();

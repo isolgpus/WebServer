@@ -2,7 +2,7 @@ package io.kiw.luxis.web.openapi;
 
 import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.HttpResult;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
@@ -25,7 +25,7 @@ public class OpenApiHandler extends JsonHandler<Void, ObjectNode, Object> {
     }
 
     @Override
-    public RequestPipeline<ObjectNode> handle(final HttpStream<Void, Object> e) {
+    public LuxisPipeline<ObjectNode> handle(final HttpStream<Void, Object> e) {
         return e.complete(ctx -> {
             if (cachedSpec == null) {
                 final OpenApiSpecGenerator generator = new OpenApiSpecGenerator(collector, objectMapper);

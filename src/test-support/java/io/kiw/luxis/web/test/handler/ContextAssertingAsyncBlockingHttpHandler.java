@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.web.handler.JsonHandler;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
@@ -17,7 +17,7 @@ public class ContextAssertingAsyncBlockingHttpHandler extends JsonHandler<Contex
     }
 
     @Override
-    public RequestPipeline<ContextResponse> handle(final HttpStream<ContextRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<ContextResponse> handle(final HttpStream<ContextRequest, MyApplicationState> httpStream) {
         return httpStream
                 .map(ctx -> {
                     asserter.assertInApplicationContext();

@@ -30,9 +30,9 @@ public abstract class RouterWrapper {
 
     private final ObjectMapper objectMapper = JacksonUtil.createMapper();
 
-    protected abstract void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline<?> flow, final RouteConfig routeConfig);
+    protected abstract void route(final String path, final Method method, final String consumes, final String provides, final LuxisPipeline<?> flow, final RouteConfig routeConfig);
 
-    protected abstract void route(final String path, final String consumes, final String provides, final RequestPipeline<?> flow, final RouteConfig routeConfig);
+    protected abstract void route(final String path, final String consumes, final String provides, final LuxisPipeline<?> flow, final RouteConfig routeConfig);
 
     public abstract void configureCors(final CorsConfig corsConfig);
 
@@ -61,9 +61,6 @@ public abstract class RouterWrapper {
             return;
         }
 
-        // whenComplete fires on whichever thread completes the future (e.g. ForkJoinPool).
-        // We must dispatch back to the application context before touching the pipeline
-        // (ctx.next(), ctx.end(), etc. are not thread-safe outside the application context).
         future.whenComplete((result, throwable) ->
                 requestContext.runOnContext(() -> {
                     if (throwable != null) {

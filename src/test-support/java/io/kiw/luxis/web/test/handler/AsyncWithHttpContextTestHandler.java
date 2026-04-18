@@ -5,7 +5,7 @@ import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.client.CorrelatedAsync;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -17,7 +17,7 @@ public class AsyncWithHttpContextTestHandler extends JsonHandler<AsyncMapRequest
     private Luxis<?> luxis;
 
     @Override
-    public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .map(ctx -> {
                     final String multiplier = ctx.session().getQueryParam("multiplier");

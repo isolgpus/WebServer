@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.test;
 
 import io.kiw.luxis.web.http.Method;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,11 +18,11 @@ public class PathMatcher {
     private Map<String, PathMatcher> children = new LinkedHashMap<>();
     private String paramName = null;
     private PathMatcher paramChild = null;
-    private Map<Method, List<RequestPipeline<?>>> flows = new EnumMap<>(Method.class);
-    private Map<Method, List<RequestPipeline<?>>> wildCardFlows = new EnumMap<>(Method.class);
-    private List<RequestPipeline<?>> allMethodWildCardFlows = new ArrayList<>();
+    private Map<Method, List<LuxisPipeline<?>>> flows = new EnumMap<>(Method.class);
+    private Map<Method, List<LuxisPipeline<?>>> wildCardFlows = new EnumMap<>(Method.class);
+    private List<LuxisPipeline<?>> allMethodWildCardFlows = new ArrayList<>();
 
-    public void putRoute(final String path, final Method method, final RequestPipeline<?> flow) {
+    public void putRoute(final String path, final Method method, final LuxisPipeline<?> flow) {
         final Queue<String> pathSegments = splitPath(path);
         this.putRoute(pathSegments, method, flow);
     }
@@ -32,7 +32,7 @@ public class PathMatcher {
                 .collect(Collectors.toCollection(LinkedList::new));
     }
 
-    private void putRoute(final Queue<String> pathSegments, final Method method, final RequestPipeline<?> flow) {
+    private void putRoute(final Queue<String> pathSegments, final Method method, final LuxisPipeline<?> flow) {
         final String pathSegment = pathSegments.poll();
 
 
@@ -59,12 +59,12 @@ public class PathMatcher {
         }
     }
 
-    public void putAllMethodRoute(final String path, final RequestPipeline<?> flow) {
+    public void putAllMethodRoute(final String path, final LuxisPipeline<?> flow) {
         final Queue<String> pathSegments = splitPath(path);
         this.putAllMethodRoute(pathSegments, flow);
     }
 
-    private void putAllMethodRoute(final Queue<String> pathSegments, final RequestPipeline<?> flow) {
+    private void putAllMethodRoute(final Queue<String> pathSegments, final LuxisPipeline<?> flow) {
         final String pathSegment = pathSegments.poll();
 
         final boolean isAWildCard = pathSegment.equals("*");
@@ -82,12 +82,12 @@ public class PathMatcher {
         }
     }
 
-    private void addWildcardHandler(final RequestPipeline<?> flow, final Method method) {
+    private void addWildcardHandler(final LuxisPipeline<?> flow, final Method method) {
         this.wildCardFlows.computeIfAbsent(method, key -> new ArrayList<>()).add(flow);
 
     }
 
-    private void addHandler(final RequestPipeline<?> flow, final Method method) {
+    private void addHandler(final LuxisPipeline<?> flow, final Method method) {
         this.flows.computeIfAbsent(method, key -> new ArrayList<>()).add(flow);
     }
 
@@ -95,11 +95,11 @@ public class PathMatcher {
         final Queue<String> pathSegments = splitPath(path);
         final Map<String, String> pathParams = new LinkedHashMap<>();
 
-        final List<RequestPipeline<?>> flows = get(pathSegments, method, new ArrayList<>(), pathParams);
+        final List<LuxisPipeline<?>> flows = get(pathSegments, method, new ArrayList<>(), pathParams);
         return new MatchResult(flows, pathParams);
     }
 
-    private List<RequestPipeline<?>> get(final Queue<String> pathSegments, final Method method, final List<RequestPipeline<?>> collectedFlows, final Map<String, String> pathParams) {
+    private List<LuxisPipeline<?>> get(final Queue<String> pathSegments, final Method method, final List<LuxisPipeline<?>> collectedFlows, final Map<String, String> pathParams) {
         collectedFlows.addAll(this.allMethodWildCardFlows);
         if (this.wildCardFlows.containsKey(method)) {
             collectedFlows.addAll(this.wildCardFlows.get(method));
@@ -124,15 +124,15 @@ public class PathMatcher {
     }
 
     public static class MatchResult {
-        private final List<RequestPipeline<?>> flows;
+        private final List<LuxisPipeline<?>> flows;
         private final Map<String, String> pathParams;
 
-        public MatchResult(final List<RequestPipeline<?>> flows, final Map<String, String> pathParams) {
+        public MatchResult(final List<LuxisPipeline<?>> flows, final Map<String, String> pathParams) {
             this.flows = flows;
             this.pathParams = pathParams;
         }
 
-        public List<RequestPipeline<?>> getFlows() {
+        public List<LuxisPipeline<?>> getFlows() {
             return flows;
         }
 

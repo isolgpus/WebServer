@@ -6,7 +6,7 @@ import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.HttpWebSocketRouteHandler;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.RouterWrapper;
 
 import java.nio.charset.StandardCharsets;
@@ -37,12 +37,12 @@ public class StubRouter extends RouterWrapper {
     }
 
     @Override
-    public void route(final String path, final Method method, final String consumes, final String provides, final RequestPipeline<?> flow, final RouteConfig routeConfig) {
+    public void route(final String path, final Method method, final String consumes, final String provides, final LuxisPipeline<?> flow, final RouteConfig routeConfig) {
         routes.putRoute(path, method, flow);
     }
 
     @Override
-    public void route(final String path, final String consumes, final String provides, final RequestPipeline<?> flow, final RouteConfig routeConfig) {
+    public void route(final String path, final String consumes, final String provides, final LuxisPipeline<?> flow, final RouteConfig routeConfig) {
         routes.putAllMethodRoute(path, flow);
     }
 
@@ -75,7 +75,7 @@ public class StubRouter extends RouterWrapper {
         final PathMatcher.MatchResult matchResult = this.routes.get(stubRequest.path, method);
         context.setPathParams(matchResult.getPathParams());
 
-        for (final RequestPipeline<?> flow : matchResult.getFlows()) {
+        for (final LuxisPipeline<?> flow : matchResult.getFlows()) {
             for (final MapInstruction applicationInstruction : flow.getApplicationInstructions()) {
                 if (applicationInstruction.isBlocking) {
                     Thread.currentThread().setName("Worker");

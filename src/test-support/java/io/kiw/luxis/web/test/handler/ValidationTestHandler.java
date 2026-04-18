@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.web.handler.JsonHandler;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -10,7 +10,7 @@ import static io.kiw.luxis.web.http.HttpResult.success;
 public class ValidationTestHandler extends JsonHandler<ValidationRequest, ValidationResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<ValidationResponse> handle(final HttpStream<ValidationRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<ValidationResponse> handle(final HttpStream<ValidationRequest, MyApplicationState> httpStream) {
         return httpStream
                 .validate(v -> {
                     v.field("name", r -> r.name).required().minLength(2);

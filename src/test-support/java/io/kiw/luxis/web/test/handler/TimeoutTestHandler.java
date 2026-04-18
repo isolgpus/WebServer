@@ -4,7 +4,7 @@ import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpResult;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -13,7 +13,7 @@ import java.util.concurrent.locks.LockSupport;
 
 public class TimeoutTestHandler extends JsonHandler<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
-    public RequestPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
+    public LuxisPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
         return e
                 .blockingMap(ctx -> {
                     LockSupport.parkNanos(TimeUnit.SECONDS.toNanos(5));

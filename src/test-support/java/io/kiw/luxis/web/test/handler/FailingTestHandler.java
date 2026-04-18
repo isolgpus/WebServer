@@ -4,7 +4,7 @@ import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpResult;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -14,7 +14,7 @@ import static io.kiw.luxis.result.Result.success;
 public class FailingTestHandler extends JsonHandler<BlockingRequest, BlockingTestResponse, MyApplicationState> {
 
     @Override
-    public RequestPipeline<BlockingTestResponse> handle(final HttpStream<BlockingRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<BlockingTestResponse> handle(final HttpStream<BlockingRequest, MyApplicationState> httpStream) {
         return
                 httpStream
                         .map(ctx -> ctx.in().numberToMultiply)

@@ -4,7 +4,7 @@ import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpResult;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -19,7 +19,7 @@ public class ErrorHandler extends JsonHandler<Void, Object, MyApplicationState> 
     }
 
     @Override
-    public RequestPipeline<Object> handle(final HttpStream<Void, MyApplicationState> httpStream) {
+    public LuxisPipeline<Object> handle(final HttpStream<Void, MyApplicationState> httpStream) {
         return httpStream
                 .complete(ctx -> HttpResult.error(statusCode, new ErrorMessageResponse(message)));
     }

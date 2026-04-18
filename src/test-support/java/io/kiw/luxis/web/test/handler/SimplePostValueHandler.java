@@ -2,7 +2,7 @@ package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.web.application.routes.ValueRequest;
 import io.kiw.luxis.web.handler.JsonHandler;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -15,7 +15,7 @@ public class SimplePostValueHandler extends JsonHandler<ValueRequest, SimpleStri
     }
 
     @Override
-    public RequestPipeline<SimpleStringValueResponse> handle(final HttpStream<ValueRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<SimpleStringValueResponse> handle(final HttpStream<ValueRequest, MyApplicationState> httpStream) {
         return httpStream
                 .complete(ctx -> success(new SimpleStringValueResponse(ctx.in().stringValue() + " string")));
     }

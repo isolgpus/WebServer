@@ -2,7 +2,7 @@ package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.client.LuxisHttpClient;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -19,7 +19,7 @@ public class HttpClientCallHandler extends JsonHandler<HttpClientGetRequest, Htt
     }
 
     @Override
-    public RequestPipeline<HttpClientGetResponse> handle(final HttpStream<HttpClientGetRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<HttpClientGetResponse> handle(final HttpStream<HttpClientGetRequest, MyApplicationState> httpStream) {
         return httpStream
                 .asyncMap(ctx -> httpClient.get(this.baseUrl + ctx.in().targetPath))
                 .map(ctx -> new HttpClientGetResponse(ctx.in().statusCode(), ctx.in().body()))

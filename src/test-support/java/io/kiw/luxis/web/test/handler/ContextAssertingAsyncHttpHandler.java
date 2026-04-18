@@ -5,7 +5,7 @@ import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.client.CorrelatedAsync;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
@@ -22,7 +22,7 @@ public class ContextAssertingAsyncHttpHandler extends JsonHandler<ContextRequest
     }
 
     @Override
-    public RequestPipeline<ContextResponse> handle(final HttpStream<ContextRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<ContextResponse> handle(final HttpStream<ContextRequest, MyApplicationState> httpStream) {
         return httpStream
                 .map(ctx -> {
                     asserter.assertInApplicationContext();

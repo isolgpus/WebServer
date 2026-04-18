@@ -3,7 +3,7 @@ package io.kiw.luxis.web.test.handler;
 import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.client.HttpClientResponse;
 import io.kiw.luxis.web.http.client.LuxisHttpClient;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -20,7 +20,7 @@ public class HttpClientPostCallHandler extends JsonHandler<HttpClientPostRequest
     }
 
     @Override
-    public RequestPipeline<HttpClientGetResponse> handle(final HttpStream<HttpClientPostRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<HttpClientGetResponse> handle(final HttpStream<HttpClientPostRequest, MyApplicationState> httpStream) {
         return httpStream
                 .asyncMap(ctx ->
                         httpClient.post("http://" + url + ctx.in().targetPath, ctx.in().forwardBody))

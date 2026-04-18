@@ -6,7 +6,7 @@ import io.kiw.luxis.web.handler.JsonHandler;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.client.LuxisAsync;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -17,7 +17,7 @@ public class AsyncTimeoutTestHandler extends JsonHandler<AsyncMapRequest, AsyncM
     private TestLuxis<?> testLuxis;
 
     @Override
-    public RequestPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
+    public LuxisPipeline<AsyncMapResponse> handle(final HttpStream<AsyncMapRequest, MyApplicationState> httpStream) {
         return httpStream
                 .<Integer>asyncMap(ctx -> {
                     // Deliberately do NOT complete — simulate missing response

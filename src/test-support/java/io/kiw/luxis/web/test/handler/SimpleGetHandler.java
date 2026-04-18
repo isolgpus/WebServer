@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.web.handler.JsonHandler;
-import io.kiw.luxis.web.internal.RequestPipeline;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
@@ -16,7 +16,7 @@ public class SimpleGetHandler extends JsonHandler<Void, SimpleValueResponse, MyA
     }
 
     @Override
-    public RequestPipeline<SimpleValueResponse> handle(final HttpStream<Void, MyApplicationState> httpStream) {
+    public LuxisPipeline<SimpleValueResponse> handle(final HttpStream<Void, MyApplicationState> httpStream) {
         return httpStream
                 .complete(ctx -> success(new SimpleValueResponse(valueToReturn)));
     }

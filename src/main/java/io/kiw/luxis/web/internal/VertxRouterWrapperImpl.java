@@ -44,13 +44,13 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     }
 
     @Override
-    public void route(final String path, final Method method, final String consumes, final String produces, final RequestPipeline<?> flow, final RouteConfig routeConfig) {
+    public void route(final String path, final Method method, final String consumes, final String produces, final LuxisPipeline<?> flow, final RouteConfig routeConfig) {
         final Route route = router.route(HttpMethod.valueOf(method.name()), path).consumes(consumes).produces(produces);
         registerHandlers(route, flow, routeConfig);
     }
 
     @Override
-    public void route(final String path, final String consumes, final String produces, final RequestPipeline<?> flow, final RouteConfig routeConfig) {
+    public void route(final String path, final String consumes, final String produces, final LuxisPipeline<?> flow, final RouteConfig routeConfig) {
         final Route route = router.route(path).consumes(consumes).produces(produces);
         registerHandlers(route, flow, routeConfig);
     }
@@ -72,7 +72,7 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
         });
     }
 
-    private void registerHandlers(final Route route, final RequestPipeline<?> flow, final RouteConfig routeConfig) {
+    private void registerHandlers(final Route route, final LuxisPipeline<?> flow, final RouteConfig routeConfig) {
         final int timeout = routeConfig.timeoutInMillis().orElse(defaultTimeoutMillis);
 
         route.handler(new VertxTimeoutHandler(timeout));
