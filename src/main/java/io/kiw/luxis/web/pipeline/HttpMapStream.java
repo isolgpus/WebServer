@@ -8,7 +8,7 @@ import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.AsyncRouteContext;
 import io.kiw.luxis.web.internal.BlockingAsyncRouteContext;
 import io.kiw.luxis.web.internal.BlockingRouteContext;
-import io.kiw.luxis.web.internal.HttpMapInstruction;
+import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RequestPipeline;
 import io.kiw.luxis.web.internal.RouteContext;
@@ -19,13 +19,13 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public class HttpMapStream<IN, APP> {
-    protected final List<HttpMapInstruction> instructionChain;
+    protected final List<MapInstruction> instructionChain;
     protected final boolean canFinishSuccessfully;
     protected final APP applicationState;
     protected final Ender ender;
     protected final PendingAsyncResponses pendingAsyncResponses;
 
-    public HttpMapStream(final List<HttpMapInstruction> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender, final PendingAsyncResponses pendingAsyncResponses) {
+    public HttpMapStream(final List<MapInstruction> instructionChain, final boolean canFinishSuccessfully, final APP applicationState, final Ender ender, final PendingAsyncResponses pendingAsyncResponses) {
         this.instructionChain = instructionChain;
         this.canFinishSuccessfully = canFinishSuccessfully;
         this.applicationState = applicationState;
@@ -39,7 +39,7 @@ public class HttpMapStream<IN, APP> {
     }
 
     public <OUT> HttpMapStream<OUT, APP> flatMap(final StreamFlatMapper<RouteContext<IN, APP, HttpSession>, HttpErrorResponse, OUT> mapper) {
-        instructionChain.add(HttpMapInstruction.nonBlocking(mapper, false));
+        instructionChain.add(MapInstruction.nonBlocking(mapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
@@ -64,7 +64,7 @@ public class HttpMapStream<IN, APP> {
     }
 
     public <OUT> HttpMapStream<OUT, APP> blockingFlatMap(final StreamFlatMapper<BlockingRouteContext<IN, HttpSession>, HttpErrorResponse, OUT> mapper) {
-        instructionChain.add(HttpMapInstruction.blocking(mapper, false));
+        instructionChain.add(MapInstruction.blocking(mapper, (in, session) -> new BlockingRouteContext<>(in, session), false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
@@ -101,7 +101,7 @@ public class HttpMapStream<IN, APP> {
             }
             return resultFuture;
         };
-        instructionChain.add(HttpMapInstruction.nonBlockingAsync(wrapper, false));
+        instructionChain.add(MapInstruction.nonBlockingAsync(wrapper, false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
@@ -138,12 +138,12 @@ public class HttpMapStream<IN, APP> {
             }
             return resultFuture;
         };
-        instructionChain.add(HttpMapInstruction.blockingAsync(wrapper, false));
+        instructionChain.add(MapInstruction.blockingAsync(wrapper, (in, session, par) -> new BlockingAsyncRouteContext<>(in, session, par), false));
         return new HttpMapStream<>(instructionChain, canFinishSuccessfully, applicationState, ender, pendingAsyncResponses);
     }
 
     public <OUT> RequestPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP, HttpSession>, HttpErrorResponse, OUT> mapper) {
-        instructionChain.add(HttpMapInstruction.nonBlocking(mapper, canFinishSuccessfully));
+        instructionChain.add(MapInstruction.nonBlocking(mapper, canFinishSuccessfully));
         return new RequestPipeline<>(instructionChain, applicationState, ender);
     }
 
@@ -153,7 +153,7 @@ public class HttpMapStream<IN, APP> {
 
 
     public <OUT> RequestPipeline<OUT> blockingComplete(final StreamFlatMapper<BlockingRouteContext<IN, HttpSession>, HttpErrorResponse, OUT> mapper) {
-        instructionChain.add(HttpMapInstruction.blocking(mapper, canFinishSuccessfully));
+        instructionChain.add(MapInstruction.blocking(mapper, (in, session) -> new BlockingRouteContext<>(in, session), canFinishSuccessfully));
         return new RequestPipeline<>(instructionChain, applicationState, ender);
     }
 }

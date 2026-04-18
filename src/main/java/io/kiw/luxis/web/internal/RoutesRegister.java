@@ -58,7 +58,7 @@ public class RoutesRegister {
 
     public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final JsonHandler<IN, OUT, APP> jsonHandler, final RouteConfig routeConfig) {
 
-        final ArrayList<HttpMapInstruction> chain = new ArrayList<>();
+        final ArrayList<MapInstruction> chain = new ArrayList<>();
         new HttpMapStream<>(chain, true, applicationState, new JsonEnder(objectMapper), pendingAsyncResponses)
                 .flatMap(ctx -> {
                     ctx.session().addResponseHeader("Content-Type", "application/json");
@@ -96,7 +96,7 @@ public class RoutesRegister {
     }
 
     public <APP> void jsonFilter(final String path, final APP applicationState, final JsonFilter<APP> jsonFilter, final RouteConfig routeConfig) {
-        final ArrayList<HttpMapInstruction> chain = new ArrayList<>();
+        final ArrayList<MapInstruction> chain = new ArrayList<>();
         new HttpMapStream<>(chain, false, applicationState, null, pendingAsyncResponses)
                 .map(ctx -> {
                     ctx.session().addResponseHeader("Content-Type", "application/json");
