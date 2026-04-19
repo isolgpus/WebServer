@@ -2,8 +2,10 @@ package io.kiw.luxis.web.validation;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
+import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpSession;
+import io.kiw.luxis.web.pipeline.ErrorMessageResponseMapper;
 import io.kiw.luxis.web.test.StubRequestContext;
 import org.junit.Test;
 
@@ -18,6 +20,8 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class ValidatorTest {
+
+    private ErrorMessageResponseMapper<HttpErrorResponse> errorMessageResponseMapper = (err, cause) -> new HttpErrorResponse(err, ErrorStatusCode.UNPROCESSABLE_ENTITY);
 
     private static class Body {
         String name;
@@ -59,7 +63,7 @@ public class ValidatorTest {
     private HttpValidator<Body> validatorWithHttp(Body body, Map<String, String> queryParams, Map<String, String> pathParams) {
         StubRequestContext ctx = new StubRequestContext("{}", queryParams, Collections.emptyMap(), Collections.emptyMap(), Collections.emptyMap());
         ctx.setPathParams(pathParams);
-        return new HttpValidator<>(body, new HttpSession(ctx), "");
+        return new HttpValidator<>(body, new HttpSession(ctx), "", errorMessageResponseMapper);
     }
 
     // --- required ---
@@ -320,7 +324,7 @@ public class ValidatorTest {
     @Test
     public void shouldReturnSuccessFromToResultWhenNoErrors() {
         Body body = new Body("Alice", "a@b.com", 25, null);
-        HttpValidator<Body> v = new HttpValidator<>(body, null, "");
+        HttpValidator<Body> v = new HttpValidator<>(body, null, "", errorMessageResponseMapper);
         v.field("name", r -> r.name).required();
         Result<HttpErrorResponse, Body> result = v.toResult();
         boolean[] isSuccess = {false};
@@ -331,7 +335,7 @@ public class ValidatorTest {
 
     @Test
     public void shouldReturnErrorFromToResultWhenErrors() {
-        HttpValidator<Body> v = new HttpValidator<>(new Body(null, null, null, null), null, "");
+        HttpValidator<Body> v = new HttpValidator<>(new Body(null, null, null, null), null, "", errorMessageResponseMapper);
         v.field("name", r -> r.name).required();
         Result<HttpErrorResponse, Body> result = v.toResult();
         boolean[] isError = {false};
