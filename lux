@@ -7,6 +7,7 @@ usage() {
     echo "Commands:"
     echo "  commit    Pull with rebase, compile, test"
     echo "  test      compile, test"
+    echo "  deploy    Run tests, tag the revision, deploy to Maven Central"
     echo "  docs      start the docs instance"
     exit 1
 }
@@ -27,6 +28,27 @@ cmd_test() {
     TEST_MODE=VERTX mvn test
 
     echo "Done."
+}
+
+cmd_deploy() {
+    echo "Running tests..."
+    TEST_MODE=VERTX mvn test
+
+    VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+    TAG="v${VERSION}"
+
+    if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+        echo "Tag ${TAG} already exists; aborting." >&2
+        exit 1
+    fi
+
+    echo "Tagging ${TAG}..."
+    git tag -a "${TAG}" -m "Release ${VERSION}"
+
+    echo "Deploying to Maven Central..."
+    mvn deploy
+
+    echo "Done. Push the tag with: git push origin ${TAG}"
 }
 
 
@@ -68,6 +90,7 @@ fi
 case "$1" in
     commit) cmd_commit ;;
     test) cmd_test ;;
+    deploy) cmd_deploy ;;
     docs) docs ;;
     *) echo "Unknown command: $1"; usage ;;
 esac
