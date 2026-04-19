@@ -34,7 +34,7 @@ public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorRes
         appendValidation(ctx -> {
             final HttpValidator<IN> v = new HttpValidator<>(ctx.in(), ctx.session(), "");
             config.accept(v);
-            return v.toHttpResult();
+            return v.toResult();
         });
         return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender);
     }

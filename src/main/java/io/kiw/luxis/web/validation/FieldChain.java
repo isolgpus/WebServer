@@ -5,9 +5,9 @@ import java.util.function.Predicate;
 public class FieldChain {
     private final String fieldName;
     private final Object value;
-    private final Validator<?> parent;
+    private final Validator<?, ?> parent;
 
-    FieldChain(final String fieldName, final Object value, final Validator<?> parent) {
+    FieldChain(final String fieldName, final Object value, final Validator<?, ?> parent) {
         this.fieldName = fieldName;
         this.value = value;
         this.parent = parent;

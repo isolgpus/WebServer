@@ -1,15 +1,14 @@
 package io.kiw.luxis.web.validation;
 
-import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorStatusCode;
-import io.kiw.luxis.web.http.HttpSession;
 import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.HttpSession;
 
-public class HttpValidator<T> extends Validator<T> {
+public class HttpValidator<T> extends Validator<T, HttpErrorResponse> {
     private final HttpSession http;
 
     public HttpValidator(final T value, final HttpSession http, final String prefix) {
-        super(value, prefix);
+        super(value, prefix, (e, cause) -> new HttpErrorResponse(e, ErrorStatusCode.UNPROCESSABLE_ENTITY));
         this.http = http;
     }
 
@@ -21,7 +20,4 @@ public class HttpValidator<T> extends Validator<T> {
         return new FieldChain(name, http.getPathParam(name), this);
     }
 
-    public Result<HttpErrorResponse, T> toHttpResult() {
-        return toResult().mapError(e -> new HttpErrorResponse(e, ErrorStatusCode.UNPROCESSABLE_ENTITY));
-    }
 }
