@@ -13,7 +13,7 @@ import java.util.function.Function;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class AsyncMapTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncMapTestHandler implements JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private final Function<Integer, Result<HttpErrorResponse, Integer>> responder;
     private Luxis<?> luxis;

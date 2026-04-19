@@ -8,7 +8,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class ContextAssertingPeekHttpHandler extends JsonHandler<ContextRequest, ContextResponse, MyApplicationState> {
+public class ContextAssertingPeekHttpHandler implements JsonHandler<ContextRequest, ContextResponse, MyApplicationState> {
 
     private final ContextAsserter asserter;
 

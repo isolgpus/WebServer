@@ -71,7 +71,7 @@ public class FilterOrderTest {
                 ctx.session().addResponseCookie(new HttpCookie("filter-second", "hit"));
                 return HttpResult.success();
             }));
-            r.jsonRoute("/ordered/test", Method.POST, state, new TestFilterHandler());
+            r.jsonRoute("/ordered/test", Method.POST, state, TestFilterRequest.class, new TestFilterHandler());
         });
         TestClient client = testClientAndServer.client();
 
@@ -95,7 +95,7 @@ public class FilterOrderTest {
                 ctx.session().addResponseCookie(new HttpCookie("narrow", "hit"));
                 return HttpResult.success();
             }));
-            r.jsonRoute("/a/b/test", Method.GET, state, new GetTestFilterHandler());
+            r.jsonRoute("/a/b/test", Method.GET, state, Void.class, new GetTestFilterHandler());
         });
         TestClient client = testClientAndServer.client();
 
@@ -119,7 +119,7 @@ public class FilterOrderTest {
                 executionOrder.add("admin");
                 return HttpResult.success();
             }));
-            r.jsonRoute("/api/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/api/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
         });
         TestClient client = testClientAndServer.client();
 

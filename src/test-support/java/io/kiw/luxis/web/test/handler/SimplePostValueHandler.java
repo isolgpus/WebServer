@@ -8,7 +8,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class SimplePostValueHandler extends JsonHandler<ValueRequest, SimpleStringValueResponse, MyApplicationState> {
+public class SimplePostValueHandler implements JsonHandler<ValueRequest, SimpleStringValueResponse, MyApplicationState> {
 
 
     public SimplePostValueHandler() {

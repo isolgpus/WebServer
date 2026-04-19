@@ -11,7 +11,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.LockSupport;
 
-public class TimeoutTestHandler extends JsonHandler<ThrowRequest, ThrowResponse, MyApplicationState> {
+public class TimeoutTestHandler implements JsonHandler<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
     public LuxisPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
         return e

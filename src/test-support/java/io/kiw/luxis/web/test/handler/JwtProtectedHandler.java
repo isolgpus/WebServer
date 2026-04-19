@@ -7,7 +7,7 @@ import io.kiw.luxis.web.jwt.JwtProvider;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class JwtProtectedHandler extends JsonHandler<Void, SubjectResponse, MyApplicationState> {
+public class JwtProtectedHandler implements JsonHandler<Void, SubjectResponse, MyApplicationState> {
 
     private final JwtProvider jwtProvider;
 

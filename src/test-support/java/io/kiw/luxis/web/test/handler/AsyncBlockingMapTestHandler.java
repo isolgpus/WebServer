@@ -11,7 +11,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class AsyncBlockingMapTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncBlockingMapTestHandler implements JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private Luxis<?> luxis;
 

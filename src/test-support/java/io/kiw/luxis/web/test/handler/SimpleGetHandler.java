@@ -7,7 +7,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class SimpleGetHandler extends JsonHandler<Void, SimpleValueResponse, MyApplicationState> {
+public class SimpleGetHandler implements JsonHandler<Void, SimpleValueResponse, MyApplicationState> {
 
     private final int valueToReturn;
 

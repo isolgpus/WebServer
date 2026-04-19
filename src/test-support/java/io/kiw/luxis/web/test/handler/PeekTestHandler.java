@@ -9,7 +9,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class PeekTestHandler extends JsonHandler<BlockingRequest, BlockingTestResponse, MyApplicationState> {
+public class PeekTestHandler implements JsonHandler<BlockingRequest, BlockingTestResponse, MyApplicationState> {
 
     public final AtomicInteger peekCount = new AtomicInteger(0);
     public final AtomicInteger blockingPeekCount = new AtomicInteger(0);

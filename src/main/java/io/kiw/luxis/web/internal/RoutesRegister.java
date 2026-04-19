@@ -61,24 +61,24 @@ public class RoutesRegister {
         router.configureCors(corsConfig);
     }
 
-    public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final JsonHandler<IN, OUT, APP> jsonHandler) {
-        jsonRoute(path, method, applicationState, jsonHandler, new RouteConfigBuilder().build());
+    public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final Class<IN> requestType, final JsonHandler<IN, OUT, APP> jsonHandler) {
+        jsonRoute(path, method, applicationState, requestType, jsonHandler, new RouteConfigBuilder().build());
     }
 
 
-    public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final JsonHandler<IN, OUT, APP> jsonHandler, final RouteConfig routeConfig) {
+    public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final Class<IN> requestType, final JsonHandler<IN, OUT, APP> jsonHandler, final RouteConfig routeConfig) {
 
         final ArrayList<MapInstruction> chain = new ArrayList<>();
         new HttpStream<>(chain, applicationState, pendingAsyncResponses, new JsonEnder(objectMapper), transactionManager)
                 .flatMap(ctx -> {
                     ctx.session().addResponseHeader("Content-Type", "application/json");
 
-                    if (method.canHaveABody() && ctx.session().ctx.getRequestBody() == null && !jsonHandler.getType().equals(Void.class)) {
+                    if (method.canHaveABody() && ctx.session().ctx.getRequestBody() == null && !requestType.equals(Void.class)) {
                         return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
                     }
 
                     try {
-                        final IN jsonRequest = method.canHaveABody() && !jsonHandler.getType().equals(Void.class) ? objectMapper.readValue(ctx.session().ctx.getRequestBody(), jsonHandler) : null;
+                        final IN jsonRequest = method.canHaveABody() && !requestType.equals(Void.class) ? objectMapper.readValue(ctx.session().ctx.getRequestBody(), requestType) : null;
                         return HttpResult.success(jsonRequest);
                     } catch (final Exception e) {
                         return HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("Invalid json request"));
@@ -91,7 +91,7 @@ public class RoutesRegister {
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(jsonHandler.getClass(), JsonHandler.class);
         openApiCollector.addRoute(new RouteDescriptor(
                 path, method,
-                typeArgs != null ? typeArgs[0] : null,
+                requestType,
                 typeArgs != null ? typeArgs[1] : null,
                 "application/json", "application/json",
                 RouteDescriptor.RouteKind.JSON,
@@ -179,6 +179,6 @@ public class RoutesRegister {
     public void serveOpenApiSpec(final String path, final String title, final String version, final String description) {
         final OpenApiHandler openApiRoute = new OpenApiHandler(openApiCollector, objectMapper, title, version, description);
         final RouteConfig config = new RouteConfigBuilder().openApi().hidden().build();
-        jsonRoute(path, Method.GET, null, openApiRoute, config);
+        jsonRoute(path, Method.GET, null, Void.class, openApiRoute, config);
     }
 }

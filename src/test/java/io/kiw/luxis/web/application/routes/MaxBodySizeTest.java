@@ -52,7 +52,7 @@ public class MaxBodySizeTest {
     @Test
     public void shouldRejectRequestExceedingMaxBodySize() {
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
         }, builder -> builder.setMaxBodySize(10));
         TestClient client = testClientAndServer.client();
 
@@ -66,7 +66,7 @@ public class MaxBodySizeTest {
     @Test
     public void shouldAcceptRequestWithinMaxBodySize() {
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
         }, builder -> builder.setMaxBodySize(1000));
         TestClient client = testClientAndServer.client();
 
@@ -81,7 +81,7 @@ public class MaxBodySizeTest {
     @Test
     public void shouldNotEnforceBodyLimitWhenNotConfigured() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
         });
         TestClient client = testClientAndServer.client();
 

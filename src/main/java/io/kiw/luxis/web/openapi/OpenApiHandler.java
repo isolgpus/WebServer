@@ -7,7 +7,7 @@ import io.kiw.luxis.web.pipeline.HttpStream;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ObjectNode;
 
-public class OpenApiHandler extends JsonHandler<Void, ObjectNode, Object> {
+public class OpenApiHandler implements JsonHandler<Void, ObjectNode, Object> {
     private final OpenApiCollector collector;
     private final ObjectMapper objectMapper;
     private final String title;

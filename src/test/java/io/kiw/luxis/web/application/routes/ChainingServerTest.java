@@ -63,7 +63,7 @@ public class ChainingServerTest {
 
         // Last server: returns value directly
         servers[CHAIN_SIZE - 1] = createTestServerAndClient(mode, (r, state) ->
-                        r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42)),
+                        r.jsonRoute("/api/value", Method.GET, state, Void.class, new SimpleGetHandler(42)),
                 builder -> builder.setPort(INITIAL_CHAIN_PORT + CHAIN_SIZE - 1));
 
         // Intermediate servers: forward GET to next server
@@ -72,7 +72,7 @@ public class ChainingServerTest {
             final LuxisHttpClient httpClient = createHttpClient(mode, servers[i + 1]);
             final String nextUrl = "http://" + HOST + ":" + (port + 1) + "/api/value";
             servers[i] = createTestServerAndClient(mode, (r, state) ->
-                            r.jsonRoute("/api/value", Method.GET, state, new ChainForwardGetHandler(httpClient, nextUrl)),
+                            r.jsonRoute("/api/value", Method.GET, state, Void.class, new ChainForwardGetHandler(httpClient, nextUrl)),
                     builder -> builder.setPort(port));
         }
 
@@ -80,7 +80,7 @@ public class ChainingServerTest {
         final LuxisHttpClient httpClient = createHttpClient(mode, servers[1]);
         final String secondBaseUrl = "http://" + HOST + ":" + (INITIAL_CHAIN_PORT + 1);
         servers[0] = createTestServerAndClient(mode, (r, state) ->
-                        r.jsonRoute("/call-next", Method.POST, state, new HttpClientCallHandler(httpClient, secondBaseUrl)),
+                        r.jsonRoute("/call-next", Method.POST, state, HttpClientGetRequest.class, new HttpClientCallHandler(httpClient, secondBaseUrl)),
                 builder -> builder.setPort(INITIAL_CHAIN_PORT));
 
         serverChain = List.of(servers);

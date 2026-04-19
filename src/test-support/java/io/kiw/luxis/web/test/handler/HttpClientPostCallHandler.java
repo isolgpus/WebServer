@@ -9,7 +9,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class HttpClientPostCallHandler extends JsonHandler<HttpClientPostRequest, HttpClientGetResponse, MyApplicationState> {
+public class HttpClientPostCallHandler implements JsonHandler<HttpClientPostRequest, HttpClientGetResponse, MyApplicationState> {
 
     private final LuxisHttpClient httpClient;
     private final String url;

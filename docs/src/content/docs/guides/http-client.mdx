@@ -98,7 +98,7 @@ Pass the client to your handler's constructor. The handler doesn't know or care 
 public static AppState registerRoutes(RoutesRegister routesRegister) {
     AppState state = new AppState();
 
-    routesRegister.jsonRoute("/orders", Method.POST, state,
+    routesRegister.jsonRoute("/orders", Method.POST, state, OrderRequest.class,
         new CreateOrderHandler(httpClient));
 
     return state;
@@ -106,7 +106,7 @@ public static AppState registerRoutes(RoutesRegister routesRegister) {
 ```
 
 ```java
-public class CreateOrderHandler extends JsonHandler<OrderRequest, OrderResponse, AppState> {
+public class CreateOrderHandler implements JsonHandler<OrderRequest, OrderResponse, AppState> {
 
     private final LuxisHttpClient httpClient;
 
@@ -135,7 +135,7 @@ LuxisHttpClient httpClient = StubLuxisHttpClient.create(userService);
 
 Luxis<AppState> orderService = Luxis.test(r -> {
     AppState state = new AppState();
-    r.jsonRoute("/orders", Method.POST, state, new CreateOrderHandler(httpClient));
+    r.jsonRoute("/orders", Method.POST, state, OrderRequest.class, new CreateOrderHandler(httpClient));
     return state;
 });
 ```

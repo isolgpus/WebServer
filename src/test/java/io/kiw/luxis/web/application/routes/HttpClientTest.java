@@ -88,13 +88,13 @@ public class HttpClientTest {
     @Test
     public void shouldCallServerBViaHttpClientGet() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                        r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42)),
+                        r.jsonRoute("/api/value", Method.GET, state, Void.class, new SimpleGetHandler(42)),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClient httpClient = createHttpClient(mode, serverB);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/call-b", Method.POST, state, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));
+                r.jsonRoute("/call-b", Method.POST, state, HttpClientGetRequest.class, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));
 
         final TestHttpResponse response = serverA.client().post(
                 StubRequest.request("/call-b")
@@ -111,13 +111,13 @@ public class HttpClientTest {
     @Test
     public void shouldForwardPostBodyToServerB() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                        r.jsonRoute("/api/multiply", Method.POST, state, new SimpleMultiplyHandler()),
+                        r.jsonRoute("/api/multiply", Method.POST, state, SimpleValueRequest.class, new SimpleMultiplyHandler()),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClient httpClient = createHttpClient(mode, serverB);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/forward", Method.POST, state, new HttpClientPostCallHandler(httpClient, "127.0.0.1:" + SERVER_B_PORT)));
+                r.jsonRoute("/forward", Method.POST, state, HttpClientPostRequest.class, new HttpClientPostCallHandler(httpClient, "127.0.0.1:" + SERVER_B_PORT)));
 
         final String bodyForB = json().put("value", 7).toString();
         final TestHttpResponse response = serverA.client().post(
@@ -138,7 +138,7 @@ public class HttpClientTest {
     @Test
     public void shouldCallServerBUsingBaseUrl() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                        r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(99)),
+                        r.jsonRoute("/api/value", Method.GET, state, Void.class, new SimpleGetHandler(99)),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
@@ -146,7 +146,7 @@ public class HttpClientTest {
         final LuxisHttpClient httpClient = createHttpClient(mode, serverB, config);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/call-b", Method.POST, state, new HttpClientCallHandler(httpClient, "")));
+                r.jsonRoute("/call-b", Method.POST, state, HttpClientGetRequest.class, new HttpClientCallHandler(httpClient, "")));
 
         final TestHttpResponse response = serverA.client().post(
                 StubRequest.request("/call-b")
@@ -163,7 +163,7 @@ public class HttpClientTest {
     @Test
     public void shouldReturnResultErrorWhenErrorAwareAndServerBReturns400() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                        r.jsonRoute("/api/error", Method.GET, state,
+                        r.jsonRoute("/api/error", Method.GET, state, Void.class,
                                 new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input")),
                 builder -> builder.setPort(SERVER_B_PORT));
 
@@ -172,7 +172,7 @@ public class HttpClientTest {
         final LuxisHttpClient httpClient = createHttpClient(mode, serverB, config);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/call-error", Method.POST, state, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));
+                r.jsonRoute("/call-error", Method.POST, state, HttpClientGetRequest.class, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));
 
         final TestHttpResponse response = serverA.client().post(
                 StubRequest.request("/call-error")
@@ -187,14 +187,14 @@ public class HttpClientTest {
     @Test
     public void shouldDeserializeTypedResponseFromServerB() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                        r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42)),
+                        r.jsonRoute("/api/value", Method.GET, state, Void.class, new SimpleGetHandler(42)),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults();
         final LuxisHttpClient httpClient = createHttpClient(mode, serverB, config);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/call-b-typed", Method.POST, state, new HttpClientTypedGetHandler(httpClient, SERVER_B_BASE_URL)));
+                r.jsonRoute("/call-b-typed", Method.POST, state, HttpClientGetRequest.class, new HttpClientTypedGetHandler(httpClient, SERVER_B_BASE_URL)));
 
         final TestHttpResponse response = serverA.client().post(
                 StubRequest.request("/call-b-typed")
@@ -210,14 +210,14 @@ public class HttpClientTest {
     @Test
     public void shouldHandleServerBReturningError() {
         serverB = createTestServerAndClient(mode, (r, state) ->
-                        r.jsonRoute("/api/error", Method.GET, state,
+                        r.jsonRoute("/api/error", Method.GET, state, Void.class,
                                 new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input")),
                 builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClient httpClient = createHttpClient(mode, serverB);
 
         serverA = createTestServerAndClient(mode, (r, state) ->
-                r.jsonRoute("/call-error", Method.POST, state, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));
+                r.jsonRoute("/call-error", Method.POST, state, HttpClientGetRequest.class, new HttpClientCallHandler(httpClient, SERVER_B_BASE_URL)));
 
         final TestHttpResponse response = serverA.client().post(
                 StubRequest.request("/call-error")
@@ -238,27 +238,27 @@ public class HttpClientTest {
 
     private LuxisHttpClient createDirectClient() {
         serverB = createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/api/value", Method.GET, state, new SimpleGetHandler(42));
-            r.jsonRoute("/api/value", Method.POST, state, new SimpleGetHandler(42));
-            r.jsonRoute("/api/value", Method.PUT, state, new SimpleGetHandler(42));
-            r.jsonRoute("/api/value", Method.DELETE, state, new SimpleGetHandler(42));
-            r.jsonRoute("/api/value", Method.PATCH, state, new SimpleGetHandler(42));
+            r.jsonRoute("/api/value", Method.GET, state, Void.class, new SimpleGetHandler(42));
+            r.jsonRoute("/api/value", Method.POST, state, Void.class, new SimpleGetHandler(42));
+            r.jsonRoute("/api/value", Method.PUT, state, Void.class, new SimpleGetHandler(42));
+            r.jsonRoute("/api/value", Method.DELETE, state, Void.class, new SimpleGetHandler(42));
+            r.jsonRoute("/api/value", Method.PATCH, state, Void.class, new SimpleGetHandler(42));
 
-            r.jsonRoute("/api/postValue", Method.POST, state, new SimplePostValueHandler());
-            r.jsonRoute("/api/postValue", Method.PUT, state, new SimplePostValueHandler());
-            r.jsonRoute("/api/postValue", Method.PATCH, state, new SimplePostValueHandler());
+            r.jsonRoute("/api/postValue", Method.POST, state, ValueRequest.class, new SimplePostValueHandler());
+            r.jsonRoute("/api/postValue", Method.PUT, state, ValueRequest.class, new SimplePostValueHandler());
+            r.jsonRoute("/api/postValue", Method.PATCH, state, ValueRequest.class, new SimplePostValueHandler());
 
-            r.jsonRoute("/api/bad-request", Method.GET, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
-            r.jsonRoute("/api/bad-request", Method.POST, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
-            r.jsonRoute("/api/bad-request", Method.PUT, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
-            r.jsonRoute("/api/bad-request", Method.DELETE, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
-            r.jsonRoute("/api/bad-request", Method.PATCH, state, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+            r.jsonRoute("/api/bad-request", Method.GET, state, Void.class, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+            r.jsonRoute("/api/bad-request", Method.POST, state, Void.class, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+            r.jsonRoute("/api/bad-request", Method.PUT, state, Void.class, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+            r.jsonRoute("/api/bad-request", Method.DELETE, state, Void.class, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
+            r.jsonRoute("/api/bad-request", Method.PATCH, state, Void.class, new ErrorHandler(ErrorStatusCode.BAD_REQUEST, "bad input"));
 
-            r.jsonRoute("/api/throw", Method.GET, state, new AlwaysThrowHandler());
-            r.jsonRoute("/api/throw", Method.POST, state, new AlwaysThrowHandler());
-            r.jsonRoute("/api/throw", Method.PUT, state, new AlwaysThrowHandler());
-            r.jsonRoute("/api/throw", Method.DELETE, state, new AlwaysThrowHandler());
-            r.jsonRoute("/api/throw", Method.PATCH, state, new AlwaysThrowHandler());
+            r.jsonRoute("/api/throw", Method.GET, state, Void.class, new AlwaysThrowHandler());
+            r.jsonRoute("/api/throw", Method.POST, state, Void.class, new AlwaysThrowHandler());
+            r.jsonRoute("/api/throw", Method.PUT, state, Void.class, new AlwaysThrowHandler());
+            r.jsonRoute("/api/throw", Method.DELETE, state, Void.class, new AlwaysThrowHandler());
+            r.jsonRoute("/api/throw", Method.PATCH, state, Void.class, new AlwaysThrowHandler());
         }, builder -> builder.setPort(SERVER_B_PORT));
 
         final LuxisHttpClientConfig config = LuxisHttpClientConfig.defaults()
