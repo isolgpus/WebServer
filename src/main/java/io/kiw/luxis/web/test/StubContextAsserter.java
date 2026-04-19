@@ -1,5 +1,7 @@
 package io.kiw.luxis.web.test;
 
+import io.kiw.luxis.web.internal.TransactionStatus;
+
 public class StubContextAsserter implements ContextAsserter {
     @Override
     public void assertInApplicationContext() {
@@ -19,11 +21,15 @@ public class StubContextAsserter implements ContextAsserter {
 
     @Override
     public void notInTransaction() {
-        throw new UnsupportedOperationException("Transaction assertions not yet implemented");
+        if (TransactionStatus.isInTransaction()) {
+            throw new AssertionError("Expected NOT to be in a transaction, but was");
+        }
     }
 
     @Override
     public void inTransaction() {
-        throw new UnsupportedOperationException("Transaction assertions not yet implemented");
+        if (!TransactionStatus.isInTransaction()) {
+            throw new AssertionError("Expected to be in a transaction, but was not");
+        }
     }
 }

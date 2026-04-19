@@ -166,11 +166,14 @@ public class LuxisPipelineExecutor<SESSION> {
 
         if (step.kind() == TransactionStep.Kind.SYNC) {
             final Result<ErrorMessageResponse, Object> result;
+            TransactionStatus.enter();
             try {
                 result = step.syncMapper().handle(ctx);
             } catch (final Exception e) {
                 rollback(tm, tx, () -> exceptionHandler.accept(e));
                 return;
+            } finally {
+                TransactionStatus.exit();
             }
             result.consume(err -> {
                 rollback(tm, tx, () -> handler.handleFailure(session, instruction, err));
@@ -179,11 +182,14 @@ public class LuxisPipelineExecutor<SESSION> {
             });
         } else {
             final io.vertx.core.Future<Object> vertxFuture;
+            TransactionStatus.enter();
             try {
                 vertxFuture = step.asyncMapper().handle(ctx);
             } catch (final Exception e) {
                 rollback(tm, tx, () -> exceptionHandler.accept(e));
                 return;
+            } finally {
+                TransactionStatus.exit();
             }
             final CompletableFuture<Object> cf = vertxFuture.toCompletionStage().toCompletableFuture();
             cf.whenComplete((ok, err) -> {

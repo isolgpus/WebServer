@@ -1,9 +1,11 @@
 package io.kiw.luxis.web.test.handler;
 
+import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
+import io.vertx.core.Future;
 
 public class TransactionalWebSocketRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {
 
@@ -15,32 +17,36 @@ public class TransactionalWebSocketRoutes extends WebSocketRoutes<MyApplicationS
 
     @Override
     public void registerRoutes(final WebSocketRoutesRegister<MyApplicationState, TestWebSocketResponse> routesRegister) {
-        // Shape-sketch for the .inTransaction(...) sub-stream feature. The real body
-        // depends on Phase 2 (sub-stream API), Phase 3 (executor integration), and
-        // Phase 4 (test harness) — see memory: project_transactional_pipeline.md.
-        // Intentionally empty for Phase 1 (SPI + wiring only).
-        //
-        // Original sketch kept below for reference:
-        //
-        // routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
-        // routesRegister
-        //     .registerInbound("echo", WebSocketEchoRequest.class, s ->
-        //         s.map(ctx -> { asserter.notInTransaction(); return ctx.in().message; })
-        //          .map(ctx -> resolveUserIdFor("bob"))
-        //          .inTransaction(txStream -> txStream
-        //              .asyncMap(ctx -> externallyProvidedAsyncDriver.query(
-        //                  "SELECT id, status FROM user WHERE id=? FOR UPDATE",
-        //                  ctx.in(), new IdAndStatusRowMapper()))
-        //              .flatMap(ctx -> ctx.in().status().equals("active")
-        //                  ? Result.success(ctx.in())
-        //                  : Result.error(USER_INACTIVE))
-        //              .asyncMap(ctx -> externallyProvidedAsyncDriver.update(
-        //                  "UPDATE balance SET ... WHERE user_id=?", ctx.in().id())
-        //                  .map(updatedRowCount -> ctx.in()))
-        //              .peek(ctx -> ctx.sendEventOnOutbox(new BalanceChanged(ctx.in().id())))
-        //              .onCompletion(ctx -> ctx.app().updateSomeAppState(ctx.in().id()))
-        //              .commit())
-        //          .complete());
+        routesRegister.registerOutbound("echoResponse", WebSocketEchoResponse.class);
+
+        routesRegister.registerInbound("echo", WebSocketEchoRequest.class, s ->
+                s.map(ctx -> {
+                            asserter.notInTransaction();
+                            return ctx.in().message;
+                        })
+                        .inTransaction(txStream -> txStream
+                                .map(ctx -> {
+                                    asserter.inTransaction();
+                                    return ctx.in() + "-queried";
+                                })
+                                .asyncMap(ctx -> {
+                                    asserter.inTransaction();
+                                    return Future.succeededFuture(ctx.in() + "-updated");
+                                })
+                                .flatMap(ctx -> {
+                                    asserter.inTransaction();
+                                    return Result.success(ctx.in());
+                                })
+                                .onCompletion(ctx -> {
+                                    asserter.notInTransaction();
+                                    ctx.app().setLongValue(99);
+                                })
+                                .commit())
+                        .map(ctx -> {
+                            asserter.notInTransaction();
+                            return new WebSocketEchoResponse(ctx.in());
+                        })
+                        .complete());
     }
 
 }
