@@ -1,0 +1,86 @@
+---
+title: Transactions
+description: Run a sub-chain of pipeline steps inside a managed transaction, with commit, rollback, and post-commit hooks.
+---
+
+Pipelines can open a transaction around a sub-chain of steps. Luxis orchestrates the lifecycle — `begin`, `commit`, `rollback`, `onCommitted` — but stays out of the driver itself. You supply a `TransactionManager`, and your async driver calls (JDBC via a worker, R2DBC, Vert.x SQL client) run inside the managed window.
+
+## Shape
+
+```java
+stream
+    .map(ctx -> ctx.in().userId())
+    .inTransaction(tx -> tx
+        .asyncMap(ctx -> loadUser(ctx.in()))          // Future<User>
+        .flatMap(ctx -> ctx.in().active()
+            ? Result.success(ctx.in())
+            : HttpResult.error(ErrorStatusCode.CONFLICT,
+                new ErrorMessageResponse("user inactive")))
+        .asyncMap(ctx -> debitBalance(ctx.in(), 100))
+        .onCompletion(ctx -> ctx.app().recordDebit(ctx.in()))
+        .commit())
+    .complete(ctx -> HttpResult.success(new DebitResponse(ctx.in())));
+```
+
+Inside `inTransaction(...)`:
+
+- `map` / `flatMap` — sync transforms on the event loop (same semantics as the outer pipeline).
+- `asyncMap` — returns Vert.x `Future<T>`. This is the one coupling point: your driver's async calls adapt to `Future`.
+- `peek` — side effect without transformation.
+- `onCompletion(ctx -> ...)` — registers a post-commit callback. Fires via `TransactionManager.onCommitted`; does **not** fire on rollback.
+- `commit()` — closes the sub-chain. Required.
+
+Only these operations are available inside the sub-chain. Blocking steps and arbitrary HTTP / Kafka calls are deliberately excluded — they'd hold a DB connection open on uncontrolled I/O.
+
+## Registering a TransactionManager
+
+```java
+Luxis.start(routes, config, new MyTransactionManager());
+```
+
+`TransactionManager<TX>` is a four-method SPI:
+
+```java
+public interface TransactionManager<TX> {
+    Future<TX> begin();
+    Future<Void> commit(TX tx);
+    Future<Void> rollback(TX tx);
+    default Future<Void> onCommitted(TX tx, Runnable callback) {
+        callback.run();
+        return Future.succeededFuture();
+    }
+}
+```
+
+`TX` is whatever token your driver needs to identify a transaction — a connection, a session, a correlation id. Luxis hands it back to you verbatim on `commit` / `rollback` / `onCommitted`.
+
+Calling `.inTransaction(...)` on a route without a `TransactionManager` registered fails at **route registration time**, not at request time.
+
+## TX-to-driver binding is yours
+
+Luxis never sees your driver. It only calls `begin` / `commit` / `rollback` and drives the sub-chain. Your `asyncMap` bodies need to see "the current TX" somehow — Luxis leaves that to you:
+
+- Stash the TX in a Vert.x context-local inside `begin()`, read it in your driver calls, clear it in `commit`/`rollback`.
+- Or close over the TX via a `ScopedValue` / `ThreadLocal` you manage yourself.
+
+Whatever the user arrangement, keep it consistent with the thread your driver expects.
+
+## `Future<T>` is the async primitive
+
+Inside a transaction, `asyncMap` returns `io.vertx.core.Future<T>`. Outside, the pipeline uses Luxis's own async mappers. The inside-tx choice is deliberate: transactional drivers already expose `Future` (Vert.x SQL client) or adapt trivially (`CompletionStage.toFuture()` for R2DBC, worker-executed JDBC via `vertx.executeBlocking(...)`).
+
+This is the one place the framework is coupled to Vert.x in the public API. Document this to callers.
+
+## Error semantics
+
+| Sub-chain outcome | Luxis calls | `onCompletion` hooks |
+|---|---|---|
+| All steps succeed | `commit` → `onCommitted` | Fire (via `onCommitted`) |
+| Any step returns `Result.error` | `rollback` | Do not fire |
+| Step throws | `rollback`, error bubbles to `exceptionHandler` | Do not fire |
+| `commit` itself fails | error bubbles to `exceptionHandler` | Do not fire |
+| `rollback` itself fails | error bubbles to `exceptionHandler` | — |
+
+`onCompletion` runs after `commit` resolves. If a hook throws, the exception goes to the configured `exceptionHandler` — the client still sees the success response, because by that point the transaction has already committed.
+
+The outer pipeline continues as soon as `commit` succeeds. Luxis does **not** wait for `onCommitted` to resolve before producing the response. Drivers with native post-commit hooks (Postgres `LISTEN/NOTIFY`, MySQL binlog tailers) can override `onCommitted` to fire the callback from the driver's own event rather than inline.
