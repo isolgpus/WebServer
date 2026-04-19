@@ -7,7 +7,7 @@ import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class GetEchoHandler extends JsonHandler<Void, EchoResponse, MyApplicationState> {
+public class GetEchoHandler implements JsonHandler<Void, EchoResponse, MyApplicationState> {
 
     @Override
     public LuxisPipeline<EchoResponse> handle(final HttpStream<Void, MyApplicationState> httpStream) {

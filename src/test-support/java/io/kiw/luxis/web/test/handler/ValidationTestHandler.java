@@ -7,7 +7,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class ValidationTestHandler extends JsonHandler<ValidationRequest, ValidationResponse, MyApplicationState> {
+public class ValidationTestHandler implements JsonHandler<ValidationRequest, ValidationResponse, MyApplicationState> {
 
     @Override
     public LuxisPipeline<ValidationResponse> handle(final HttpStream<ValidationRequest, MyApplicationState> httpStream) {

@@ -5,7 +5,7 @@ import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 
-public class HelloWorldHandler extends JsonHandler<HelloWorldRequest, HelloWorldResponse, AppState> {
+public class HelloWorldHandler implements JsonHandler<HelloWorldRequest, HelloWorldResponse, AppState> {
 
 
     @Override

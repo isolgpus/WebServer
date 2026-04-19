@@ -7,7 +7,7 @@ import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class StatusCodeTestHandler extends JsonHandler<StatusCodeRequest, HttpSuccessResponse<StatusCodeResponse>, MyApplicationState> {
+public class StatusCodeTestHandler implements JsonHandler<StatusCodeRequest, HttpSuccessResponse<StatusCodeResponse>, MyApplicationState> {
 
     @Override
     public LuxisPipeline<HttpSuccessResponse<StatusCodeResponse>> handle(final HttpStream<StatusCodeRequest, MyApplicationState> e) {

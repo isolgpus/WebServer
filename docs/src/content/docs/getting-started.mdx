@@ -16,10 +16,10 @@ Add the Luxis dependency to your `pom.xml`:
 
 ## Create a Handler
 
-Create a handler by extending `JsonHandler`:
+Create a handler by implementing `JsonHandler`:
 
 ```java
-public class HelloWorldHandler extends JsonHandler<HelloWorldRequest, HelloWorldResponse, AppState> {
+public class HelloWorldHandler implements JsonHandler<HelloWorldRequest, HelloWorldResponse, AppState> {
 
     @Override
     public RequestPipeline<HelloWorldResponse> handle(HttpStream<HelloWorldRequest, AppState> e) {
@@ -35,7 +35,7 @@ Start the server and register your routes:
 ```java
 WebServer.start(routesRegister -> {
     AppState appState = new AppState();
-    routesRegister.jsonRoute("/hello/world", Method.POST, appState.helloWorldState, new HelloWorldHandler());
+    routesRegister.jsonRoute("/hello/world", Method.POST, appState.helloWorldState, HelloWorldRequest.class, new HelloWorldHandler());
     return appState;
 });
 ```
@@ -44,6 +44,7 @@ The `jsonRoute` method registers a typed JSON endpoint. It takes:
 - The **path** (`"/hello/world"`)
 - The **HTTP method** (`Method.POST`)
 - The **application state** for this route
+- The **request type** class (used for JSON deserialization; pass `Void.class` for bodyless requests)
 - The **handler** instance
 
 ## Next Steps

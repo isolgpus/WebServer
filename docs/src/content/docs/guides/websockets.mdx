@@ -95,7 +95,7 @@ public static AppState registerRoutes(RoutesRegister routesRegister) {
     AppState state = new AppState();
 
     // HTTP routes
-    routesRegister.jsonRoute("/api/users", Method.GET, state, new ListUsersHandler());
+    routesRegister.jsonRoute("/api/users", Method.GET, state, Void.class, new ListUsersHandler());
 
     // WebSocket routes
     routesRegister.webSocketRoute("/ws/chat", state, new ChatWebSocketRoutes());

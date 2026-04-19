@@ -8,7 +8,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class HttpClientCallHandler extends JsonHandler<HttpClientGetRequest, HttpClientGetResponse, MyApplicationState> {
+public class HttpClientCallHandler implements JsonHandler<HttpClientGetRequest, HttpClientGetResponse, MyApplicationState> {
 
     private final LuxisHttpClient httpClient;
     private final String baseUrl;

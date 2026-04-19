@@ -5,6 +5,7 @@ import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.TestWebSocketClient;
+import io.kiw.luxis.web.test.handler.BlockingRequest;
 import io.kiw.luxis.web.test.handler.PeekTestHandler;
 import io.kiw.luxis.web.test.handler.PeekWebSocketRoutes;
 import org.junit.After;
@@ -58,7 +59,7 @@ public class PeekTest {
     public void shouldExecutePeekSideEffectAndPassThroughValue() {
         final PeekTestHandler handler = new PeekTestHandler();
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/peek", Method.POST, state, handler);
+            r.jsonRoute("/peek", Method.POST, state, BlockingRequest.class, handler);
         });
         TestClient client = testClientAndServer.client();
 
@@ -77,7 +78,7 @@ public class PeekTest {
     public void shouldExecutePeekSideEffectsOnMultipleRequests() {
         final PeekTestHandler handler = new PeekTestHandler();
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/peek", Method.POST, state, handler);
+            r.jsonRoute("/peek", Method.POST, state, BlockingRequest.class, handler);
         });
         TestClient client = testClientAndServer.client();
 

@@ -8,7 +8,7 @@ import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class BlockingFlatMapFailHandler extends JsonHandler<BlockingRequest, BlockingTestResponse, MyApplicationState> {
+public class BlockingFlatMapFailHandler implements JsonHandler<BlockingRequest, BlockingTestResponse, MyApplicationState> {
 
     @Override
     public LuxisPipeline<BlockingTestResponse> handle(final HttpStream<BlockingRequest, MyApplicationState> httpStream) {

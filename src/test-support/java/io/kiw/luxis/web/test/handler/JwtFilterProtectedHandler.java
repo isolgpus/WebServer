@@ -6,7 +6,7 @@ import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class JwtFilterProtectedHandler extends JsonHandler<Void, SubjectResponse, MyApplicationState> {
+public class JwtFilterProtectedHandler implements JsonHandler<Void, SubjectResponse, MyApplicationState> {
 
 
     @Override

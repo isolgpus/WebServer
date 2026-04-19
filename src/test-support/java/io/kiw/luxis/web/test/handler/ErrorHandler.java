@@ -8,7 +8,7 @@ import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class ErrorHandler extends JsonHandler<Void, Object, MyApplicationState> {
+public class ErrorHandler implements JsonHandler<Void, Object, MyApplicationState> {
 
     private final ErrorStatusCode statusCode;
     private final String message;

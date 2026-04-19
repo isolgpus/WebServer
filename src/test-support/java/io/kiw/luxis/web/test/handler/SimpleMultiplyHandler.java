@@ -7,7 +7,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class SimpleMultiplyHandler extends JsonHandler<SimpleValueRequest, SimpleValueResponse, MyApplicationState> {
+public class SimpleMultiplyHandler implements JsonHandler<SimpleValueRequest, SimpleValueResponse, MyApplicationState> {
 
     @Override
     public LuxisPipeline<SimpleValueResponse> handle(final HttpStream<SimpleValueRequest, MyApplicationState> httpStream) {

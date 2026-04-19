@@ -6,7 +6,7 @@ import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class ThrowTestHandler extends JsonHandler<ThrowRequest, ThrowResponse, MyApplicationState> {
+public class ThrowTestHandler implements JsonHandler<ThrowRequest, ThrowResponse, MyApplicationState> {
     @Override
     public LuxisPipeline<ThrowResponse> handle(final HttpStream<ThrowRequest, MyApplicationState> e) {
         return e.map(ctx -> ctx.in().where).map(ctx -> {

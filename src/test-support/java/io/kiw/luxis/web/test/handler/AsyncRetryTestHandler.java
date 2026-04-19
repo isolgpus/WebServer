@@ -14,7 +14,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class AsyncRetryTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncRetryTestHandler implements JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private final AtomicLong counter;
     private final TestRetryBehaviour testRetryBehaviour;

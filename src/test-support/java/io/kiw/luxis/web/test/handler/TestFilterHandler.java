@@ -6,7 +6,7 @@ import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class TestFilterHandler extends JsonHandler<TestFilterRequest, TestFilterResponse, MyApplicationState> {
+public class TestFilterHandler implements JsonHandler<TestFilterRequest, TestFilterResponse, MyApplicationState> {
 
     @Override
     public LuxisPipeline<TestFilterResponse> handle(final HttpStream<TestFilterRequest, MyApplicationState> e) {

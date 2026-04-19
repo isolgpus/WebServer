@@ -5,7 +5,7 @@ import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class AlwaysThrowHandler extends JsonHandler<Void, Object, MyApplicationState> {
+public class AlwaysThrowHandler implements JsonHandler<Void, Object, MyApplicationState> {
 
     @Override
     public LuxisPipeline<Object> handle(final HttpStream<Void, MyApplicationState> httpStream) {

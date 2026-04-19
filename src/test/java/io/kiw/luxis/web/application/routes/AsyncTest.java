@@ -10,6 +10,7 @@ import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
 import io.kiw.luxis.web.test.handler.AsyncBlockingMapTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncCustomTimeoutTestHandler;
+import io.kiw.luxis.web.test.handler.AsyncMapRequest;
 import io.kiw.luxis.web.test.handler.AsyncMapTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncRetryTestHandler;
 import io.kiw.luxis.web.test.handler.AsyncRetryWebSocketRoutes;
@@ -72,7 +73,7 @@ public class AsyncTest {
         final AsyncMapTestHandler handler = new AsyncMapTestHandler();
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/async", Method.POST, state, handler);
+            r.jsonRoute("/async", Method.POST, state, AsyncMapRequest.class, handler);
         });
         handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient luxisTestClient = testClientAndServer.client();
@@ -89,7 +90,7 @@ public class AsyncTest {
     public void shouldSupportCorrelatedAsyncBlockingMap() {
         AsyncBlockingMapTestHandler handler = new AsyncBlockingMapTestHandler();
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/asyncBlocking", Method.POST, state, handler);
+            r.jsonRoute("/asyncBlocking", Method.POST, state, AsyncMapRequest.class, handler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
         handler.evillyReferenceLuxis(testClientAndServer.luxis());
@@ -106,7 +107,7 @@ public class AsyncTest {
         AsyncMapTestHandler handler = new AsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.BAD_REQUEST, new ErrorMessageResponse("async error")));
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/async", Method.POST, state,
+            r.jsonRoute("/async", Method.POST, state, AsyncMapRequest.class,
                     handler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
@@ -124,7 +125,7 @@ public class AsyncTest {
     public void shouldPassInputValueToHandler() {
         AsyncMapTestHandler handler = new AsyncMapTestHandler();
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/async", Method.POST, state, handler);
+            r.jsonRoute("/async", Method.POST, state, AsyncMapRequest.class, handler);
         });
         handler.evillyReferenceLuxis(testClientAndServer.luxis());
         TestClient luxisTestClient = testClientAndServer.client();
@@ -141,7 +142,7 @@ public class AsyncTest {
     @Test
     public void shouldHandleExceptionInCorrelatedAsyncHandler() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/throw", Method.POST, state, new AsyncThrowTestHandler());
+            r.jsonRoute("/throw", Method.POST, state, AsyncMapRequest.class, new AsyncThrowTestHandler());
         });
         TestClient luxisTestClient = testClientAndServer.client();
 
@@ -156,7 +157,7 @@ public class AsyncTest {
     public void shouldWorkWithPipelineStepsBeforeCorrelatedAsync() {
         AsyncWithHttpContextTestHandler jsonHandler = new AsyncWithHttpContextTestHandler();
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/withContext", Method.POST, state, jsonHandler);
+            r.jsonRoute("/withContext", Method.POST, state, AsyncMapRequest.class, jsonHandler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
 
@@ -177,7 +178,7 @@ public class AsyncTest {
     public void shouldHandleStandardClientErrorAndMapToInternalServerError() {
         AsyncMapTestHandler handler = new AsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("not found")));
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/async", Method.POST, state,
+            r.jsonRoute("/async", Method.POST, state, AsyncMapRequest.class,
                     handler);
         });
         TestClient luxisTestClient = testClientAndServer.client();
@@ -194,7 +195,7 @@ public class AsyncTest {
         final AsyncCustomTimeoutTestHandler handler = new AsyncCustomTimeoutTestHandler();
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/customTimeout", Method.POST, state, handler);
+            r.jsonRoute("/customTimeout", Method.POST, state, AsyncMapRequest.class, handler);
         });
 
         if (STUB_MODE.equals(mode)) {
@@ -217,7 +218,7 @@ public class AsyncTest {
         final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().error().error().error().error());
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/customTimeout", Method.POST, state, handler);
+            r.jsonRoute("/customTimeout", Method.POST, state, AsyncMapRequest.class, handler);
         });
 
 
@@ -240,7 +241,7 @@ public class AsyncTest {
         final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().success());
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/retry", Method.POST, state, handler);
+            r.jsonRoute("/retry", Method.POST, state, AsyncMapRequest.class, handler);
         });
 
         final TestClient luxisTestClient = testClientAndServer.client();
@@ -260,7 +261,7 @@ public class AsyncTest {
         final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().error().error().success());
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/retry", Method.POST, state, handler);
+            r.jsonRoute("/retry", Method.POST, state, AsyncMapRequest.class, handler);
         });
 
         final TestClient luxisTestClient = testClientAndServer.client();
@@ -280,7 +281,7 @@ public class AsyncTest {
         final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().error().error().error().success());
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/retry", Method.POST, state, handler);
+            r.jsonRoute("/retry", Method.POST, state, AsyncMapRequest.class, handler);
         });
 
         final TestClient luxisTestClient = testClientAndServer.client();
@@ -300,7 +301,7 @@ public class AsyncTest {
         final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().exception().success());
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/retry", Method.POST, state, handler);
+            r.jsonRoute("/retry", Method.POST, state, AsyncMapRequest.class, handler);
         });
 
         final TestClient luxisTestClient = testClientAndServer.client();
@@ -321,7 +322,7 @@ public class AsyncTest {
         final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().error().exception().error().success());
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/retry", Method.POST, state, handler);
+            r.jsonRoute("/retry", Method.POST, state, AsyncMapRequest.class, handler);
         });
 
         final TestClient luxisTestClient = testClientAndServer.client();
@@ -346,7 +347,7 @@ public class AsyncTest {
                 .exception());
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/retry", Method.POST, state, handler);
+            r.jsonRoute("/retry", Method.POST, state, AsyncMapRequest.class, handler);
         });
 
         final TestClient luxisTestClient = testClientAndServer.client();
@@ -365,7 +366,7 @@ public class AsyncTest {
         final AsyncRetryTestHandler handler = new AsyncRetryTestHandler(counter, new TestRetryBehaviour().exception().error().exception().error());
 
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/retry", Method.POST, state, handler);
+            r.jsonRoute("/retry", Method.POST, state, AsyncMapRequest.class, handler);
         });
 
         final TestClient luxisTestClient = testClientAndServer.client();

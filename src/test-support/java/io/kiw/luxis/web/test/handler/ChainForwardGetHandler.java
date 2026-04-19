@@ -8,7 +8,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class ChainForwardGetHandler extends JsonHandler<Void, SimpleValueResponse, MyApplicationState> {
+public class ChainForwardGetHandler implements JsonHandler<Void, SimpleValueResponse, MyApplicationState> {
 
     private final LuxisHttpClient httpClient;
     private final String targetUrl;

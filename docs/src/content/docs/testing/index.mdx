@@ -23,8 +23,8 @@ Define your routes in a method. This is the same function your production server
 ```java
 public static MyState registerRoutes(RoutesRegister routesRegister) {
     MyState state = new MyState();
-    routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-    routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+    routesRegister.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+    routesRegister.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
     return state;
 }
 ```
@@ -183,7 +183,7 @@ LuxisHttpClient httpClient = StubLuxisHttpClient.create(downstream);
 // Create the upstream service, injecting the HTTP client
 Luxis<UpstreamState> upstream = Luxis.test(r -> {
     UpstreamState state = new UpstreamState();
-    r.jsonRoute("/call-next", Method.POST, state,
+    r.jsonRoute("/call-next", Method.POST, state, HttpClientGetRequest.class,
         new HttpClientCallHandler(httpClient, "http://127.0.0.1:8091"));
     return state;
 });

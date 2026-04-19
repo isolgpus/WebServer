@@ -12,7 +12,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import java.util.concurrent.CompletableFuture;
 
-public class AsyncTimeoutTestHandler extends JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
+public class AsyncTimeoutTestHandler implements JsonHandler<AsyncMapRequest, AsyncMapResponse, MyApplicationState> {
 
     private TestLuxis<?> testLuxis;
 

@@ -7,7 +7,7 @@ import io.kiw.luxis.web.test.MyApplicationState;
 
 import static io.kiw.luxis.web.http.HttpResult.success;
 
-public class BlockingCompleteTestHandler extends JsonHandler<BlockingRequest, BlockingTestResponse, MyApplicationState> {
+public class BlockingCompleteTestHandler implements JsonHandler<BlockingRequest, BlockingTestResponse, MyApplicationState> {
 
     @Override
     public LuxisPipeline<BlockingTestResponse> handle(final HttpStream<BlockingRequest, MyApplicationState> httpStream) {

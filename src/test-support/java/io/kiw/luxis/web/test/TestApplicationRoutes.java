@@ -42,29 +42,29 @@ public final class TestApplicationRoutes {
         routesRegister.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
         routesRegister.jsonFilter("/jwt/filter/*", state, new JwtFilter(jwtProvider));
         routesRegister.jsonFilter("/root/somethingElse/*", state, new TestFilter("otherFilter"));
-        routesRegister.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
-        routesRegister.jsonRoute("/root/filter/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/root/filter/test", Method.GET, state, new GetTestFilterHandler());
-        routesRegister.jsonRoute("/root/filter/test", Method.PUT, state, new TestFilterHandler());
-        routesRegister.jsonRoute("/root/filter/test", Method.DELETE, state, new TestFilterHandler());
-        routesRegister.jsonRoute("/root/filter/test", Method.PATCH, state, new TestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/test", Method.POST, state, TestFilterRequest.class, new TestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+        routesRegister.jsonRoute("/root/filter/test", Method.GET, state, Void.class, new GetTestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/test", Method.PUT, state, TestFilterRequest.class, new TestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/test", Method.DELETE, state, TestFilterRequest.class, new TestFilterHandler());
+        routesRegister.jsonRoute("/root/filter/test", Method.PATCH, state, TestFilterRequest.class, new TestFilterHandler());
 
-        routesRegister.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.PUT, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.DELETE, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.PATCH, state, new PostEchoHandler());
-        routesRegister.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
-        routesRegister.jsonRoute("/echo/:pathExample", Method.GET, state, new GetEchoHandler());
-        routesRegister.jsonRoute("/blocking", Method.POST, state, new BlockingTestHandler());
-        routesRegister.jsonRoute("/failing", Method.POST, state, new FailingTestHandler());
-        routesRegister.jsonRoute("/state", Method.POST, state, new StateTestHandler());
-        routesRegister.jsonRoute("/throw", Method.POST, state, new ThrowTestHandler());
-        routesRegister.jsonRoute("/blockingComplete", Method.POST, state, new BlockingCompleteTestHandler());
-        routesRegister.jsonRoute("/timing", Method.POST, state, new TimeoutTestHandler());
-        routesRegister.jsonRoute("/validate/:userId", Method.POST, state, new ValidationTestHandler());
+        routesRegister.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+        routesRegister.jsonRoute("/echo", Method.PUT, state, EchoRequest.class, new PostEchoHandler());
+        routesRegister.jsonRoute("/echo", Method.DELETE, state, EchoRequest.class, new PostEchoHandler());
+        routesRegister.jsonRoute("/echo", Method.PATCH, state, EchoRequest.class, new PostEchoHandler());
+        routesRegister.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
+        routesRegister.jsonRoute("/echo/:pathExample", Method.GET, state, Void.class, new GetEchoHandler());
+        routesRegister.jsonRoute("/blocking", Method.POST, state, BlockingRequest.class, new BlockingTestHandler());
+        routesRegister.jsonRoute("/failing", Method.POST, state, BlockingRequest.class, new FailingTestHandler());
+        routesRegister.jsonRoute("/state", Method.POST, state, Void.class, new StateTestHandler());
+        routesRegister.jsonRoute("/throw", Method.POST, state, ThrowRequest.class, new ThrowTestHandler());
+        routesRegister.jsonRoute("/blockingComplete", Method.POST, state, BlockingRequest.class, new BlockingCompleteTestHandler());
+        routesRegister.jsonRoute("/timing", Method.POST, state, ThrowRequest.class, new TimeoutTestHandler());
+        routesRegister.jsonRoute("/validate/:userId", Method.POST, state, ValidationRequest.class, new ValidationTestHandler());
         routesRegister.jsonFilter("/protected/*", state, new ErrorFilter());
-        routesRegister.jsonRoute("/protected/resource", Method.GET, state, new GetEchoHandler());
-        routesRegister.jsonRoute("/blockingFailing", Method.POST, state, new BlockingFlatMapFailHandler());
+        routesRegister.jsonRoute("/protected/resource", Method.GET, state, Void.class, new GetEchoHandler());
+        routesRegister.jsonRoute("/blockingFailing", Method.POST, state, BlockingRequest.class, new BlockingFlatMapFailHandler());
         routesRegister.uploadFileRoute("/upload", Method.POST, state, new FileUploaderHandler());
         routesRegister.downloadFileRoute("/download", Method.GET, state, new FileDownloaderHandler(), "text/html; charset=utf-8");
         routesRegister.webSocketRoute("/ws/echo", state, new EchoWebSocketRoutes());
@@ -73,11 +73,11 @@ public final class TestApplicationRoutes {
         routesRegister.webSocketRoute("/ws/flatMapFail", state, new FlatMapFailWebSocketRoutes());
         routesRegister.webSocketRoute("/ws/blockingFlatMapFail", state, new BlockingFlatMapFailWebSocketRoutes());
         routesRegister.webSocketRoute("/ws/throw", state, new ThrowWebSocketRoutes());
-        routesRegister.jsonRoute("/statusCode", Method.POST, state, new StatusCodeTestHandler());
-        routesRegister.jsonRoute("/jwt/protected", Method.GET, state, new JwtProtectedHandler(jwtProvider));
-        routesRegister.jsonRoute("/jwt/filter/test", Method.GET, state, new JwtFilterProtectedHandler());
+        routesRegister.jsonRoute("/statusCode", Method.POST, state, StatusCodeRequest.class, new StatusCodeTestHandler());
+        routesRegister.jsonRoute("/jwt/protected", Method.GET, state, Void.class, new JwtProtectedHandler(jwtProvider));
+        routesRegister.jsonRoute("/jwt/filter/test", Method.GET, state, Void.class, new JwtFilterProtectedHandler());
 
-        routesRegister.jsonRoute("/openapi/echo", Method.POST, state, new PostEchoHandler(),
+        routesRegister.jsonRoute("/openapi/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler(),
                 new RouteConfigBuilder()
                         .openApi()
                         .summary("Echo the input")
@@ -86,19 +86,19 @@ public final class TestApplicationRoutes {
                         .responseDescription("The echoed response")
                         .build()
         );
-        routesRegister.jsonRoute("/openapi/echo/:pathExample", Method.GET, state, new GetEchoHandler(),
+        routesRegister.jsonRoute("/openapi/echo/:pathExample", Method.GET, state, Void.class, new GetEchoHandler(),
                 new RouteConfigBuilder()
                         .openApi()
                         .paramDescription("pathExample", "An example path param")
                         .build()
         );
-        routesRegister.jsonRoute("/openapi/hidden", Method.GET, state, new GetEchoHandler(),
+        routesRegister.jsonRoute("/openapi/hidden", Method.GET, state, Void.class, new GetEchoHandler(),
                 new RouteConfigBuilder()
                         .openApi()
                         .hidden()
                         .build()
         );
-        routesRegister.jsonRoute("/openapi/timeout", Method.POST, state, new PostEchoHandler(),
+        routesRegister.jsonRoute("/openapi/timeout", Method.POST, state, EchoRequest.class, new PostEchoHandler(),
                 new RouteConfigBuilder()
                         .timeout(5000)
                         .openApi()

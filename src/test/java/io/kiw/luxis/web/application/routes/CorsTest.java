@@ -62,8 +62,8 @@ public class CorsTest {
     @Test
     public void shouldReturnCorsHeadersOnPreflightRequest() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 
@@ -83,8 +83,8 @@ public class CorsTest {
     @Test
     public void shouldReturnCorsHeadersOnPreflightForSecondAllowedOrigin() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 
@@ -100,8 +100,8 @@ public class CorsTest {
     @Test
     public void shouldRejectPreflightFromDisallowedOrigin() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 
@@ -117,8 +117,8 @@ public class CorsTest {
     @Test
     public void shouldRejectPreflightWithNoOrigin() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 
@@ -132,8 +132,8 @@ public class CorsTest {
     @Test
     public void shouldAddCorsHeadersToNormalGetResponse() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 
@@ -150,8 +150,8 @@ public class CorsTest {
     @Test
     public void shouldAddCorsHeadersToNormalPostResponse() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 
@@ -168,8 +168,8 @@ public class CorsTest {
     @Test
     public void shouldNotAddCorsHeadersForDisallowedOriginOnNormalRequest() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 
@@ -184,8 +184,8 @@ public class CorsTest {
     @Test
     public void shouldNotAddCorsHeadersWhenNoOriginOnNormalRequest() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 
@@ -203,8 +203,8 @@ public class CorsTest {
                 .allowMethod("GET")
                 .build();
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, wildcardConfig);
         TestClient client = testClientAndServer.client();
 
@@ -231,8 +231,8 @@ public class CorsTest {
                 .allowMethod("GET")
                 .build();
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         }, simpleConfig);
         TestClient client = testClientAndServer.client();
 
@@ -249,8 +249,8 @@ public class CorsTest {
     @Test
     public void shouldNotInterfereWithNormalRequestsWhenNoCorsConfigured() {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
-            r.jsonRoute("/echo", Method.POST, state, new PostEchoHandler());
-            r.jsonRoute("/echo", Method.GET, state, new GetEchoHandler());
+            r.jsonRoute("/echo", Method.POST, state, EchoRequest.class, new PostEchoHandler());
+            r.jsonRoute("/echo", Method.GET, state, Void.class, new GetEchoHandler());
         });
         TestClient client = testClientAndServer.client();
 
@@ -265,7 +265,7 @@ public class CorsTest {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
-            r.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
+            r.jsonRoute("/root/filter/test", Method.POST, state, TestFilterRequest.class, new TestFilterHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 
@@ -283,7 +283,7 @@ public class CorsTest {
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonFilter("/root/*", state, new TestFilter("rootFilter"));
             r.jsonFilter("/root/filter/*", state, new TestFilter("pathFilter"));
-            r.jsonRoute("/root/filter/test", Method.POST, state, new TestFilterHandler());
+            r.jsonRoute("/root/filter/test", Method.POST, state, TestFilterRequest.class, new TestFilterHandler());
         }, defaultCorsConfig);
         TestClient client = testClientAndServer.client();
 

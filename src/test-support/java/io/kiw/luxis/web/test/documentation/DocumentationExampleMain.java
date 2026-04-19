@@ -13,7 +13,7 @@ public final class DocumentationExampleMain {
                 routesRegister -> {
                     final AppState appState = new AppState();
 
-                    routesRegister.jsonRoute("/hello/world", Method.POST, appState, new HelloWorldHandler());
+                    routesRegister.jsonRoute("/hello/world", Method.POST, appState, HelloWorldRequest.class, new HelloWorldHandler());
                     return appState;
                 });
 
