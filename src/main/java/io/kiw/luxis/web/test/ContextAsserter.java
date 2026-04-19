@@ -4,4 +4,8 @@ public interface ContextAsserter {
     void assertInApplicationContext();
 
     void assertInWorkerContext();
+
+    void notInTransaction();
+
+    void inTransaction();
 }

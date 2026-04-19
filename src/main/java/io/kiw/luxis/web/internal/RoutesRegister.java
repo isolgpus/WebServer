@@ -2,6 +2,7 @@ package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.RouteConfigBuilder;
+import io.kiw.luxis.web.TransactionManager;
 import io.kiw.luxis.web.WebSocketRouteConfig;
 import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
 import io.kiw.luxis.web.cors.CorsConfig;
@@ -38,11 +39,21 @@ public class RoutesRegister {
     private final ObjectMapper objectMapper = JacksonUtil.createMapper();
     private final OpenApiCollector openApiCollector = new OpenApiCollector();
     private final PendingAsyncResponses pendingAsyncResponses;
+    private final TransactionManager<?> transactionManager;
 
     public RoutesRegister(final RouterWrapper router, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses) {
+        this(router, executionDispatcher, pendingAsyncResponses, null);
+    }
+
+    public RoutesRegister(final RouterWrapper router, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final TransactionManager<?> transactionManager) {
         this.router = router;
         this.executionDispatcher = executionDispatcher;
         this.pendingAsyncResponses = pendingAsyncResponses;
+        this.transactionManager = transactionManager;
+    }
+
+    public TransactionManager<?> getTransactionManager() {
+        return transactionManager;
     }
 
 
@@ -138,7 +149,7 @@ public class RoutesRegister {
     }
 
     public <APP, RESP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP, RESP> route, final WebSocketRouteConfig config) {
-        final HttpWebSocketRouteHandlerImpl<APP, RESP> handler = new HttpWebSocketRouteHandlerImpl<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses);
+        final HttpWebSocketRouteHandlerImpl<APP, RESP> handler = new HttpWebSocketRouteHandlerImpl<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses, transactionManager);
         router.webSocketRoute(path, handler);
     }
 

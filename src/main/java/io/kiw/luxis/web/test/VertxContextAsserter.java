@@ -17,4 +17,14 @@ public class VertxContextAsserter implements ContextAsserter {
         }
     }
 
+    @Override
+    public void notInTransaction() {
+        throw new UnsupportedOperationException("Transaction assertions not yet implemented");
+    }
+
+    @Override
+    public void inTransaction() {
+        throw new UnsupportedOperationException("Transaction assertions not yet implemented");
+    }
+
 }

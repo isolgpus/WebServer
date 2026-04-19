@@ -1,6 +1,7 @@
 package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.ApplicationRoutesRegister;
+import io.kiw.luxis.web.TransactionManager;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
@@ -21,6 +22,18 @@ public final class VertxRoutesRegistrar {
                                  final Optional<CorsConfig> corsConfig,
                                  final VertxExecutionDispatcher executionDispatcher,
                                  final PendingAsyncResponses pendingAsyncResponses) {
+        return register(router, routesRegisterConsumer, defaultTimeoutMillis, exceptionHandler, maxBodySize, corsConfig, executionDispatcher, pendingAsyncResponses, null);
+    }
+
+    public static <R> R register(final Router router,
+                                 final ApplicationRoutesRegister<R> routesRegisterConsumer,
+                                 final int defaultTimeoutMillis,
+                                 final Consumer<Exception> exceptionHandler,
+                                 final OptionalLong maxBodySize,
+                                 final Optional<CorsConfig> corsConfig,
+                                 final VertxExecutionDispatcher executionDispatcher,
+                                 final PendingAsyncResponses pendingAsyncResponses,
+                                 final TransactionManager<?> transactionManager) {
         final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
@@ -29,7 +42,7 @@ public final class VertxRoutesRegistrar {
         maxBodySize.ifPresent(handler::setBodyLimit);
         router.route().handler(handler);
 
-        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, executionDispatcher, pendingAsyncResponses);
+        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, executionDispatcher, pendingAsyncResponses, transactionManager);
         return routesRegisterConsumer.registerRoutes(routesRegister);
 
     }

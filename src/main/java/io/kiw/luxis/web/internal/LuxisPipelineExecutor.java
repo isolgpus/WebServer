@@ -1,6 +1,7 @@
 package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.TransactionManager;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 
 import java.util.concurrent.CompletableFuture;
@@ -15,13 +16,19 @@ public class LuxisPipelineExecutor<SESSION> {
     private final ExecutionDispatcher executionDispatcher;
     private final PendingAsyncResponses pendingAsyncResponses;
     private final LuxisPipelineHandler<SESSION> handler;
+    private final TransactionManager<?> transactionManager;
 
     public LuxisPipelineExecutor(final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final LuxisPipelineHandler<SESSION> handler) {
+        this(appState, exceptionHandler, executionDispatcher, pendingAsyncResponses, handler, null);
+    }
+
+    public LuxisPipelineExecutor(final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final LuxisPipelineHandler<SESSION> handler, final TransactionManager<?> transactionManager) {
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
         this.executionDispatcher = executionDispatcher;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.handler = handler;
+        this.transactionManager = transactionManager;
     }
 
     @SuppressWarnings("unchecked")
