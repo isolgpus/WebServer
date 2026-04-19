@@ -63,7 +63,7 @@
                 <executions>
                     <execution>
                         <id>checkstyle-check</id>
-                        <phase>validate</phase>
+                        <phase>process-classes</phase>
                         <goals>
                             <goal>check</goal>
                         </goals>
