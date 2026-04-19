@@ -12,11 +12,11 @@ public RequestPipeline<EchoResponse> handle(HttpStream<EchoRequest, MyState> e) 
         // Read from request
         String query = ctx.session().getQueryParam("search");
         String header = ctx.session().getRequestHeader("X-Request-Id");
-        Cookie cookie = ctx.session().getRequestCookie("session");
+        HttpCookie cookie = ctx.session().getRequestCookie("session");
 
         // Write to response
         ctx.session().addResponseHeader("X-Response-Id", "abc");
-        ctx.session().addResponseCookie(new CookieImpl("session", "new-value"));
+        ctx.session().addResponseCookie(new HttpCookie("session", "new-value"));
 
         return HttpResult.success(new EchoResponse(query, header));
     });
