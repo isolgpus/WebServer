@@ -34,7 +34,7 @@ public class WebSocketRoutesRegister<APP, RESP> {
         if (routes.containsKey(typeKey)) {
             throw new IllegalArgumentException("Duplicate type key: " + typeKey);
         }
-        final LuxisStream<IN, APP, RESP, ErrorMessageResponse, WebSocketSession<RESP>> stream = new LuxisStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, httpErr -> httpErr.errorMessageValue());
+        final LuxisStream<IN, APP, RESP, ErrorMessageResponse, WebSocketSession<RESP>> stream = new LuxisStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, (msg, cause) -> msg);
         final LuxisPipeline<?> pipeline = webSocketHandler.handle(stream);
         routes.put(typeKey, new WebSocketRoute<>(messageType, pipeline));
     }

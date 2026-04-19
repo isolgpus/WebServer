@@ -116,7 +116,7 @@ public class AsyncTest {
                 StubRequest.request("/async").body(json().put("value", 5).toString()));
 
         Assert.assertEquals(
-                TestHttpResponse.response(json().put("message", "async error").set("errors", json()).toString()).withStatusCode(400),
+                TestHttpResponse.response(json().put("message", "async error").set("errors", json()).toString()).withStatusCode(500),
                 response);
     }
 
@@ -174,7 +174,7 @@ public class AsyncTest {
     }
 
     @Test
-    public void shouldReturnDifferentErrorStatusCodes() {
+    public void shouldHandleStandardClientErrorAndMapToInternalServerError() {
         AsyncMapTestHandler handler = new AsyncMapTestHandler(value -> HttpResult.error(ErrorStatusCode.NOT_FOUND, new ErrorMessageResponse("not found")));
         testClientAndServer = TestApplicationClientCreator.createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/async", Method.POST, state,
@@ -186,7 +186,7 @@ public class AsyncTest {
         final TestHttpResponse response = luxisTestClient.post(
                 StubRequest.request("/async").body(json().put("value", 1).toString()));
 
-        Assert.assertEquals(404, response.statusCode);
+        Assert.assertEquals(500, response.statusCode);
     }
 
     @Test

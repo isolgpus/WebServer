@@ -2,7 +2,6 @@ package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
-import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.AsyncRouteContext;
 import io.kiw.luxis.web.internal.MapInstruction;
@@ -42,7 +41,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
         if (!instructionChain.isEmpty()) {
             instructionChain.getLast().setNext(e);
         }
-        instructionChain.add((MapInstruction) e);
+        instructionChain.add(e);
     }
 
     protected void appendValidation(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, IN> mapper) {
@@ -126,10 +125,10 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
                 final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
                 pendingAsyncResponses.reportException(
                         cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
-                return Result.error(errorMessageResponseMapper.map(new HttpErrorResponse(new ErrorMessageResponse("Something went wrong"), 500)));
+                return Result.error(errorMessageResponseMapper.map(new ErrorMessageResponse("Something went wrong"), ErrorCause.ASYNC_ERROR));
             });
         };
-        final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlockingAsync(wrapper, false, errorMessageResponseMapper::map);
+        final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlockingAsync(wrapper, false, httpErr -> errorMessageResponseMapper.map(httpErr.errorMessageValue(), ErrorCause.HTTP_CLIENT_ERROR));
         appendInstruction(e);
         return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender);
     }
@@ -170,11 +169,11 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
                 final Throwable cause = throwable instanceof CompletionException ? throwable.getCause() : throwable;
                 pendingAsyncResponses.reportException(
                         cause instanceof Exception ? (Exception) cause : new RuntimeException(cause));
-                return Result.error(errorMessageResponseMapper.map(new HttpErrorResponse(new ErrorMessageResponse("Something went wrong"), 500)));
+                return Result.error(errorMessageResponseMapper.map(new ErrorMessageResponse("Something went wrong"), ErrorCause.ASYNC_ERROR));
             });
         };
         final MapInstruction<IN, OUT, Object, SESSION, ERR> e =
-                MapInstruction.blockingAsync(wrapper, (in, session, par) -> new RestrictedBlockingAsyncRouteContext<>(in, par, errorMessageResponseMapper::map), false);
+                MapInstruction.blockingAsync(wrapper, (in, session, par) -> new RestrictedBlockingAsyncRouteContext<>(in, par, httpErr -> errorMessageResponseMapper.map(httpErr.errorMessageValue(), ErrorCause.HTTP_CLIENT_ERROR)), false);
         appendInstruction(e);
         return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender);
     }

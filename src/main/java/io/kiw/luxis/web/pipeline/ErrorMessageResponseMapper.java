@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.pipeline;
 
-import io.kiw.luxis.web.http.HttpErrorResponse;
+import io.kiw.luxis.web.http.ErrorMessageResponse;
 
 public interface ErrorMessageResponseMapper<ERR> {
-    ERR map(HttpErrorResponse httpErrorResponse);
+    ERR map(ErrorMessageResponse errorMessageResponse, ErrorCause cause);
 }

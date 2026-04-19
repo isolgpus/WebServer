@@ -22,7 +22,14 @@ import java.util.function.Consumer;
 public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorResponse, HttpSession> {
 
     public HttpStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final Ender ender) {
-        super(instructionChain, applicationState, pendingAsyncResponses, httpErr -> httpErr, ender);
+        super(instructionChain, applicationState, pendingAsyncResponses, (msg, cause) -> new HttpErrorResponse(msg, statusFor(cause)), ender);
+    }
+
+    private static ErrorStatusCode statusFor(final ErrorCause cause) {
+        return switch (cause) {
+            case VALIDATION_ERROR -> ErrorStatusCode.UNPROCESSABLE_ENTITY;
+            case ASYNC_ERROR, HTTP_CLIENT_ERROR -> ErrorStatusCode.INTERNAL_SERVER_ERROR;
+        };
     }
 
     public HttpStream<IN, APP> validate(final Consumer<HttpValidator<IN>> config) {
