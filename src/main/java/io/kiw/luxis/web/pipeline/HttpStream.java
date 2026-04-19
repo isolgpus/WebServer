@@ -6,10 +6,8 @@ import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.HttpSession;
-import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
-import io.kiw.luxis.web.internal.RestrictedBlockingRouteContext;
 import io.kiw.luxis.web.internal.RouteContext;
 import io.kiw.luxis.web.internal.ender.Ender;
 import io.kiw.luxis.web.jwt.JwtClaims;
@@ -62,23 +60,4 @@ public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorRes
         return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender);
     }
 
-    @Override
-    public <OUT> LuxisPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP, HttpSession>, HttpErrorResponse, OUT> mapper) {
-        final MapInstruction<IN, OUT, APP, HttpSession, HttpErrorResponse> e = MapInstruction.nonBlocking(mapper, ender != null);
-        appendInstruction(e);
-        return new LuxisPipeline<>(instructionChain, applicationState, ender);
-    }
-
-    @Override
-    public LuxisPipeline<IN> complete() {
-        return complete(ctx -> Result.success(ctx.in()));
-    }
-
-    @Override
-    public <OUT> LuxisPipeline<OUT> blockingComplete(final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, HttpErrorResponse, OUT> mapper) {
-        final MapInstruction<IN, OUT, Object, HttpSession, HttpErrorResponse> e =
-                MapInstruction.blocking(mapper, (in, session) -> new RestrictedBlockingRouteContext<>(in), ender != null);
-        appendInstruction(e);
-        return new LuxisPipeline<>(instructionChain, applicationState, ender);
-    }
 }

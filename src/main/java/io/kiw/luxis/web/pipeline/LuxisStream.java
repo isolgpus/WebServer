@@ -4,13 +4,13 @@ import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.AsyncRouteContext;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RestrictedBlockingAsyncRouteContext;
 import io.kiw.luxis.web.internal.RestrictedBlockingRouteContext;
 import io.kiw.luxis.web.internal.RouteContext;
 import io.kiw.luxis.web.internal.ScheduleType;
-import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.ender.Ender;
 
 import java.util.List;
@@ -179,7 +179,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
     }
 
     public <OUT> LuxisPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, OUT> mapper) {
-        final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, true);
+        final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, ender != null);
         appendInstruction(e);
         return new LuxisPipeline<>(instructionChain, applicationState, true, ender);
     }
@@ -187,7 +187,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
     public LuxisPipeline<IN> complete() {
         final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, IN> mapper =
                 ctx -> Result.success(ctx.in());
-        final MapInstruction<IN, IN, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, true);
+        final MapInstruction<IN, IN, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, ender != null);
         appendInstruction(e);
         return new LuxisPipeline<>(instructionChain, applicationState, true, ender);
     }
@@ -198,7 +198,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
 
     public <OUT> LuxisPipeline<OUT> blockingComplete(final StreamFlatMapper<RestrictedBlockingRouteContext<IN>, ERR, OUT> mapper) {
         final MapInstruction<IN, OUT, Object, SESSION, ERR> e =
-                MapInstruction.blocking(mapper, (in, session) -> new RestrictedBlockingRouteContext<>(in), true);
+                MapInstruction.blocking(mapper, (in, session) -> new RestrictedBlockingRouteContext<>(in), ender != null);
         appendInstruction(e);
         return new LuxisPipeline<>(instructionChain, applicationState, true, ender);
     }
