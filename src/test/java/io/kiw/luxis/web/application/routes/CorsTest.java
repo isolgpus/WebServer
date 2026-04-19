@@ -7,6 +7,8 @@ import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestFilter;
 import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.test.handler.EchoRequest;
+import io.kiw.luxis.web.test.handler.TestFilterRequest;
 import io.kiw.luxis.web.test.handler.GetEchoHandler;
 import io.kiw.luxis.web.test.handler.PostEchoHandler;
 import io.kiw.luxis.web.test.handler.TestFilterHandler;
