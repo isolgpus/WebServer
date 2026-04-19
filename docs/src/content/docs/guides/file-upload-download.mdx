@@ -36,7 +36,7 @@ public class DownloadHandler implements FileDownloadRoute<String, MyState> {
     @Override
     public RequestPipeline<DownloadFileResponse> handle(HttpStream<String, MyState> e) {
         return e.complete(ctx ->
-            Result.success(new DownloadFileResponse(Buffer.buffer("file contents"), "report.csv")));
+            HttpResult.success(new DownloadFileResponse(Buffer.buffer("file contents"), "report.csv")));
     }
 }
 ```

@@ -12,8 +12,8 @@ This pipeline validates input, updates application state, checks a database, wri
 ```java
 return stream
     .validate(v -> {
-        v.jsonField("name", r -> r.name).required().minLength(2);
-        v.jsonField("email", r -> r.email).required().email();
+        v.field("name", r -> r.name).required().minLength(2);
+        v.field("email", r -> r.email).required().email();
     })
     .map(this::updateApplicationState)               // event loop — access app state
     .blockingFlatMap(this::validateAgainstDatabase)  // worker thread — can handle failure case
@@ -83,7 +83,7 @@ Any method with `flat` in the name lets you explicitly handle error cases and co
         return HttpResult.error(ErrorStatusCode.BAD_REQUEST,
             new ErrorMessageResponse("Age must be positive"));
     }
-    return Result.success(ctx.in());
+    return HttpResult.success(ctx.in());
 })
 ```
 
