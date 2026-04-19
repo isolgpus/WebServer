@@ -12,10 +12,12 @@ import io.kiw.luxis.web.internal.RestrictedBlockingRouteContext;
 import io.kiw.luxis.web.internal.RouteContext;
 import io.kiw.luxis.web.internal.ScheduleType;
 import io.kiw.luxis.web.internal.ender.Ender;
+import io.kiw.luxis.web.validation.Validator;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.function.Consumer;
 
 public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
     protected final List<MapInstruction> instructionChain;
@@ -50,8 +52,12 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
         appendInstruction(e);
     }
 
-    public LuxisStream<IN, APP, RESP, ERR, SESSION> validate(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, IN> mapper) {
-        appendValidation(mapper);
+    public LuxisStream<IN, APP, RESP, ERR, SESSION> validate(final Consumer<Validator<IN, ERR>> config) {
+        appendValidation(ctx -> {
+            final Validator<IN, ERR> v = new Validator<>(ctx.in(), "", errorMessageResponseMapper);
+            config.accept(v);
+            return v.toResult();
+        });
         return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender);
     }
 

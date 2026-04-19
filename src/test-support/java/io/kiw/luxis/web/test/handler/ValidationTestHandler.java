@@ -12,7 +12,7 @@ public class ValidationTestHandler extends JsonHandler<ValidationRequest, Valida
     @Override
     public LuxisPipeline<ValidationResponse> handle(final HttpStream<ValidationRequest, MyApplicationState> httpStream) {
         return httpStream
-                .validate(v -> {
+                .validateHttp(v -> {
                     v.field("name", r -> r.name).required().minLength(2);
                     v.field("email", r -> r.email).required().email();
                     v.field("age", r -> r.age).required().min(0).max(150);

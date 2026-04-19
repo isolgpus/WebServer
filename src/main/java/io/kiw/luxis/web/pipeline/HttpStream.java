@@ -30,7 +30,7 @@ public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorRes
         };
     }
 
-    public HttpStream<IN, APP> validate(final Consumer<HttpValidator<IN>> config) {
+    public HttpStream<IN, APP> validateHttp(final Consumer<HttpValidator<IN>> config) {
         appendValidation(ctx -> {
             final HttpValidator<IN> v = new HttpValidator<>(ctx.in(), ctx.session(), "", errorMessageResponseMapper);
             config.accept(v);
