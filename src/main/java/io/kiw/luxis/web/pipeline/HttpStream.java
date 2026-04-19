@@ -1,6 +1,7 @@
 package io.kiw.luxis.web.pipeline;
 
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.TransactionManager;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.http.ErrorStatusCode;
 import io.kiw.luxis.web.http.HttpErrorResponse;
@@ -20,7 +21,11 @@ import java.util.function.Consumer;
 public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorResponse, HttpSession> {
 
     public HttpStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final Ender ender) {
-        super(instructionChain, applicationState, pendingAsyncResponses, (msg, cause) -> new HttpErrorResponse(msg, statusFor(cause)), ender);
+        super(instructionChain, applicationState, pendingAsyncResponses, (msg, cause) -> new HttpErrorResponse(msg, statusFor(cause)), ender, null);
+    }
+
+    public HttpStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final Ender ender, final TransactionManager<?> transactionManager) {
+        super(instructionChain, applicationState, pendingAsyncResponses, (msg, cause) -> new HttpErrorResponse(msg, statusFor(cause)), ender, transactionManager);
     }
 
     private static ErrorStatusCode statusFor(final ErrorCause cause) {
@@ -36,7 +41,7 @@ public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorRes
             config.accept(v);
             return v.toResult();
         });
-        return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender);
+        return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender, transactionManager);
     }
 
     public HttpStream<IN, APP> requireJwt(final JwtProvider jwtProvider) {
@@ -57,7 +62,7 @@ public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorRes
         };
         final MapInstruction<IN, IN, APP, HttpSession, HttpErrorResponse> e = MapInstruction.nonBlocking(mapper, false);
         appendInstruction(e);
-        return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender);
+        return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender, transactionManager);
     }
 
 }

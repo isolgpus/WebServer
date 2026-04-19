@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.pipeline;
 
+import io.kiw.luxis.web.TransactionManager;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.LuxisPipeline;
@@ -15,12 +16,18 @@ public class WebSocketRoutesRegister<APP, RESP> {
     private final APP applicationState;
     private final PendingAsyncResponses pendingAsyncResponses;
     private final Map<Class<?>, String> responseTypeRegistry;
+    private final TransactionManager<?> transactionManager;
 
     public WebSocketRoutesRegister(final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final LinkedHashMap<String, WebSocketRoute<?>> routes, final Map<Class<?>, String> responseTypeRegistry) {
+        this(applicationState, pendingAsyncResponses, routes, responseTypeRegistry, null);
+    }
+
+    public WebSocketRoutesRegister(final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final LinkedHashMap<String, WebSocketRoute<?>> routes, final Map<Class<?>, String> responseTypeRegistry, final TransactionManager<?> transactionManager) {
         this.applicationState = applicationState;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.routes = routes;
         this.responseTypeRegistry = responseTypeRegistry;
+        this.transactionManager = transactionManager;
     }
 
     public <T extends RESP> void registerOutbound(final String typeKey, final Class<T> responseClass) {
@@ -34,7 +41,7 @@ public class WebSocketRoutesRegister<APP, RESP> {
         if (routes.containsKey(typeKey)) {
             throw new IllegalArgumentException("Duplicate type key: " + typeKey);
         }
-        final LuxisStream<IN, APP, RESP, ErrorMessageResponse, WebSocketSession<RESP>> stream = new LuxisStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, (msg, cause) -> msg);
+        final LuxisStream<IN, APP, RESP, ErrorMessageResponse, WebSocketSession<RESP>> stream = new LuxisStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, (msg, cause) -> msg, null, transactionManager);
         final LuxisPipeline<?> pipeline = webSocketHandler.handle(stream);
         routes.put(typeKey, new WebSocketRoute<>(messageType, pipeline));
     }

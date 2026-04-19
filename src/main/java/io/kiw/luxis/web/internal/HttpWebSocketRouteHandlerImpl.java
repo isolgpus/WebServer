@@ -45,7 +45,7 @@ public class HttpWebSocketRouteHandlerImpl<APP, RESP> implements HttpWebSocketRo
         this.config = config;
         this.responseTypeRegistry = new HashMap<>();
         routes = new LinkedHashMap<>();
-        routesRegister = new WebSocketRoutesRegister<>(appState, pendingAsyncResponses, routes, responseTypeRegistry);
+        routesRegister = new WebSocketRoutesRegister<>(appState, pendingAsyncResponses, routes, responseTypeRegistry, transactionManager);
         route.registerRoutes(routesRegister);
         this.executor = new LuxisPipelineExecutor<>(appState, exceptionHandler, executionDispatcher, pendingAsyncResponses, new LuxisPipelineHandler<>() {
             @Override
