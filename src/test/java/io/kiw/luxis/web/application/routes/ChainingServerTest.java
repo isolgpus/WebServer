@@ -4,6 +4,7 @@ import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.http.client.LuxisHttpClient;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.test.handler.HttpClientGetRequest;
 import io.kiw.luxis.web.test.handler.ChainForwardGetHandler;
 import io.kiw.luxis.web.test.handler.HttpClientCallHandler;
 import io.kiw.luxis.web.test.handler.SimpleGetHandler;
