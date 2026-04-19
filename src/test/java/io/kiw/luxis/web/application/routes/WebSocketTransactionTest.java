@@ -88,7 +88,7 @@ public class WebSocketTransactionTest {
     }
 
     @Test
-    public void shouldRollbackWhenSubChainReturnsError() {
+    public void shouldRollbackWhenFlatMapReturnsResultError() {
         final ContextAsserter asserter = createContextAsserter(mode);
         final InMemoryTransactionManager tm = new InMemoryTransactionManager();
 
@@ -111,5 +111,25 @@ public class WebSocketTransactionTest {
 
         final List<String> events = tm.events();
         Assert.assertEquals(Arrays.asList("begin:1", "rollback:1"), events);
+    }
+
+    @Test
+    public void shouldRollbackWhenAsyncMapReturnsFailedFuture() {
+        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+
+        testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
+            r.webSocketRoute("/ws/tx", state, new AsyncMapThrowsTransactionalWebSocketRoutes());
+        }, tm);
+        final TestClient client = testClientAndServer.client();
+
+        ws = client.webSocket(StubRequest.request("/ws/tx"));
+        ws.send("{\"type\":\"echo\",\"payload\":{\"message\":\"hello\"}}");
+
+        ws.onResponses(received -> {
+            Assert.assertEquals(0, received.size());
+            Assert.assertEquals(Arrays.asList("begin:1", "rollback:1"), tm.events());
+            client.assertException("async driver failed");
+            client.assertNoMoreExceptions();
+        });
     }
 }
