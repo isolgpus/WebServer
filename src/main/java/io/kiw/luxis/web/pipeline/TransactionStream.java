@@ -31,7 +31,7 @@ public final class TransactionStream<T, APP, ERR, SESSION> {
         return new TransactionStream<>(steps, onCompletionHooks);
     }
 
-    public <OUT> TransactionStream<OUT, APP, ERR, SESSION> asyncMap(final TransactionAsyncMapper<T, OUT, APP, SESSION> mapper) {
+    public <OUT> TransactionStream<OUT, APP, ERR, SESSION> asyncMap(final TransactionAsyncMapper<T, OUT, APP, ERR, SESSION> mapper) {
         steps.add(TransactionStep.async(mapper));
         return new TransactionStream<>(steps, onCompletionHooks);
     }

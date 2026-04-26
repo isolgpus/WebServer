@@ -181,18 +181,18 @@ public class LuxisPipelineExecutor<SESSION> {
                 runSubChainStep(session, pipeline, instruction, subChain, idx + 1, ok, tx, tm);
             });
         } else {
-            final io.vertx.core.Future<Object> vertxFuture;
+            final io.kiw.luxis.web.http.client.LuxisAsync<Object, ErrorMessageResponse> luxisAsync;
             TransactionStatus.enter();
             try {
-                vertxFuture = step.asyncMapper().handle(ctx);
+                luxisAsync = step.asyncMapper().handle(ctx);
             } catch (final Exception e) {
                 rollback(tm, tx, () -> exceptionHandler.accept(e));
                 return;
             } finally {
                 TransactionStatus.exit();
             }
-            final CompletableFuture<Object> cf = vertxFuture.toCompletionStage().toCompletableFuture();
-            cf.whenComplete((ok, err) -> {
+            final CompletableFuture<Result<ErrorMessageResponse, Object>> cf = luxisAsync.toCompletableFuture();
+            cf.whenComplete((result, err) -> {
                 if (err != null) {
                     final Throwable cause = err instanceof CompletionException ? err.getCause() : err;
                     final Exception ex = cause instanceof Exception ? (Exception) cause : new RuntimeException(cause);
@@ -200,7 +200,9 @@ public class LuxisPipelineExecutor<SESSION> {
                             rollback(tm, tx, () -> exceptionHandler.accept(ex)));
                 } else {
                     executionDispatcher.handleOnApplicationContext(() ->
-                            runSubChainStep(session, pipeline, instruction, subChain, idx + 1, ok, tx, tm));
+                            result.consume(
+                                    errValue -> rollback(tm, tx, () -> handler.handleFailure(session, instruction, errValue)),
+                                    ok -> runSubChainStep(session, pipeline, instruction, subChain, idx + 1, ok, tx, tm)));
                 }
             });
         }

@@ -1,8 +1,8 @@
 package io.kiw.luxis.web.pipeline;
 
-import io.vertx.core.Future;
+import io.kiw.luxis.web.http.client.LuxisAsync;
 
 @FunctionalInterface
-public interface TransactionAsyncMapper<IN, OUT, APP, SESSION> {
-    Future<OUT> handle(TransactionRouteContext<IN, APP, SESSION> ctx);
+public interface TransactionAsyncMapper<IN, OUT, APP, ERR, SESSION> {
+    LuxisAsync<OUT, ERR> handle(TransactionRouteContext<IN, APP, SESSION> ctx);
 }

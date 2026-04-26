@@ -1,12 +1,12 @@
 package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.handler.WebSocketRoutes;
+import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.MyApplicationState;
 import io.kiw.luxis.web.test.handler.TestWebSocketResponse;
 import io.kiw.luxis.web.test.handler.WebSocketEchoRequest;
 import io.kiw.luxis.web.test.handler.WebSocketEchoResponse;
-import io.vertx.core.Future;
 
 public class AsyncMapThrowsTransactionalWebSocketRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {
 
@@ -17,7 +17,7 @@ public class AsyncMapThrowsTransactionalWebSocketRoutes extends WebSocketRoutes<
         routesRegister.registerInbound("echo", WebSocketEchoRequest.class, s ->
                 s.map(ctx -> ctx.in().message)
                         .inTransaction(txStream -> txStream
-                                .<String>asyncMap(ctx -> Future.failedFuture(new RuntimeException("async driver failed")))
+                                .<String>asyncMap(ctx -> LuxisAsync.failed(new RuntimeException("async driver failed")))
                                 .onCompletion(ctx -> ctx.app().setLongValue(99))
                                 .commit())
                         .map(ctx -> new WebSocketEchoResponse(ctx.in()))

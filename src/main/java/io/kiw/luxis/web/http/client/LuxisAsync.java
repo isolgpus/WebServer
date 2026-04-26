@@ -11,8 +11,17 @@ public final class LuxisAsync<T, ERR> {
         this.future = future;
     }
 
-    public static <T> LuxisAsync<T, ?> completed(final T value) {
+    public static <T, ERR> LuxisAsync<T, ERR> completed(final T value) {
         return new LuxisAsync<>(CompletableFuture.completedFuture(Result.success(value)));
+    }
+
+    public static <T, ERR> LuxisAsync<T, ERR> failed(final Throwable throwable) {
+        final CompletableFuture<Result<ERR, T>> future = new CompletableFuture<>();
+        future.completeExceptionally(throwable);
+        return new LuxisAsync<>(future);
+    }
+    public static <T, ERR> LuxisAsync<T, ERR> failed(final ERR failure) {
+        return new LuxisAsync<>(CompletableFuture.completedFuture(Result.error(failure)));
     }
 
     public <R> LuxisAsync<R, ERR> map(final java.util.function.Function<T, R> mapper) {

@@ -2,10 +2,10 @@ package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
+import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.pipeline.WebSocketRoutesRegister;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
-import io.vertx.core.Future;
 
 public class TransactionalWebSocketRoutes extends WebSocketRoutes<MyApplicationState, TestWebSocketResponse> {
 
@@ -31,7 +31,7 @@ public class TransactionalWebSocketRoutes extends WebSocketRoutes<MyApplicationS
                                 })
                                 .asyncMap(ctx -> {
                                     asserter.inTransaction();
-                                    return Future.succeededFuture(ctx.in() + "-updated");
+                                    return LuxisAsync.completed(ctx.in() + "-updated");
                                 })
                                 .flatMap(ctx -> {
                                     asserter.inTransaction();

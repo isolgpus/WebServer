@@ -9,12 +9,12 @@ public final class TransactionStep<IN, OUT, APP, ERR, SESSION> {
 
     private final Kind kind;
     private final StreamFlatMapper<TransactionRouteContext<IN, APP, SESSION>, ERR, OUT> syncMapper;
-    private final TransactionAsyncMapper<IN, OUT, APP, SESSION> asyncMapper;
+    private final TransactionAsyncMapper<IN, OUT, APP, ERR, SESSION> asyncMapper;
 
     private TransactionStep(
             final Kind kind,
             final StreamFlatMapper<TransactionRouteContext<IN, APP, SESSION>, ERR, OUT> syncMapper,
-            final TransactionAsyncMapper<IN, OUT, APP, SESSION> asyncMapper) {
+            final TransactionAsyncMapper<IN, OUT, APP, ERR, SESSION> asyncMapper) {
         this.kind = kind;
         this.syncMapper = syncMapper;
         this.asyncMapper = asyncMapper;
@@ -26,7 +26,7 @@ public final class TransactionStep<IN, OUT, APP, ERR, SESSION> {
     }
 
     public static <IN, OUT, APP, ERR, SESSION> TransactionStep<IN, OUT, APP, ERR, SESSION> async(
-            final TransactionAsyncMapper<IN, OUT, APP, SESSION> mapper) {
+            final TransactionAsyncMapper<IN, OUT, APP, ERR, SESSION> mapper) {
         return new TransactionStep<>(Kind.ASYNC, null, mapper);
     }
 
@@ -38,7 +38,7 @@ public final class TransactionStep<IN, OUT, APP, ERR, SESSION> {
         return syncMapper;
     }
 
-    public TransactionAsyncMapper<IN, OUT, APP, SESSION> asyncMapper() {
+    public TransactionAsyncMapper<IN, OUT, APP, ERR, SESSION> asyncMapper() {
         return asyncMapper;
     }
 }
