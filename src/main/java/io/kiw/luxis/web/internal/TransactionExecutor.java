@@ -101,19 +101,11 @@ public class TransactionExecutor {
                 TransactionStatus.exit();
             }
             final CompletableFuture<Result> cf = luxisAsync.toCompletableFuture();
-            cf.whenComplete((result, err) -> {
-                if (err != null) {
-                    final Throwable cause = err instanceof CompletionException ? err.getCause() : err;
-                    final Exception ex = cause instanceof Exception ? (Exception) cause : new RuntimeException(cause);
-                    executionDispatcher.handleOnApplicationContext(() ->
-                            rollback(tm, tx, exceptionHandler, () -> exceptionHandler.accept(ex)));
-                } else {
-                    executionDispatcher.handleOnApplicationContext(() ->
-                            result.consume(
-                                    errVal -> rollback(tm, tx, exceptionHandler, () -> callbacks.onSubChainError(errVal)),
-                                    ok -> runStep(session, appState, subChain, idx + 1, ok, tx, tm, exceptionHandler, callbacks)));
-                }
-            });
+            final Consumer<Exception> rollbackThenHandle = ex ->
+                    rollback(tm, tx, exceptionHandler, () -> exceptionHandler.accept(ex));
+            executionDispatcher.handleOnApplicationContext(cf, rollbackThenHandle, r ->
+                    r.consume(errVal -> rollback(tm, tx, exceptionHandler, () -> callbacks.onSubChainError(errVal)),
+                            ok -> runStep(session, appState, subChain, idx + 1, ok, tx, tm, exceptionHandler, callbacks)));
         }
     }
 

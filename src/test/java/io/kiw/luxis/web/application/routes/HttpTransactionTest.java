@@ -6,6 +6,7 @@ import io.kiw.luxis.web.test.InMemoryTransactionManager;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
+import io.kiw.luxis.web.test.handler.ChainedAsyncTransactionalHttpHandler;
 import io.kiw.luxis.web.test.handler.EchoRequest;
 import io.kiw.luxis.web.test.handler.TransactionalHttpHandler;
 import org.junit.After;
@@ -310,6 +311,57 @@ public class HttpTransactionTest {
         Assert.assertEquals(
                 Arrays.asList("begin:1", "commit:1", "begin:2", "commit:2"),
                 tm.events());
+        client.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldChainTwoAsyncMapsAndCommit() {
+        final ContextAsserter asserter = createContextAsserter(mode);
+        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+
+        testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new ChainedAsyncTransactionalHttpHandler(asserter));
+        }, tm);
+        final TestClient client = testClientAndServer.client();
+
+        final TestHttpResponse response = client.post(
+                StubRequest.request("/tx").body(json().put("stringExample", "hello").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json()
+                        .put("intExample", 0)
+                        .put("stringExample", "hello-first-between-second")
+                        .putNull("pathExample")
+                        .putNull("queryExample")
+                        .putNull("requestHeaderExample")
+                        .putNull("requestCookieExample")
+                        .toString()),
+                response);
+
+        Assert.assertEquals(
+                Arrays.asList("begin:1", "commit:1", "onCommitted:1"),
+                tm.events());
+        client.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldRollbackWhenSecondChainedAsyncFails() {
+        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+
+        testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new ChainedAsyncSecondFailsTransactionalHttpHandler());
+        }, tm);
+        final TestClient client = testClientAndServer.client();
+
+        final TestHttpResponse response = client.post(
+                StubRequest.request("/tx").body(json().put("stringExample", "hello").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
+                response);
+
+        Assert.assertEquals(Arrays.asList("begin:1", "rollback:1"), tm.events());
+        client.assertException("second async driver failed");
         client.assertNoMoreExceptions();
     }
 }

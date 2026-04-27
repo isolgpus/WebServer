@@ -9,11 +9,11 @@ import io.kiw.luxis.web.test.AsyncTestSupport;
 import io.kiw.luxis.web.test.ContextAsserter;
 import io.kiw.luxis.web.test.MyApplicationState;
 
-public class TransactionalHttpHandler implements JsonHandler<EchoRequest, EchoResponse, MyApplicationState> {
+public class ChainedAsyncTransactionalHttpHandler implements JsonHandler<EchoRequest, EchoResponse, MyApplicationState> {
 
     private final ContextAsserter asserter;
 
-    public TransactionalHttpHandler(final ContextAsserter asserter) {
+    public ChainedAsyncTransactionalHttpHandler(final ContextAsserter asserter) {
         this.asserter = asserter;
     }
 
@@ -24,15 +24,19 @@ public class TransactionalHttpHandler implements JsonHandler<EchoRequest, EchoRe
                     return ctx.in().stringExample;
                 })
                 .inTransaction(tx -> tx
-                        .map(ctx -> {
-                            asserter.inTransaction();
-                            return ctx.in() + "-queried";
-                        })
-                        .peek(ctx -> asserter.inTransaction())
                         .asyncMap(ctx -> {
                             asserter.inTransaction();
-                            return AsyncTestSupport.<String, HttpErrorResponse>completed(ctx.in() + "-updated").map(TransactionResponse::new);
+                            return AsyncTestSupport.<String, HttpErrorResponse>completed(ctx.in() + "-first");
                         })
+                        .map(ctx -> {
+                            asserter.inTransaction();
+                            return ctx.in() + "-between";
+                        })
+                        .asyncMap(ctx -> {
+                            asserter.inTransaction();
+                            return AsyncTestSupport.<String, HttpErrorResponse>completed(ctx.in() + "-second");
+                        })
+                        .peek(ctx -> asserter.inTransaction())
                         .onCompletion(ctx -> {
                             asserter.notInTransaction();
                             ctx.app().setLongValue(99);
@@ -40,10 +44,7 @@ public class TransactionalHttpHandler implements JsonHandler<EchoRequest, EchoRe
                         .commit())
                 .complete(ctx -> {
                     asserter.notInTransaction();
-                    return HttpResult.success(new EchoResponse(0, ctx.in().in, null, null, null, null));
+                    return HttpResult.success(new EchoResponse(0, ctx.in(), null, null, null, null));
                 });
-    }
-
-    private record TransactionResponse(String in) {
     }
 }
