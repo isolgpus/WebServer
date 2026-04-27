@@ -168,4 +168,148 @@ public class HttpTransactionTest {
         client.assertException("sync map failed");
         client.assertNoMoreExceptions();
     }
+
+    @Test
+    public void shouldSurfaceCommitFailureViaExceptionHandler() {
+        final ContextAsserter asserter = createContextAsserter(mode);
+        final InMemoryTransactionManager tm = new InMemoryTransactionManager().failCommits();
+
+        testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new TransactionalHttpHandler(asserter));
+        }, tm);
+        final TestClient client = testClientAndServer.client();
+
+        final TestHttpResponse response = client.post(
+                StubRequest.request("/tx").body(json().put("stringExample", "hello").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
+                response);
+
+        Assert.assertEquals(Arrays.asList("begin:1", "commit:1"), tm.events());
+        client.assertException("commit failed");
+        client.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldSurfaceRollbackFailureViaExceptionHandler() {
+        final ContextAsserter asserter = createContextAsserter(mode);
+        final InMemoryTransactionManager tm = new InMemoryTransactionManager().failRollbacks();
+
+        testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new RollbackOnErrorHttpHandler(asserter));
+        }, tm);
+        final TestClient client = testClientAndServer.client();
+
+        final TestHttpResponse response = client.post(
+                StubRequest.request("/tx").body(json().put("stringExample", "hello").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
+                response);
+
+        Assert.assertEquals(Arrays.asList("begin:1", "rollback:1"), tm.events());
+        client.assertException("rollback failed");
+        client.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldRollbackWhenAsyncMapReturnsTypedError() {
+        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+
+        testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new AsyncMapTypedErrorTransactionalHttpHandler());
+        }, tm);
+        final TestClient client = testClientAndServer.client();
+
+        final TestHttpResponse response = client.post(
+                StubRequest.request("/tx").body(json().put("stringExample", "hello").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json()
+                        .put("message", "async typed error")
+                        .set("errors", json())
+                        .toString()).withStatusCode(400),
+                response);
+
+        Assert.assertEquals(Arrays.asList("begin:1", "rollback:1"), tm.events());
+        client.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldRollbackWhenAsyncMapMapperThrowsSynchronously() {
+        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+
+        testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new AsyncMapSyncThrowTransactionalHttpHandler());
+        }, tm);
+        final TestClient client = testClientAndServer.client();
+
+        final TestHttpResponse response = client.post(
+                StubRequest.request("/tx").body(json().put("stringExample", "hello").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
+                response);
+
+        Assert.assertEquals(Arrays.asList("begin:1", "rollback:1"), tm.events());
+        client.assertException("async mapper threw");
+        client.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldFlowFinalValueIntoOuterStepAfterTransaction() {
+        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+
+        testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new OuterStepAfterTransactionHttpHandler());
+        }, tm);
+        final TestClient client = testClientAndServer.client();
+
+        final TestHttpResponse response = client.post(
+                StubRequest.request("/tx").body(json().put("stringExample", "hello").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json()
+                        .put("intExample", 0)
+                        .put("stringExample", "hello-tx-after")
+                        .putNull("pathExample")
+                        .putNull("queryExample")
+                        .putNull("requestHeaderExample")
+                        .putNull("requestCookieExample")
+                        .toString()),
+                response);
+
+        Assert.assertEquals(Arrays.asList("begin:1", "commit:1"), tm.events());
+        client.assertNoMoreExceptions();
+    }
+
+    @Test
+    public void shouldRunTwoSequentialTransactionsWithinOneRequest() {
+        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+
+        testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
+            r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new TwoTransactionsHttpHandler());
+        }, tm);
+        final TestClient client = testClientAndServer.client();
+
+        final TestHttpResponse response = client.post(
+                StubRequest.request("/tx").body(json().put("stringExample", "hello").toString()));
+
+        Assert.assertEquals(
+                TestHttpResponse.response(json()
+                        .put("intExample", 0)
+                        .put("stringExample", "hello-tx1-tx2")
+                        .putNull("pathExample")
+                        .putNull("queryExample")
+                        .putNull("requestHeaderExample")
+                        .putNull("requestCookieExample")
+                        .toString()),
+                response);
+
+        Assert.assertEquals(
+                Arrays.asList("begin:1", "commit:1", "begin:2", "commit:2"),
+                tm.events());
+        client.assertNoMoreExceptions();
+    }
 }
