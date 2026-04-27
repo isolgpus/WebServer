@@ -15,8 +15,8 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     private final Router router;
     private final int defaultTimeoutMillis;
 
-    public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses) {
-        super(exceptionHandler, pendingAsyncResponses);
+    public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor) {
+        super(exceptionHandler, pendingAsyncResponses, transactionExecutor);
         this.router = router;
         this.defaultTimeoutMillis = defaultTimeoutMillis;
     }
@@ -78,7 +78,9 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
         route.handler(new VertxTimeoutHandler(timeout));
 
         for (final MapInstruction applicationInstruction : flow.getApplicationInstructions()) {
-            if (applicationInstruction.isAsync && applicationInstruction.isBlocking) {
+            if (applicationInstruction.isTransactional) {
+                route.handler(ctx -> handleTransactional(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
+            } else if (applicationInstruction.isAsync && applicationInstruction.isBlocking) {
                 route.blockingHandler(ctx -> handleAsync(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));
             } else if (applicationInstruction.isAsync) {
                 route.handler(ctx -> handleAsync(applicationInstruction, new VertxRequestContextImpl(ctx), flow.getApplicationState(), flow.getEnder()));

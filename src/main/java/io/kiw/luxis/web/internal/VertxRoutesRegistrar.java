@@ -34,7 +34,8 @@ public final class VertxRoutesRegistrar {
                                  final VertxExecutionDispatcher executionDispatcher,
                                  final PendingAsyncResponses pendingAsyncResponses,
                                  final TransactionManager<?> transactionManager) {
-        final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses);
+        final TransactionExecutor transactionExecutor = transactionManager == null ? null : new TransactionExecutor(transactionManager, executionDispatcher);
+        final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses, transactionExecutor);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
         final BodyHandler handler = BodyHandler.create()

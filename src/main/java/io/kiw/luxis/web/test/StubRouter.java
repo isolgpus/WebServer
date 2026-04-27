@@ -8,6 +8,7 @@ import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.RouterWrapper;
+import io.kiw.luxis.web.internal.TransactionExecutor;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -23,8 +24,8 @@ public class StubRouter extends RouterWrapper {
     private OptionalLong maxBodySize = OptionalLong.empty();
     private final List<WebSocketRouteEntry> webSocketRoutes = new ArrayList<>();
 
-    public StubRouter(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses) {
-        super(exceptionHandler, pendingAsyncResponses);
+    public StubRouter(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor) {
+        super(exceptionHandler, pendingAsyncResponses, transactionExecutor);
     }
 
     public void setMaxBodySize(final OptionalLong maxBodySize) {
@@ -83,7 +84,9 @@ public class StubRouter extends RouterWrapper {
                     Thread.currentThread().setName("Application");
                 }
 
-                if (applicationInstruction.isAsync) {
+                if (applicationInstruction.isTransactional) {
+                    this.handleTransactional(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
+                } else if (applicationInstruction.isAsync) {
                     this.handleAsync(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
                 } else {
 

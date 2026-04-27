@@ -18,10 +18,12 @@ public abstract class RouterWrapper {
 
     private final Consumer<Exception> exceptionHandler;
     private final PendingAsyncResponses pendingAsyncResponses;
+    private final TransactionExecutor transactionExecutor;
 
-    public RouterWrapper(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses) {
+    public RouterWrapper(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor) {
         this.exceptionHandler = exceptionHandler;
         this.pendingAsyncResponses = pendingAsyncResponses;
+        this.transactionExecutor = transactionExecutor;
     }
 
     Consumer<Exception> getExceptionHandler() {
@@ -72,8 +74,30 @@ public abstract class RouterWrapper {
         );
     }
 
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public void handleTransactional(final MapInstruction applicationInstruction, final RequestContext requestContext, final Object applicationState, final Ender ender) {
+        if (transactionExecutor == null) {
+            handleException(requestContext, new IllegalStateException(
+                    "Encountered transactional instruction but no TransactionManager is registered."));
+            return;
+        }
+        final HttpSession httpSession = new HttpSession(requestContext);
+        final Consumer<Exception> wrappedExceptionHandler = e -> handleException(requestContext, e);
+        transactionExecutor.execute(httpSession, applicationState, applicationInstruction, requestContext.get("state"), wrappedExceptionHandler, new TransactionExecutor.Callbacks() {
+            @Override
+            public void onSuccess(final Object finalValue) {
+                processResult(Result.success(finalValue), applicationInstruction, requestContext, ender);
+            }
+
+            @Override
+            public void onSubChainError(final Object errValue) {
+                processResult(Result.error((HttpErrorResponse) errValue), applicationInstruction, requestContext, ender);
+            }
+        });
+    }
+
     @SuppressWarnings("IllegalCatch")
-    private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<Object, T, Object, HttpSession, HttpErrorResponse> applicationInstruction, final RequestContext requestContext, final Ender ender) {
+    private <T> void processResult(final Result<HttpErrorResponse, T> result, final MapInstruction<?, T, ?, HttpSession, HttpErrorResponse> applicationInstruction, final RequestContext requestContext, final Ender ender) {
         result.consume(httpErrorResponse -> {
                     requestContext.setStatusCode(httpErrorResponse.statusCode());
                     requestContext.end(this.objectMapper.writeValueAsString(httpErrorResponse.errorMessageValue()));
