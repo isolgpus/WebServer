@@ -45,7 +45,7 @@ public interface Luxis<APP> extends AutoCloseable {
         final APP applicationState = VertxRoutesRegistrar.register(router, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig, executionDispatcher, pendingAsyncResponses, transactionManager);
 
         httpServer.requestHandler(router).listen(webServerConfig.port).toCompletionStage().toCompletableFuture().join();
-        return new VertxLuxis<>(executionDispatcher, applicationState, pendingAsyncResponses, () -> vertx.close().toCompletionStage().toCompletableFuture().join());
+        return new VertxLuxis<>(vertx, executionDispatcher, applicationState, pendingAsyncResponses, () -> vertx.close().toCompletionStage().toCompletableFuture().join());
     }
 
 
@@ -93,5 +93,7 @@ public interface Luxis<APP> extends AutoCloseable {
     <IN> void apply(final IN immutableState, final BiConsumer<IN, APP> applicationStateConsumer);
 
     <T> void handleAsyncResponse(long correlationId, Result<HttpErrorResponse, T> result);
+
+    Vertx getVertx();
 
 }

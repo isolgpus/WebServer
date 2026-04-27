@@ -1,4 +1,4 @@
-package io.kiw.luxis.web;
+   package io.kiw.luxis.web;
 
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.http.HttpErrorResponse;
@@ -6,6 +6,7 @@ import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.test.StubRouter;
 import io.kiw.luxis.web.test.StubTimeoutScheduler;
 import io.kiw.luxis.web.test.TimeInjector;
+import io.vertx.core.Vertx;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -18,6 +19,7 @@ public class TestLuxis<APP> implements Luxis<APP> {
     private final PendingAsyncResponses pendingAsyncResponses;
     private final StubTimeoutScheduler stubTimeoutScheduler;
     private final TimeInjector timeInjector;
+    private volatile Vertx vertx;
 
     @SuppressWarnings("unchecked")
     TestLuxis(final StubRouter router, final APP applicationState, final Consumer<Exception>[] exceptionHandlerRef, final PendingAsyncResponses pendingAsyncResponses, final StubTimeoutScheduler stubTimeoutScheduler, final TimeInjector timeInjector) {
@@ -54,7 +56,19 @@ public class TestLuxis<APP> implements Luxis<APP> {
 
 
     @Override
-    public void close() {
+    public synchronized Vertx getVertx() {
+        if (vertx == null) {
+            vertx = Vertx.vertx();
+        }
+        return vertx;
+    }
+
+    @Override
+    public synchronized void close() {
+        if (vertx != null) {
+            vertx.close().toCompletionStage().toCompletableFuture().join();
+            vertx = null;
+        }
     }
 
     public TimeInjector getTimeInjector() {
