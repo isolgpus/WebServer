@@ -26,7 +26,8 @@ public class TransactionalHttpHandler implements JsonHandler<EchoRequest, EchoRe
                 .inTransaction(txStream -> txStream
                         .asyncPeek(ctx -> {
                             asserter.inTransaction();
-                            return ctx.db().query("select * from users where username = ? FOR UPDATE", row -> null, ctx.in());
+                            return ctx.db().query("select * from users where username = ? FOR UPDATE", row -> null, ctx.in())
+                                    .map(a -> a);
                         })
                         .peek(ctx -> asserter.inTransaction())
                         .asyncPeek(ctx -> {

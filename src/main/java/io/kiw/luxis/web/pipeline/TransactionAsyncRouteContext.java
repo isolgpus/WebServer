@@ -26,7 +26,7 @@ public class TransactionAsyncRouteContext<IN, APP, SESSION, ERR> extends Transac
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public <ROW, KEY> DbAccessor<ROW, KEY> db() {
+    public <ROW, KEY> DbAccessor<ROW, KEY, ERR> db() {
         if (databaseClient == null) {
             return null;
         }

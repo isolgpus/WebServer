@@ -29,7 +29,7 @@ public final class AsyncRouteContext<IN, APP, SESSION, ERR> extends RouteContext
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    public <ROW, KEY> DbAccessor<ROW, KEY> db() {
+    public <ROW, KEY> DbAccessor<ROW, KEY, ERR> db() {
         if (databaseClient == null) {
             return null;
         }
