@@ -3,6 +3,7 @@ package io.kiw.luxis.web.internal;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.cors.CorsConfig;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.http.HttpSession;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpSuccessResponse;
@@ -19,11 +20,17 @@ public abstract class RouterWrapper {
     private final Consumer<Exception> exceptionHandler;
     private final PendingAsyncResponses pendingAsyncResponses;
     private final TransactionExecutor transactionExecutor;
+    private final DatabaseClient<?, ?, ?> databaseClient;
 
     public RouterWrapper(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor) {
+        this(exceptionHandler, pendingAsyncResponses, transactionExecutor, null);
+    }
+
+    public RouterWrapper(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor, final DatabaseClient<?, ?, ?> databaseClient) {
         this.exceptionHandler = exceptionHandler;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.transactionExecutor = transactionExecutor;
+        this.databaseClient = databaseClient;
     }
 
     Consumer<Exception> getExceptionHandler() {
@@ -53,15 +60,16 @@ public abstract class RouterWrapper {
         processResult(result, applicationInstruction, vertxContext, ender);
     }
 
-    protected <T> void handleAsync(final MapInstruction<Object, T, Object, HttpSession, HttpErrorResponse> applicationInstruction, final RequestContext requestContext, final Object applicationState, final Ender ender) {
+    protected <T> CompletableFuture<Result<HttpErrorResponse, T>> handleAsync(final MapInstruction<Object, T, Object, HttpSession, HttpErrorResponse> applicationInstruction, final RequestContext requestContext, final Object applicationState, final Ender ender) {
         final HttpSession httpSession = new HttpSession(requestContext);
         final CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
-            future = applicationInstruction.handleAsync(requestContext.get("state"), httpSession, applicationState, pendingAsyncResponses);
+            future = applicationInstruction.handleAsync(requestContext.get("state"), httpSession, applicationState, pendingAsyncResponses, databaseClient);
         } catch (final Exception e) {
             handleException(requestContext, e);
-            return;
+            return null;
         }
+
 
         future.whenComplete((result, throwable) ->
                 requestContext.runOnContext(() -> {
@@ -72,13 +80,15 @@ public abstract class RouterWrapper {
                     processResult(result, applicationInstruction, requestContext, ender);
                 })
         );
+
+        return future;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public void handleTransactional(final MapInstruction applicationInstruction, final RequestContext requestContext, final Object applicationState, final Ender ender) {
         if (transactionExecutor == null) {
             handleException(requestContext, new IllegalStateException(
-                    "Encountered transactional instruction but no TransactionManager is registered."));
+                    "Encountered transactional instruction but no DatabaseClient is registered."));
             return;
         }
         final HttpSession httpSession = new HttpSession(requestContext);

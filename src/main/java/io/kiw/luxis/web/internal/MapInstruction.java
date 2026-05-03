@@ -1,6 +1,7 @@
 package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.pipeline.StreamAsyncFlatMapper;
 import io.kiw.luxis.web.pipeline.StreamFlatMapper;
@@ -122,9 +123,9 @@ public final class MapInstruction<IN, OUT, APP, SESSION, ERR> {
     }
 
     @SuppressWarnings("unchecked")
-    public CompletableFuture<Result<ERR, OUT>> handleAsync(final IN state, final SESSION session, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses) {
+    public CompletableFuture<Result<ERR, OUT>> handleAsync(final IN state, final SESSION session, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final DatabaseClient<?, ?, ?> databaseClient) {
         if (asyncConsumer != null) {
-            return asyncConsumer.handle(new AsyncRouteContext<>(state, session, applicationState, pendingAsyncResponses, errorMapper));
+            return asyncConsumer.handle(new AsyncRouteContext<>(state, session, applicationState, pendingAsyncResponses, errorMapper, databaseClient));
         } else if (asyncBlockingConsumer != null) {
             return asyncBlockingConsumer.handle(blockingAsyncContextFactory.create(state, session, pendingAsyncResponses));
         }

@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.internal;
 
-import io.kiw.luxis.web.TransactionManager;
 import io.kiw.luxis.web.WebSocketRouteConfig;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.handler.WebSocketRoutes;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 import io.kiw.luxis.web.pipeline.DisconnectSession;
@@ -37,7 +37,7 @@ public class HttpWebSocketRouteHandlerImpl<APP, RESP> implements HttpWebSocketRo
         this(route, objectMapper, appState, exceptionHandler, executionDispatcher, config, pendingAsyncResponses, null);
     }
 
-    public HttpWebSocketRouteHandlerImpl(final WebSocketRoutes<APP, RESP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses, final TransactionManager<?> transactionManager) {
+    public HttpWebSocketRouteHandlerImpl(final WebSocketRoutes<APP, RESP> route, final ObjectMapper objectMapper, final APP appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final WebSocketRouteConfig config, final PendingAsyncResponses pendingAsyncResponses, final DatabaseClient<?, ?, ?> databaseClient) {
         this.route = route;
         this.objectMapper = objectMapper;
         this.appState = appState;
@@ -45,7 +45,7 @@ public class HttpWebSocketRouteHandlerImpl<APP, RESP> implements HttpWebSocketRo
         this.config = config;
         this.responseTypeRegistry = new HashMap<>();
         routes = new LinkedHashMap<>();
-        routesRegister = new WebSocketRoutesRegister<>(appState, pendingAsyncResponses, routes, responseTypeRegistry, transactionManager);
+        routesRegister = new WebSocketRoutesRegister<>(appState, pendingAsyncResponses, routes, responseTypeRegistry, databaseClient);
         route.registerRoutes(routesRegister);
         this.executor = new LuxisPipelineExecutor<>(appState, exceptionHandler, executionDispatcher, pendingAsyncResponses, new LuxisPipelineHandler<>() {
             @Override
@@ -65,7 +65,7 @@ public class HttpWebSocketRouteHandlerImpl<APP, RESP> implements HttpWebSocketRo
             public void sendFinalResponse(final WebSocketSession<?> session, final Object result) {
                 sendFinalEnvelope(session, result);
             }
-        }, transactionManager);
+        }, databaseClient);
     }
 
     @Override

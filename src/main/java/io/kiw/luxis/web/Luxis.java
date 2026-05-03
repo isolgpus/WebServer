@@ -1,6 +1,7 @@
 package io.kiw.luxis.web;
 
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RoutesRegister;
@@ -30,11 +31,11 @@ public interface Luxis<APP> extends AutoCloseable {
         return start(routesRegisterConsumer, webServerConfig, null);
     }
 
-    static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final TransactionManager<?> transactionManager) {
-        return start(routesRegisterConsumer, new WebServiceConfigBuilder().build(), transactionManager);
+    static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final DatabaseClient<?, ?, ?> databaseClient) {
+        return start(routesRegisterConsumer, new WebServiceConfigBuilder().build(), databaseClient);
     }
 
-    static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final WebServerConfig webServerConfig, final TransactionManager<?> transactionManager) {
+    static <APP> Luxis<APP> start(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final WebServerConfig webServerConfig, final DatabaseClient<?, ?, ?> databaseClient) {
         final Vertx vertx = Vertx.vertx();
         final HttpServer httpServer = vertx.createHttpServer();
         final Router router = Router.router(vertx);
@@ -42,7 +43,7 @@ public interface Luxis<APP> extends AutoCloseable {
         final VertxExecutionDispatcher executionDispatcher = new VertxExecutionDispatcher(vertx);
         final VertxTimeoutScheduler timeoutScheduler = new VertxTimeoutScheduler(vertx);
         final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses(timeoutScheduler, webServerConfig.exceptionHandler);
-        final APP applicationState = VertxRoutesRegistrar.register(router, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig, executionDispatcher, pendingAsyncResponses, transactionManager);
+        final APP applicationState = VertxRoutesRegistrar.register(router, routesRegisterConsumer, webServerConfig.defaultTimeoutMillis, webServerConfig.exceptionHandler, webServerConfig.maxBodySize, webServerConfig.corsConfig, executionDispatcher, pendingAsyncResponses, databaseClient);
 
         httpServer.requestHandler(router).listen(webServerConfig.port).toCompletionStage().toCompletableFuture().join();
         return new VertxLuxis<>(vertx, executionDispatcher, applicationState, pendingAsyncResponses, () -> vertx.close().toCompletionStage().toCompletableFuture().join());
@@ -50,20 +51,20 @@ public interface Luxis<APP> extends AutoCloseable {
 
 
     public static <APP> TestLuxis<APP> test(final ApplicationRoutesRegister<APP> routesRegisterConsumer) {
-        return test(routesRegisterConsumer, (TransactionManager<?>) null);
+        return test(routesRegisterConsumer, (DatabaseClient<?, ?, ?>) null);
     }
 
     @SuppressWarnings("unchecked")
-    public static <APP> TestLuxis<APP> test(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final TransactionManager<?> transactionManager) {
+    public static <APP> TestLuxis<APP> test(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final DatabaseClient<?, ?, ?> databaseClient) {
         final Consumer<Exception>[] ref = new Consumer[] {e -> {
         }};
         final TimeInjector timeInjector = new TimeInjector();
         final StubTimeoutScheduler stubTimeoutScheduler = new StubTimeoutScheduler(timeInjector);
         final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses(stubTimeoutScheduler, e -> ref[0].accept(e));
         final StubExecutionDispatcher executionDispatcher = new StubExecutionDispatcher();
-        final TransactionExecutor transactionExecutor = transactionManager == null ? null : new TransactionExecutor(transactionManager, executionDispatcher);
-        final StubRouter router = new StubRouter(e -> ref[0].accept(e), pendingAsyncResponses, transactionExecutor);
-        final RoutesRegister routesRegister = new RoutesRegister(router, executionDispatcher, pendingAsyncResponses, transactionManager);
+        final TransactionExecutor transactionExecutor = databaseClient == null ? null : new TransactionExecutor(databaseClient, executionDispatcher);
+        final StubRouter router = new StubRouter(e -> ref[0].accept(e), pendingAsyncResponses, transactionExecutor, databaseClient);
+        final RoutesRegister routesRegister = new RoutesRegister(router, executionDispatcher, pendingAsyncResponses, databaseClient);
         final APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
         return new TestLuxis<>(router, applicationState, ref, pendingAsyncResponses, stubTimeoutScheduler, timeInjector);
     }
@@ -73,19 +74,19 @@ public interface Luxis<APP> extends AutoCloseable {
     }
 
     @SuppressWarnings("unchecked")
-    public static <APP> TestLuxis<APP> test(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final WebServerConfig webServerConfig, final TransactionManager<?> transactionManager) {
+    public static <APP> TestLuxis<APP> test(final ApplicationRoutesRegister<APP> routesRegisterConsumer, final WebServerConfig webServerConfig, final DatabaseClient<?, ?, ?> databaseClient) {
         final Consumer<Exception>[] ref = new Consumer[] {webServerConfig.exceptionHandler};
         final TimeInjector timeInjector = new TimeInjector();
 
         final StubTimeoutScheduler stubTimeoutScheduler = new StubTimeoutScheduler(timeInjector);
         final PendingAsyncResponses pendingAsyncResponses = new PendingAsyncResponses(stubTimeoutScheduler, e -> ref[0].accept(e));
         final StubExecutionDispatcher executionDispatcher = new StubExecutionDispatcher();
-        final TransactionExecutor transactionExecutor = transactionManager == null ? null : new TransactionExecutor(transactionManager, executionDispatcher);
-        final StubRouter router = new StubRouter(e -> ref[0].accept(e), pendingAsyncResponses, transactionExecutor);
+        final TransactionExecutor transactionExecutor = databaseClient == null ? null : new TransactionExecutor(databaseClient, executionDispatcher);
+        final StubRouter router = new StubRouter(e -> ref[0].accept(e), pendingAsyncResponses, transactionExecutor, databaseClient);
         webServerConfig.corsConfig.ifPresent(router::configureCors);
         router.setMaxBodySize(webServerConfig.maxBodySize);
 
-        final RoutesRegister routesRegister = new RoutesRegister(router, executionDispatcher, pendingAsyncResponses, transactionManager);
+        final RoutesRegister routesRegister = new RoutesRegister(router, executionDispatcher, pendingAsyncResponses, databaseClient);
         final APP applicationState = routesRegisterConsumer.registerRoutes(routesRegister);
         return new TestLuxis<>(router, applicationState, ref, pendingAsyncResponses, stubTimeoutScheduler, timeInjector);
     }

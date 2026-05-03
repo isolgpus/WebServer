@@ -2,8 +2,8 @@ package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.RouteConfigBuilder;
-import io.kiw.luxis.web.TransactionManager;
 import io.kiw.luxis.web.WebSocketRouteConfig;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.WebSocketRouteConfigBuilder;
 import io.kiw.luxis.web.cors.CorsConfig;
 import io.kiw.luxis.web.handler.JsonHandler;
@@ -39,21 +39,21 @@ public class RoutesRegister {
     private final ObjectMapper objectMapper = JacksonUtil.createMapper();
     private final OpenApiCollector openApiCollector = new OpenApiCollector();
     private final PendingAsyncResponses pendingAsyncResponses;
-    private final TransactionManager<?> transactionManager;
+    private final DatabaseClient<?, ?, ?> databaseClient;
 
     public RoutesRegister(final RouterWrapper router, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses) {
         this(router, executionDispatcher, pendingAsyncResponses, null);
     }
 
-    public RoutesRegister(final RouterWrapper router, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final TransactionManager<?> transactionManager) {
+    public RoutesRegister(final RouterWrapper router, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final DatabaseClient<?, ?, ?> databaseClient) {
         this.router = router;
         this.executionDispatcher = executionDispatcher;
         this.pendingAsyncResponses = pendingAsyncResponses;
-        this.transactionManager = transactionManager;
+        this.databaseClient = databaseClient;
     }
 
-    public TransactionManager<?> getTransactionManager() {
-        return transactionManager;
+    public DatabaseClient<?, ?, ?> getDatabaseClient() {
+        return databaseClient;
     }
 
 
@@ -69,7 +69,7 @@ public class RoutesRegister {
     public <IN, OUT, APP> void jsonRoute(final String path, final Method method, final APP applicationState, final Class<IN> requestType, final JsonHandler<IN, OUT, APP> jsonHandler, final RouteConfig routeConfig) {
 
         final ArrayList<MapInstruction> chain = new ArrayList<>();
-        new HttpStream<>(chain, applicationState, pendingAsyncResponses, new JsonEnder(objectMapper), transactionManager)
+        new HttpStream<>(chain, applicationState, pendingAsyncResponses, new JsonEnder(objectMapper), databaseClient)
                 .flatMap(ctx -> {
                     ctx.session().addResponseHeader("Content-Type", "application/json");
 
@@ -85,7 +85,7 @@ public class RoutesRegister {
                     }
                 }).flatMap(ctx -> HttpResult.success(ctx.in()));
 
-        final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, applicationState, pendingAsyncResponses, new JsonEnder(objectMapper), transactionManager);
+        final HttpStream<IN, APP> httpStream = new HttpStream<>(chain, applicationState, pendingAsyncResponses, new JsonEnder(objectMapper), databaseClient);
         final LuxisPipeline<?> flow = jsonHandler.handle(httpStream);
 
         final Type[] typeArgs = TypeResolver.resolveTypeArguments(jsonHandler.getClass(), JsonHandler.class);
@@ -107,12 +107,12 @@ public class RoutesRegister {
 
     public <APP> void jsonFilter(final String path, final APP applicationState, final JsonFilter<APP> jsonFilter, final RouteConfig routeConfig) {
         final ArrayList<MapInstruction> chain = new ArrayList<>();
-        new HttpStream<Void, APP>(chain, applicationState, pendingAsyncResponses, null, transactionManager)
+        new HttpStream<Void, APP>(chain, applicationState, pendingAsyncResponses, null, databaseClient)
                 .map(ctx -> {
                     ctx.session().addResponseHeader("Content-Type", "application/json");
                     return null;
                 });
-        final HttpStream<Void, APP> httpStream = new HttpStream<>(chain, applicationState, pendingAsyncResponses, null, transactionManager);
+        final HttpStream<Void, APP> httpStream = new HttpStream<>(chain, applicationState, pendingAsyncResponses, null, databaseClient);
         final LuxisPipeline<Void> flow = jsonFilter.handle(httpStream);
 
 
@@ -121,7 +121,7 @@ public class RoutesRegister {
 
     public <OUT, APP> void uploadFileRoute(final String path, final Method method, final APP applicationState, final FileUploadRoute<OUT, APP> fileUploaderHandler) {
 
-        final HttpStream<Map<String, HttpBuffer>, APP> httpStream = new HttpStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, new JsonEnder(objectMapper), transactionManager);
+        final HttpStream<Map<String, HttpBuffer>, APP> httpStream = new HttpStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, new JsonEnder(objectMapper), databaseClient);
 
         httpStream.flatMap(ctx -> {
             ctx.session().addResponseHeader("Content-Type", "application/json");
@@ -149,12 +149,12 @@ public class RoutesRegister {
     }
 
     public <APP, RESP> void webSocketRoute(final String path, final APP applicationState, final WebSocketRoutes<APP, RESP> route, final WebSocketRouteConfig config) {
-        final HttpWebSocketRouteHandlerImpl<APP, RESP> handler = new HttpWebSocketRouteHandlerImpl<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses, transactionManager);
+        final HttpWebSocketRouteHandlerImpl<APP, RESP> handler = new HttpWebSocketRouteHandlerImpl<>(route, objectMapper, applicationState, router.getExceptionHandler(), executionDispatcher, config, pendingAsyncResponses, databaseClient);
         router.webSocketRoute(path, handler);
     }
 
     public <IN, APP> void downloadFileRoute(final String path, final Method method, final APP applicationState, final FileDownloadRoute<IN, APP> fileDownloadHandler, final String contentType) {
-        final HttpStream<IN, APP> httpStream = new HttpStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, new FileEnder(), transactionManager);
+        final HttpStream<IN, APP> httpStream = new HttpStream<>(new ArrayList<>(), applicationState, pendingAsyncResponses, new FileEnder(), databaseClient);
 
         httpStream.flatMap(ctx -> {
             ctx.session().addResponseHeader("Content-Type", contentType);

@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.result.Result;
-import io.kiw.luxis.web.TransactionManager;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.http.ErrorMessageResponse;
 
 import java.util.concurrent.CompletableFuture;
@@ -17,18 +17,20 @@ public class LuxisPipelineExecutor<SESSION> {
     private final PendingAsyncResponses pendingAsyncResponses;
     private final LuxisPipelineHandler<SESSION> handler;
     private final TransactionExecutor transactionExecutor;
+    private final DatabaseClient<?, ?, ?> databaseClient;
 
     public LuxisPipelineExecutor(final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final LuxisPipelineHandler<SESSION> handler) {
         this(appState, exceptionHandler, executionDispatcher, pendingAsyncResponses, handler, null);
     }
 
-    public LuxisPipelineExecutor(final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final LuxisPipelineHandler<SESSION> handler, final TransactionManager<?> transactionManager) {
+    public LuxisPipelineExecutor(final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final LuxisPipelineHandler<SESSION> handler, final DatabaseClient<?, ?, ?> databaseClient) {
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
         this.executionDispatcher = executionDispatcher;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.handler = handler;
-        this.transactionExecutor = transactionManager == null ? null : new TransactionExecutor(transactionManager, executionDispatcher);
+        this.databaseClient = databaseClient;
+        this.transactionExecutor = databaseClient == null ? null : new TransactionExecutor(databaseClient, executionDispatcher);
     }
 
     @SuppressWarnings("unchecked")
@@ -54,7 +56,7 @@ public class LuxisPipelineExecutor<SESSION> {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future;
             try {
-                future = instruction.handleAsync(message, session, (APP) appState, pendingAsyncResponses);
+                future = instruction.handleAsync(message, session, (APP) appState, pendingAsyncResponses, databaseClient);
             } catch (final Exception e) {
                 exceptionHandler.accept(e);
                 return;
@@ -120,7 +122,7 @@ public class LuxisPipelineExecutor<SESSION> {
             final IN message) {
         if (transactionExecutor == null) {
             exceptionHandler.accept(new IllegalStateException(
-                    "Encountered transactional instruction but no TransactionManager is registered."));
+                    "Encountered transactional instruction but no DatabaseClient is registered."));
             return;
         }
         transactionExecutor.execute(session, appState, instruction, message, exceptionHandler, new TransactionExecutor.Callbacks() {

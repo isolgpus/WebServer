@@ -2,11 +2,12 @@ package io.kiw.luxis.web.test;
 
 import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.cors.CorsConfig;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.HttpWebSocketRouteHandler;
+import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.MapInstruction;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
-import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.RouterWrapper;
 import io.kiw.luxis.web.internal.TransactionExecutor;
 
@@ -16,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.OptionalLong;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 
 public class StubRouter extends RouterWrapper {
@@ -25,7 +27,11 @@ public class StubRouter extends RouterWrapper {
     private final List<WebSocketRouteEntry> webSocketRoutes = new ArrayList<>();
 
     public StubRouter(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor) {
-        super(exceptionHandler, pendingAsyncResponses, transactionExecutor);
+        this(exceptionHandler, pendingAsyncResponses, transactionExecutor, null);
+    }
+
+    public StubRouter(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor, final DatabaseClient<?, ?, ?> databaseClient) {
+        super(exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient);
     }
 
     public void setMaxBodySize(final OptionalLong maxBodySize) {
@@ -87,7 +93,10 @@ public class StubRouter extends RouterWrapper {
                 if (applicationInstruction.isTransactional) {
                     this.handleTransactional(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
                 } else if (applicationInstruction.isAsync) {
-                    this.handleAsync(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
+                    final CompletableFuture completableFuture = this.handleAsync(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());
+                    if (completableFuture != null) {
+                        completableFuture.join();
+                    }
                 } else {
 
                     this.handle(applicationInstruction, context, flow.getApplicationState(), flow.getEnder());

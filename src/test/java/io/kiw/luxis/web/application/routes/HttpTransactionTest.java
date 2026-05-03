@@ -2,7 +2,7 @@ package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.test.ContextAsserter;
-import io.kiw.luxis.web.test.InMemoryTransactionManager;
+import io.kiw.luxis.web.test.InMemoryDatabaseClient;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestHttpResponse;
@@ -60,7 +60,7 @@ public class HttpTransactionTest {
     @Test
     public void shouldRunTransactionalSubChainAndFireCommitLifecycle() {
         final ContextAsserter asserter = createContextAsserter(mode);
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new TransactionalHttpHandler(asserter));
@@ -73,7 +73,7 @@ public class HttpTransactionTest {
         Assert.assertEquals(
                 TestHttpResponse.response(json()
                         .put("intExample", 0)
-                        .put("stringExample", "hello-queried-updated")
+                        .put("stringExample", "hello-updated")
                         .putNull("pathExample")
                         .putNull("queryExample")
                         .putNull("requestHeaderExample")
@@ -81,14 +81,19 @@ public class HttpTransactionTest {
                         .toString()),
                 response);
 
-        Assert.assertEquals(Arrays.asList("begin:1", "commit:1", "onCommitted:1"), tm.events());
+        Assert.assertEquals(Arrays.asList(
+                "begin:1",
+                "query:1:select * from users where username = ? FOR UPDATE",
+                "update:1:insert into users values (?)",
+                "commit:1",
+                "onCommitted:1"), tm.events());
         client.assertNoMoreExceptions();
     }
 
     @Test
     public void shouldRunIndependentTransactionsForSequentialRequests() {
         final ContextAsserter asserter = createContextAsserter(mode);
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new TransactionalHttpHandler(asserter));
@@ -99,7 +104,17 @@ public class HttpTransactionTest {
         client.post(StubRequest.request("/tx").body(json().put("stringExample", "second").toString()));
 
         Assert.assertEquals(
-                Arrays.asList("begin:1", "commit:1", "onCommitted:1", "begin:2", "commit:2", "onCommitted:2"),
+                Arrays.asList(
+                        "begin:1",
+                        "query:1:select * from users where username = ? FOR UPDATE",
+                        "update:1:insert into users values (?)",
+                        "commit:1",
+                        "onCommitted:1",
+                        "begin:2",
+                        "query:2:select * from users where username = ? FOR UPDATE",
+                        "update:2:insert into users values (?)",
+                        "commit:2",
+                        "onCommitted:2"),
                 tm.events());
         client.assertNoMoreExceptions();
     }
@@ -107,7 +122,7 @@ public class HttpTransactionTest {
     @Test
     public void shouldRollbackWhenFlatMapReturnsResultError() {
         final ContextAsserter asserter = createContextAsserter(mode);
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new RollbackOnErrorHttpHandler(asserter));
@@ -130,7 +145,7 @@ public class HttpTransactionTest {
 
     @Test
     public void shouldRollbackWhenAsyncMapReturnsFailedFuture() {
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new AsyncMapThrowsTransactionalHttpHandler());
@@ -151,7 +166,7 @@ public class HttpTransactionTest {
 
     @Test
     public void shouldRollbackWhenSyncMapThrows() {
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new MapThrowsTransactionalHttpHandler());
@@ -173,7 +188,7 @@ public class HttpTransactionTest {
     @Test
     public void shouldSurfaceCommitFailureViaExceptionHandler() {
         final ContextAsserter asserter = createContextAsserter(mode);
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager().failCommits();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient().failCommits();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new TransactionalHttpHandler(asserter));
@@ -187,7 +202,11 @@ public class HttpTransactionTest {
                 TestHttpResponse.response(json().put("message", "Something went wrong").toString()).withStatusCode(500),
                 response);
 
-        Assert.assertEquals(Arrays.asList("begin:1", "commit:1"), tm.events());
+        Assert.assertEquals(Arrays.asList(
+                "begin:1",
+                "query:1:select * from users where username = ? FOR UPDATE",
+                "update:1:insert into users values (?)",
+                "commit:1"), tm.events());
         client.assertException("commit failed");
         client.assertNoMoreExceptions();
     }
@@ -195,7 +214,7 @@ public class HttpTransactionTest {
     @Test
     public void shouldSurfaceRollbackFailureViaExceptionHandler() {
         final ContextAsserter asserter = createContextAsserter(mode);
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager().failRollbacks();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient().failRollbacks();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new RollbackOnErrorHttpHandler(asserter));
@@ -216,7 +235,7 @@ public class HttpTransactionTest {
 
     @Test
     public void shouldRollbackWhenAsyncMapReturnsTypedError() {
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new AsyncMapTypedErrorTransactionalHttpHandler());
@@ -239,7 +258,7 @@ public class HttpTransactionTest {
 
     @Test
     public void shouldRollbackWhenAsyncMapMapperThrowsSynchronously() {
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new AsyncMapSyncThrowTransactionalHttpHandler());
@@ -260,7 +279,7 @@ public class HttpTransactionTest {
 
     @Test
     public void shouldFlowFinalValueIntoOuterStepAfterTransaction() {
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new OuterStepAfterTransactionHttpHandler());
@@ -287,7 +306,7 @@ public class HttpTransactionTest {
 
     @Test
     public void shouldRunTwoSequentialTransactionsWithinOneRequest() {
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new TwoTransactionsHttpHandler());
@@ -317,7 +336,7 @@ public class HttpTransactionTest {
     @Test
     public void shouldChainTwoAsyncMapsAndCommit() {
         final ContextAsserter asserter = createContextAsserter(mode);
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new ChainedAsyncTransactionalHttpHandler(asserter));
@@ -346,7 +365,7 @@ public class HttpTransactionTest {
 
     @Test
     public void shouldRollbackWhenSecondChainedAsyncFails() {
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/tx", Method.POST, state, EchoRequest.class, new ChainedAsyncSecondFailsTransactionalHttpHandler());

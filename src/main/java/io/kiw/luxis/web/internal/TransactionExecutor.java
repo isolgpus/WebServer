@@ -1,9 +1,10 @@
 package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.result.Result;
-import io.kiw.luxis.web.TransactionManager;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.pipeline.StreamPeeker;
+import io.kiw.luxis.web.pipeline.TransactionAsyncRouteContext;
 import io.kiw.luxis.web.pipeline.TransactionRouteContext;
 
 import java.util.List;
@@ -13,11 +14,11 @@ import java.util.function.Consumer;
 
 public class TransactionExecutor {
 
-    private final TransactionManager<?> transactionManager;
+    private final DatabaseClient<?, ?, ?> databaseClient;
     private final ExecutionDispatcher executionDispatcher;
 
-    public TransactionExecutor(final TransactionManager<?> transactionManager, final ExecutionDispatcher executionDispatcher) {
-        this.transactionManager = transactionManager;
+    public TransactionExecutor(final DatabaseClient<?, ?, ?> databaseClient, final ExecutionDispatcher executionDispatcher) {
+        this.databaseClient = databaseClient;
         this.executionDispatcher = executionDispatcher;
     }
 
@@ -35,12 +36,12 @@ public class TransactionExecutor {
             final Object input,
             final Consumer<Exception> exceptionHandler,
             final Callbacks callbacks) {
-        if (transactionManager == null) {
+        if (databaseClient == null) {
             exceptionHandler.accept(new IllegalStateException(
-                    "Encountered transactional instruction but no TransactionManager is registered."));
+                    "Encountered transactional instruction but no DatabaseClient is registered."));
             return;
         }
-        final TransactionManager tm = (TransactionManager) transactionManager;
+        final DatabaseClient tm = (DatabaseClient) databaseClient;
         final TransactionSubChain subChain = (TransactionSubChain) instruction.transactionSubChain();
 
         final CompletableFuture<Object> beginCf;
@@ -63,7 +64,7 @@ public class TransactionExecutor {
             final int idx,
             final Object current,
             final Object tx,
-            final TransactionManager tm,
+            final DatabaseClient tm,
             final Consumer<Exception> exceptionHandler,
             final Callbacks callbacks) {
         final List<TransactionStep> steps = (List) subChain.steps();
@@ -73,9 +74,10 @@ public class TransactionExecutor {
         }
 
         final TransactionStep step = steps.get(idx);
-        final TransactionRouteContext ctx = new TransactionRouteContext<>(current, appState, session);
 
         if (step.kind() == TransactionStep.Kind.SYNC) {
+            final TransactionRouteContext ctx = new TransactionRouteContext<>(current, appState, session);
+
             final Result result;
             TransactionStatus.enter();
             try {
@@ -91,6 +93,8 @@ public class TransactionExecutor {
                     ok -> runStep(session, appState, subChain, idx + 1, ok, tx, tm, exceptionHandler, callbacks));
         } else {
             final LuxisAsync luxisAsync;
+            final TransactionAsyncRouteContext ctx = new TransactionAsyncRouteContext<>(current, appState, session, databaseClient, tx);
+
             TransactionStatus.enter();
             try {
                 luxisAsync = step.asyncMapper().handle(ctx);
@@ -110,7 +114,7 @@ public class TransactionExecutor {
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
-    private void rollback(final TransactionManager tm, final Object tx, final Consumer<Exception> exceptionHandler, final Runnable afterRollback) {
+    private void rollback(final DatabaseClient tm, final Object tx, final Consumer<Exception> exceptionHandler, final Runnable afterRollback) {
         final CompletableFuture<Void> rollbackCf;
         try {
             rollbackCf = tm.rollback(tx).toCompletionStage().toCompletableFuture();
@@ -129,7 +133,7 @@ public class TransactionExecutor {
             final TransactionSubChain subChain,
             final Object finalValue,
             final Object tx,
-            final TransactionManager tm,
+            final DatabaseClient tm,
             final Consumer<Exception> exceptionHandler,
             final Callbacks callbacks) {
         final CompletableFuture<Void> commitCf;
@@ -150,7 +154,7 @@ public class TransactionExecutor {
             final TransactionSubChain subChain,
             final Object finalValue,
             final Object tx,
-            final TransactionManager tm,
+            final DatabaseClient tm,
             final SESSION session,
             final Object appState,
             final Consumer<Exception> exceptionHandler) {

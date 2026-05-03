@@ -1,7 +1,7 @@
 package io.kiw.luxis.web.application.routes;
 
 import io.kiw.luxis.web.test.ContextAsserter;
-import io.kiw.luxis.web.test.InMemoryTransactionManager;
+import io.kiw.luxis.web.test.InMemoryDatabaseClient;
 import io.kiw.luxis.web.test.StubRequest;
 import io.kiw.luxis.web.test.TestClient;
 import io.kiw.luxis.web.test.TestWebSocketClient;
@@ -62,7 +62,7 @@ public class WebSocketTransactionTest {
     @Test
     public void shouldRunTransactionalSubChainAndFireCommitLifecycle() {
         final ContextAsserter asserter = createContextAsserter(mode);
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/tx", state, new TransactionalWebSocketRoutes(asserter));
@@ -90,7 +90,7 @@ public class WebSocketTransactionTest {
     @Test
     public void shouldRollbackWhenFlatMapReturnsResultError() {
         final ContextAsserter asserter = createContextAsserter(mode);
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/tx", state, new RollbackOnErrorWebSocketRoutes(asserter));
@@ -115,7 +115,7 @@ public class WebSocketTransactionTest {
 
     @Test
     public void shouldRollbackWhenAsyncMapReturnsFailedFuture() {
-        final InMemoryTransactionManager tm = new InMemoryTransactionManager();
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.webSocketRoute("/ws/tx", state, new AsyncMapThrowsTransactionalWebSocketRoutes());

@@ -3,7 +3,7 @@ package io.kiw.luxis.web.application.routes;
 import io.kiw.luxis.web.ApplicationRoutesRegister;
 import io.kiw.luxis.web.Luxis;
 import io.kiw.luxis.web.TestLuxis;
-import io.kiw.luxis.web.TransactionManager;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.WebServerConfig;
 import io.kiw.luxis.web.WebServiceConfigBuilder;
 import io.kiw.luxis.web.cors.CorsConfig;
@@ -88,12 +88,12 @@ public class TestApplicationClientCreator {
         return createTestServerAndClient(mode, registerRoutes, config, null);
     }
 
-    public static TestClientAndServer createTestServerAndClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, TransactionManager<?> transactionManager) {
+    public static TestClientAndServer createTestServerAndClient(String mode, BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, DatabaseClient<?, ?, ?> databaseClient) {
         final WebServiceConfigBuilder webServiceConfigBuilder = new WebServiceConfigBuilder().setPort(8080);
-        return createTestServerAndClient(mode, registerRoutes, webServiceConfigBuilder.build(), transactionManager);
+        return createTestServerAndClient(mode, registerRoutes, webServiceConfigBuilder.build(), databaseClient);
     }
 
-    private static TestClientAndServer createTestServerAndClient(final String mode, final BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, final WebServerConfig config, final TransactionManager<?> transactionManager) {
+    private static TestClientAndServer createTestServerAndClient(final String mode, final BiConsumer<RoutesRegister, MyApplicationState> registerRoutes, final WebServerConfig config, final DatabaseClient<?, ?, ?> databaseClient) {
         MyApplicationState state = new MyApplicationState();
 
         ApplicationRoutesRegister<MyApplicationState> routes = routesRegister -> {
@@ -103,10 +103,10 @@ public class TestApplicationClientCreator {
 
         if (REAL_MODE.equals(mode)) {
 
-            Luxis<MyApplicationState> luxis = Luxis.start(routes, config, transactionManager);
+            Luxis<MyApplicationState> luxis = Luxis.start(routes, config, databaseClient);
             return new TestClientAndServer(new VertxTestClient("127.0.0.1", config.port()), luxis);
         } else {
-            Luxis<MyApplicationState> luxis = Luxis.test(routes, config, transactionManager);
+            Luxis<MyApplicationState> luxis = Luxis.test(routes, config, databaseClient);
             return new TestClientAndServer(new StubTestClient("127.0.0.1", config.port(), luxis), luxis);
         }
 

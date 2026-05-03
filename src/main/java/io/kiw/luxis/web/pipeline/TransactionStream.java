@@ -36,6 +36,15 @@ public final class TransactionStream<T, APP, ERR, SESSION> {
         return new TransactionStream<>(steps, onCompletionHooks);
     }
 
+    public <X> TransactionStream<T, APP, ERR, SESSION> asyncPeek(final TransactionAsyncMapper<T, X, APP, ERR, SESSION> mapper) {
+        final TransactionAsyncMapper<T, T, APP, ERR, SESSION> wrapped = ctx -> {
+            final T input = ctx.in();
+            return mapper.handle(ctx).map(ignore -> input);
+        };
+        steps.add(TransactionStep.async(wrapped));
+        return new TransactionStream<>(steps, onCompletionHooks);
+    }
+
     public TransactionStream<T, APP, ERR, SESSION> peek(final StreamPeeker<TransactionRouteContext<T, APP, SESSION>> peeker) {
         return map(ctx -> {
             peeker.handle(ctx);

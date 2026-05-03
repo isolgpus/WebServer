@@ -2,6 +2,7 @@ package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.RouteConfig;
 import io.kiw.luxis.web.cors.CorsConfig;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.websocket.WebSocketSession;
 import io.vertx.core.http.HttpMethod;
@@ -16,7 +17,11 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     private final int defaultTimeoutMillis;
 
     public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor) {
-        super(exceptionHandler, pendingAsyncResponses, transactionExecutor);
+        this(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses, transactionExecutor, null);
+    }
+
+    public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor, final DatabaseClient<?, ?, ?> databaseClient) {
+        super(exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient);
         this.router = router;
         this.defaultTimeoutMillis = defaultTimeoutMillis;
     }

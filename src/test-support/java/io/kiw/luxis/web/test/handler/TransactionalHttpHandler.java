@@ -1,7 +1,6 @@
 package io.kiw.luxis.web.test.handler;
 
 import io.kiw.luxis.web.handler.JsonHandler;
-import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.pipeline.HttpStream;
@@ -23,15 +22,16 @@ public class TransactionalHttpHandler implements JsonHandler<EchoRequest, EchoRe
                     asserter.notInTransaction();
                     return ctx.in().stringExample;
                 })
-                .inTransaction(tx -> tx
-                        .map(ctx -> {
+                .asyncMap(ctx -> AsyncTestSupport.completed(ctx.in() + "-updated"))
+                .inTransaction(txStream -> txStream
+                        .asyncPeek(ctx -> {
                             asserter.inTransaction();
-                            return ctx.in() + "-queried";
+                            return ctx.db().query("select * from users where username = ? FOR UPDATE", row -> null, ctx.in());
                         })
                         .peek(ctx -> asserter.inTransaction())
-                        .asyncMap(ctx -> {
+                        .asyncPeek(ctx -> {
                             asserter.inTransaction();
-                            return AsyncTestSupport.<String, HttpErrorResponse>completed(ctx.in() + "-updated").map(TransactionResponse::new);
+                            return ctx.db().update("insert into users values (?)", ctx.in());
                         })
                         .onCompletion(ctx -> {
                             asserter.notInTransaction();
@@ -40,10 +40,7 @@ public class TransactionalHttpHandler implements JsonHandler<EchoRequest, EchoRe
                         .commit())
                 .complete(ctx -> {
                     asserter.notInTransaction();
-                    return HttpResult.success(new EchoResponse(0, ctx.in().in, null, null, null, null));
+                    return HttpResult.success(new EchoResponse(0, ctx.in(), null, null, null, null));
                 });
-    }
-
-    private record TransactionResponse(String in) {
     }
 }

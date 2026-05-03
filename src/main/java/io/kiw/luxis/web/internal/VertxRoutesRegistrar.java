@@ -1,8 +1,8 @@
 package io.kiw.luxis.web.internal;
 
 import io.kiw.luxis.web.ApplicationRoutesRegister;
-import io.kiw.luxis.web.TransactionManager;
 import io.kiw.luxis.web.cors.CorsConfig;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
 
@@ -33,9 +33,9 @@ public final class VertxRoutesRegistrar {
                                  final Optional<CorsConfig> corsConfig,
                                  final VertxExecutionDispatcher executionDispatcher,
                                  final PendingAsyncResponses pendingAsyncResponses,
-                                 final TransactionManager<?> transactionManager) {
-        final TransactionExecutor transactionExecutor = transactionManager == null ? null : new TransactionExecutor(transactionManager, executionDispatcher);
-        final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses, transactionExecutor);
+                                 final DatabaseClient<?, ?, ?> databaseClient) {
+        final TransactionExecutor transactionExecutor = databaseClient == null ? null : new TransactionExecutor(databaseClient, executionDispatcher);
+        final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
         final BodyHandler handler = BodyHandler.create()
@@ -43,7 +43,7 @@ public final class VertxRoutesRegistrar {
         maxBodySize.ifPresent(handler::setBodyLimit);
         router.route().handler(handler);
 
-        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, executionDispatcher, pendingAsyncResponses, transactionManager);
+        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, executionDispatcher, pendingAsyncResponses, databaseClient);
         return routesRegisterConsumer.registerRoutes(routesRegister);
 
     }
