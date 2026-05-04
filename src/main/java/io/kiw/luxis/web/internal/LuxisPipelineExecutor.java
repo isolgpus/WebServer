@@ -62,7 +62,7 @@ public class LuxisPipelineExecutor<SESSION> {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future;
             try {
-                future = instruction.handleAsync(message, session, (APP) appState, pendingAsyncResponses, databaseClient, messaging.publisher());
+                future = instruction.handleAsync(message, session, (APP) appState, pendingAsyncResponses, databaseClient, messaging);
             } catch (final Exception e) {
                 exceptionHandler.accept(e);
                 return;

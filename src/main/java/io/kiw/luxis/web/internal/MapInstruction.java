@@ -3,7 +3,6 @@ package io.kiw.luxis.web.internal;
 import io.kiw.luxis.result.Result;
 import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.http.HttpErrorResponse;
-import io.kiw.luxis.web.messaging.Publisher;
 import io.kiw.luxis.web.pipeline.StreamAsyncFlatMapper;
 import io.kiw.luxis.web.pipeline.StreamFlatMapper;
 
@@ -124,9 +123,10 @@ public final class MapInstruction<IN, OUT, APP, SESSION, ERR> {
     }
 
     @SuppressWarnings("unchecked")
-    public CompletableFuture<Result<ERR, OUT>> handleAsync(final IN state, final SESSION session, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final DatabaseClient<?, ?, ?> databaseClient, final Publisher publisher) {
+    public CompletableFuture<Result<ERR, OUT>> handleAsync(final IN state, final SESSION session, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final DatabaseClient<?, ?, ?> databaseClient, final MessagingComponents messaging) {
         if (asyncConsumer != null) {
-            return asyncConsumer.handle(new AsyncRouteContext<>(state, session, applicationState, pendingAsyncResponses, errorMapper, databaseClient, publisher));
+            final MessagingComponents m = messaging != null ? messaging : MessagingComponents.NONE;
+            return asyncConsumer.handle(new AsyncRouteContext<>(state, session, applicationState, pendingAsyncResponses, errorMapper, databaseClient, m.outboxStore(), m.drainer()));
         } else if (asyncBlockingConsumer != null) {
             return asyncBlockingConsumer.handle(blockingAsyncContextFactory.create(state, session, pendingAsyncResponses));
         }

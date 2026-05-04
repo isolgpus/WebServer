@@ -5,7 +5,7 @@ import io.kiw.luxis.web.db.DbAccessor;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.client.CorrelatedAsync;
 import io.kiw.luxis.web.messaging.AsyncPublisher;
-import io.kiw.luxis.web.messaging.Publisher;
+import io.kiw.luxis.web.messaging.OutboxStore;
 
 import java.util.function.Function;
 
@@ -14,22 +14,24 @@ public final class AsyncRouteContext<IN, APP, SESSION, ERR> extends RouteContext
     private final PendingAsyncResponses pendingAsyncResponses;
     private final Function<HttpErrorResponse, ERR> errorMapper;
     private final DatabaseClient<?, ?, ?> databaseClient;
-    private final Publisher publisher;
+    private final OutboxStore<?> outboxStore;
+    private final OutboxDrainer drainer;
 
     public AsyncRouteContext(final IN in, final SESSION session, final APP app, final PendingAsyncResponses pendingAsyncResponses, final Function<HttpErrorResponse, ERR> errorMapper) {
-        this(in, session, app, pendingAsyncResponses, errorMapper, null, null);
+        this(in, session, app, pendingAsyncResponses, errorMapper, null, null, null);
     }
 
     public AsyncRouteContext(final IN in, final SESSION session, final APP app, final PendingAsyncResponses pendingAsyncResponses, final Function<HttpErrorResponse, ERR> errorMapper, final DatabaseClient<?, ?, ?> databaseClient) {
-        this(in, session, app, pendingAsyncResponses, errorMapper, databaseClient, null);
+        this(in, session, app, pendingAsyncResponses, errorMapper, databaseClient, null, null);
     }
 
-    public AsyncRouteContext(final IN in, final SESSION session, final APP app, final PendingAsyncResponses pendingAsyncResponses, final Function<HttpErrorResponse, ERR> errorMapper, final DatabaseClient<?, ?, ?> databaseClient, final Publisher publisher) {
+    public AsyncRouteContext(final IN in, final SESSION session, final APP app, final PendingAsyncResponses pendingAsyncResponses, final Function<HttpErrorResponse, ERR> errorMapper, final DatabaseClient<?, ?, ?> databaseClient, final OutboxStore<?> outboxStore, final OutboxDrainer drainer) {
         super(in, session, app);
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.errorMapper = errorMapper;
         this.databaseClient = databaseClient;
-        this.publisher = publisher;
+        this.outboxStore = outboxStore;
+        this.drainer = drainer;
     }
 
     public <T> CorrelatedAsync<T, ERR> correlated() {
@@ -45,6 +47,6 @@ public final class AsyncRouteContext<IN, APP, SESSION, ERR> extends RouteContext
     }
 
     public AsyncPublisher<ERR> publisher() {
-        return new AsyncPublisher<>(publisher);
+        return new AsyncPublisher<>(outboxStore, databaseClient, drainer);
     }
 }

@@ -92,9 +92,9 @@ public class HttpTransactionalMessagingTest {
 
         Assert.assertEquals(Arrays.asList(
                 "publishBatch:3",
-                "publish:str:order:hello-str",
-                "publish:bytes:order:hello-bytes",
-                "publish:buf:order:hello-buf"), publisher.events());
+                "publish:str:1:order:hello-str",
+                "publish:bytes:2:order:hello-bytes",
+                "publish:buf:3:order:hello-buf"), publisher.events());
 
         client.assertNoMoreExceptions();
     }
@@ -130,12 +130,14 @@ public class HttpTransactionalMessagingTest {
     }
 
     @Test
-    public void shouldDispatchImmediatelyOutsideTransaction() {
+    public void shouldDispatchOutsideTransactionViaOutbox() {
+        final InMemoryDatabaseClient tm = new InMemoryDatabaseClient();
         final InMemoryPublisher publisher = new InMemoryPublisher();
+        final InMemoryOutboxStore outbox = new InMemoryOutboxStore();
 
         testClientAndServer = createTestServerAndClient(mode, (r, state) -> {
             r.jsonRoute("/publish", Method.POST, state, EchoRequest.class, new OutsideTxPublishHandler());
-        }, null, publisher, null);
+        }, tm, publisher, outbox);
         final TestClient client = testClientAndServer.client();
 
         final TestHttpResponse response = client.post(
@@ -144,8 +146,17 @@ public class HttpTransactionalMessagingTest {
         Assert.assertEquals(200, response.statusCode);
 
         Assert.assertEquals(Arrays.asList(
+                "begin:1",
+                "commit:1"), tm.events());
+
+        Assert.assertEquals(Arrays.asList(
+                "append:1:1",
+                "readPending:1",
+                "markBatchSent:1"), outbox.events());
+
+        Assert.assertEquals(Arrays.asList(
                 "publishBatch:1",
-                "publish:str:topic:outside"), publisher.events());
+                "publish:str:1:topic:outside"), publisher.events());
 
         client.assertNoMoreExceptions();
     }

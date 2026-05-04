@@ -70,7 +70,7 @@ public abstract class RouterWrapper {
         final HttpSession httpSession = new HttpSession(requestContext);
         final CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
-            future = applicationInstruction.handleAsync(requestContext.get("state"), httpSession, applicationState, pendingAsyncResponses, databaseClient, messaging.publisher());
+            future = applicationInstruction.handleAsync(requestContext.get("state"), httpSession, applicationState, pendingAsyncResponses, databaseClient, messaging);
         } catch (final Exception e) {
             handleException(requestContext, e);
             return null;

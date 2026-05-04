@@ -1,7 +1,9 @@
 package io.kiw.luxis.web.messaging;
 
 import io.kiw.luxis.result.Result;
+import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.http.client.LuxisAsync;
+import io.kiw.luxis.web.internal.OutboxDrainer;
 import io.vertx.core.Future;
 
 import java.nio.ByteBuffer;
@@ -10,10 +12,14 @@ import java.util.concurrent.CompletableFuture;
 
 public final class AsyncPublisher<ERR> {
 
-    private final Publisher publisher;
+    private final OutboxStore<?> outboxStore;
+    private final DatabaseClient<?, ?, ?> databaseClient;
+    private final OutboxDrainer drainer;
 
-    public AsyncPublisher(final Publisher publisher) {
-        this.publisher = publisher;
+    public AsyncPublisher(final OutboxStore<?> outboxStore, final DatabaseClient<?, ?, ?> databaseClient, final OutboxDrainer drainer) {
+        this.outboxStore = outboxStore;
+        this.databaseClient = databaseClient;
+        this.drainer = drainer;
     }
 
     public LuxisAsync<Void, ERR> publish(final String key, final String message) {
@@ -29,11 +35,25 @@ public final class AsyncPublisher<ERR> {
     }
 
     private LuxisAsync<Void, ERR> dispatch(final OutboxEvent event) {
-        if (publisher == null) {
+        if (outboxStore == null || databaseClient == null) {
             throw new IllegalStateException(
                     "Cannot publish — no Publisher registered at Luxis.start(...) / Luxis.test(...).");
         }
-        return wrap(publisher.publish(List.of(event)));
+        return wrap(appendInOwnTx(event));
+    }
+
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    private Future<Void> appendInOwnTx(final OutboxEvent event) {
+        final DatabaseClient db = databaseClient;
+        final OutboxStore store = outboxStore;
+        return db.begin().compose(tx -> store.append(tx, List.of(event))
+                .compose(v -> db.commit(tx))
+                .onFailure(err -> db.rollback(tx))
+                .onSuccess(v -> {
+                    if (drainer != null) {
+                        drainer.kick();
+                    }
+                }));
     }
 
     private static <ERR> LuxisAsync<Void, ERR> wrap(final Future<Void> future) {

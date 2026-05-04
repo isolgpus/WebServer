@@ -1,6 +1,7 @@
 package io.kiw.luxis.web.test;
 
 import io.kiw.luxis.web.messaging.OutboxEvent;
+import io.kiw.luxis.web.messaging.PendingOutboxEvent;
 import io.kiw.luxis.web.messaging.Publisher;
 import io.vertx.core.Future;
 
@@ -27,22 +28,24 @@ public class InMemoryPublisher implements Publisher {
     }
 
     @Override
-    public Future<Void> publish(final List<OutboxEvent> batch) {
+    public Future<Void> publish(final List<PendingOutboxEvent> batch) {
         if (shouldFail) {
             return Future.failedFuture(new RuntimeException("publish failed"));
         }
         events.add("publishBatch:" + batch.size());
-        for (final OutboxEvent event : batch) {
-            events.add(formatLine(event));
+        for (final PendingOutboxEvent pe : batch) {
+            events.add(formatLine(pe));
         }
         return Future.succeededFuture();
     }
 
-    private static String formatLine(final OutboxEvent event) {
+    private static String formatLine(final PendingOutboxEvent pe) {
+        final OutboxEvent event = pe.event();
+        final long id = pe.id();
         return switch (event.payload()) {
-            case OutboxEvent.Payload.Str s -> "publish:str:" + event.key() + ":" + s.value();
-            case OutboxEvent.Payload.Bytes b -> "publish:bytes:" + event.key() + ":" + new String(b.value(), StandardCharsets.UTF_8);
-            case OutboxEvent.Payload.Buf b -> "publish:buf:" + event.key() + ":" + readBuffer(b.value());
+            case OutboxEvent.Payload.Str s -> "publish:str:" + id + ":" + event.key() + ":" + s.value();
+            case OutboxEvent.Payload.Bytes b -> "publish:bytes:" + id + ":" + event.key() + ":" + new String(b.value(), StandardCharsets.UTF_8);
+            case OutboxEvent.Payload.Buf b -> "publish:buf:" + id + ":" + event.key() + ":" + readBuffer(b.value());
         };
     }
 

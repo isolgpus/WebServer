@@ -6,7 +6,7 @@ description: Publish events transactionally via an outbox, or fire-and-forget ou
 Luxis supports event publishing with two modes that share the same call site:
 
 - **Inside `inTransaction`**, `ctx.publisher().publish(...)` is **void**. Events are buffered, batch-inserted into your outbox table immediately before commit (in the same transaction as your business writes), and dispatched after commit succeeds. If the outbox insert fails, the whole transaction rolls back.
-- **Outside a transaction**, `ctx.publisher().publish(...)` returns `LuxisAsync<Void, ERR>` and dispatches via your `Publisher` immediately.
+- **Outside a transaction**, `ctx.publisher().publish(...)` returns `LuxisAsync<Void, ERR>`. Luxis opens its own short-lived transaction, appends the event to your `OutboxStore`, commits, then kicks the drainer. The returned future resolves once the row is durably appended; broker delivery happens on the drain pass.
 
 The drainer that reads the outbox and pushes to your broker is **owned by Luxis** — you provide the `OutboxStore` (how to read/append/mark) and `Publisher` (how to send).
 
@@ -35,7 +35,7 @@ stream.<Void>asyncMap(ctx ->
 .complete(...);
 ```
 
-Same call shape; this version returns `LuxisAsync<Void, ERR>` so you can chain or await.
+Same call shape; this version returns `LuxisAsync<Void, ERR>` so you can chain or await. The returned future completes when the outbox row is committed — not when the broker accepts — so delivery is at-least-once just like the transactional path.
 
 ## SPIs
 
@@ -43,13 +43,15 @@ Same call shape; this version returns `LuxisAsync<Void, ERR>` so you can chain o
 
 ```java
 public interface Publisher {
-    Future<Void> publish(List<OutboxEvent> events);
+    Future<Void> publish(List<PendingOutboxEvent> events);
 }
 ```
 
+Each `PendingOutboxEvent` is `(long id, OutboxEvent event)`. The `id` is the persisted outbox row id — propagate it to your broker as a stable dedup key (e.g. a Kafka header `x-luxis-event-id`) so consumers can drop duplicates produced when a drain pass retries the whole batch.
+
 Treated as **all-or-nothing**: if the returned future fails, Luxis assumes the entire batch failed and retries the whole batch on the next drain pass. Implementations should fail the future on any partial failure rather than reporting "some sent". Inside the batch, each `OutboxEvent` carries a sealed `Payload` — `Str`, `Bytes`, or `Buf` — so a single batch can mix payload types; the implementation matches on the variant to dispatch each event.
 
-The non-transactional `ctx.publisher().publish("key", value)` overloads (`String`, `byte[]`, `ByteBuffer`) wrap into a single-element batch under the hood.
+The non-transactional `ctx.publisher().publish("key", value)` overloads (`String`, `byte[]`, `ByteBuffer`) append a single-row batch through the outbox; the `Publisher` always sees events with real persisted ids regardless of which call site emitted them.
 
 ### OutboxStore
 
@@ -99,8 +101,8 @@ If you don't register a `Publisher` + `OutboxStore`, calls to `ctx.publisher().p
 
 | When | What happens |
 |---|---|
-| `Publisher.publish` throws (sync) outside tx | Surfaces as `LuxisAsync` failure to the caller. |
-| `Publisher.publish` returns failed `Future` outside tx | Same — caller sees the `Future` failure. |
+| `OutboxStore.append` / `DatabaseClient.commit` fails on the non-tx path | Surfaces as `LuxisAsync` failure to the caller; transaction is rolled back. |
+| `Publisher.publish` fails outside tx | Caller does not see this directly — it occurs on the drainer pass after `LuxisAsync` has already completed. The exception is forwarded to the configured handler and the batch is retried. |
 | `ctx.publisher()` inside tx with no `OutboxStore` registered | Sub-chain throws `IllegalStateException` → rollback → `exceptionHandler` invoked. |
 | `OutboxStore.append` fails | Rollback → `exceptionHandler` invoked. |
 | `Publisher.publish` fails during a drain pass | Whole batch stays pending; next tick retries the entire batch. Exception forwarded to the configured handler. |

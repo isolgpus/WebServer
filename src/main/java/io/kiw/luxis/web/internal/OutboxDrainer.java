@@ -1,6 +1,5 @@
 package io.kiw.luxis.web.internal;
 
-import io.kiw.luxis.web.messaging.OutboxEvent;
 import io.kiw.luxis.web.messaging.OutboxStore;
 import io.kiw.luxis.web.messaging.PendingOutboxEvent;
 import io.kiw.luxis.web.messaging.Publisher;
@@ -75,15 +74,13 @@ public final class OutboxDrainer {
     }
 
     private void dispatchBatch(final List<PendingOutboxEvent> pending, final Runnable done) {
-        final List<OutboxEvent> events = new ArrayList<>(pending.size());
         final List<Long> ids = new ArrayList<>(pending.size());
         for (final PendingOutboxEvent pe : pending) {
-            events.add(pe.event());
             ids.add(pe.id());
         }
         final Future<Void> sent;
         try {
-            sent = publisher.publish(events);
+            sent = publisher.publish(pending);
         } catch (final Exception e) {
             exceptionHandler.accept(e);
             done.run();
