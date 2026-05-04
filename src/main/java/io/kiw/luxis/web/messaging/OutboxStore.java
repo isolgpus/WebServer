@@ -26,7 +26,7 @@ public interface OutboxStore<TX> {
 
     /**
      * Return false to disable the Luxis-owned drainer. {@link #append} still runs pre-commit,
-     * but Luxis will not call {@link #readPending} or {@link #markSent} — you are responsible
+     * but Luxis will not call {@link #readPending} or {@link #markBatchSent} — you are responsible
      * for reading and dispatching events yourself (e.g. Debezium, a separate worker process).
      */
     default boolean drainerEnabled() {
