@@ -21,16 +21,22 @@ public abstract class RouterWrapper {
     private final PendingAsyncResponses pendingAsyncResponses;
     private final TransactionExecutor transactionExecutor;
     private final DatabaseClient<?, ?, ?> databaseClient;
+    private final MessagingComponents messaging;
 
     public RouterWrapper(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor) {
-        this(exceptionHandler, pendingAsyncResponses, transactionExecutor, null);
+        this(exceptionHandler, pendingAsyncResponses, transactionExecutor, null, MessagingComponents.NONE);
     }
 
     public RouterWrapper(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor, final DatabaseClient<?, ?, ?> databaseClient) {
+        this(exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient, MessagingComponents.NONE);
+    }
+
+    public RouterWrapper(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor, final DatabaseClient<?, ?, ?> databaseClient, final MessagingComponents messaging) {
         this.exceptionHandler = exceptionHandler;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.transactionExecutor = transactionExecutor;
         this.databaseClient = databaseClient;
+        this.messaging = messaging != null ? messaging : MessagingComponents.NONE;
     }
 
     Consumer<Exception> getExceptionHandler() {
@@ -64,7 +70,7 @@ public abstract class RouterWrapper {
         final HttpSession httpSession = new HttpSession(requestContext);
         final CompletableFuture<Result<HttpErrorResponse, T>> future;
         try {
-            future = applicationInstruction.handleAsync(requestContext.get("state"), httpSession, applicationState, pendingAsyncResponses, databaseClient);
+            future = applicationInstruction.handleAsync(requestContext.get("state"), httpSession, applicationState, pendingAsyncResponses, databaseClient, messaging.publisher());
         } catch (final Exception e) {
             handleException(requestContext, e);
             return null;

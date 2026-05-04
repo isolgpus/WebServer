@@ -7,6 +7,7 @@ import io.kiw.luxis.web.http.Method;
 import io.kiw.luxis.web.internal.HttpWebSocketRouteHandler;
 import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.MapInstruction;
+import io.kiw.luxis.web.internal.MessagingComponents;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RouterWrapper;
 import io.kiw.luxis.web.internal.TransactionExecutor;
@@ -27,11 +28,15 @@ public class StubRouter extends RouterWrapper {
     private final List<WebSocketRouteEntry> webSocketRoutes = new ArrayList<>();
 
     public StubRouter(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor) {
-        this(exceptionHandler, pendingAsyncResponses, transactionExecutor, null);
+        this(exceptionHandler, pendingAsyncResponses, transactionExecutor, null, MessagingComponents.NONE);
     }
 
     public StubRouter(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor, final DatabaseClient<?, ?, ?> databaseClient) {
-        super(exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient);
+        this(exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient, MessagingComponents.NONE);
+    }
+
+    public StubRouter(final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor, final DatabaseClient<?, ?, ?> databaseClient, final MessagingComponents messaging) {
+        super(exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient, messaging);
     }
 
     public void setMaxBodySize(final OptionalLong maxBodySize) {

@@ -18,19 +18,25 @@ public class LuxisPipelineExecutor<SESSION> {
     private final LuxisPipelineHandler<SESSION> handler;
     private final TransactionExecutor transactionExecutor;
     private final DatabaseClient<?, ?, ?> databaseClient;
+    private final MessagingComponents messaging;
 
     public LuxisPipelineExecutor(final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final LuxisPipelineHandler<SESSION> handler) {
-        this(appState, exceptionHandler, executionDispatcher, pendingAsyncResponses, handler, null);
+        this(appState, exceptionHandler, executionDispatcher, pendingAsyncResponses, handler, null, MessagingComponents.NONE);
     }
 
     public LuxisPipelineExecutor(final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final LuxisPipelineHandler<SESSION> handler, final DatabaseClient<?, ?, ?> databaseClient) {
+        this(appState, exceptionHandler, executionDispatcher, pendingAsyncResponses, handler, databaseClient, MessagingComponents.NONE);
+    }
+
+    public LuxisPipelineExecutor(final Object appState, final Consumer<Exception> exceptionHandler, final ExecutionDispatcher executionDispatcher, final PendingAsyncResponses pendingAsyncResponses, final LuxisPipelineHandler<SESSION> handler, final DatabaseClient<?, ?, ?> databaseClient, final MessagingComponents messaging) {
         this.appState = appState;
         this.exceptionHandler = exceptionHandler;
         this.executionDispatcher = executionDispatcher;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.handler = handler;
         this.databaseClient = databaseClient;
-        this.transactionExecutor = databaseClient == null ? null : new TransactionExecutor(databaseClient, executionDispatcher);
+        this.messaging = messaging != null ? messaging : MessagingComponents.NONE;
+        this.transactionExecutor = databaseClient == null ? null : new TransactionExecutor(databaseClient, executionDispatcher, this.messaging);
     }
 
     @SuppressWarnings("unchecked")
@@ -56,7 +62,7 @@ public class LuxisPipelineExecutor<SESSION> {
         if (instruction.isAsync) {
             final CompletableFuture<Result<ErrorMessageResponse, OUT>> future;
             try {
-                future = instruction.handleAsync(message, session, (APP) appState, pendingAsyncResponses, databaseClient);
+                future = instruction.handleAsync(message, session, (APP) appState, pendingAsyncResponses, databaseClient, messaging.publisher());
             } catch (final Exception e) {
                 exceptionHandler.accept(e);
                 return;

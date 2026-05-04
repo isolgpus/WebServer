@@ -4,6 +4,8 @@ import io.kiw.luxis.web.db.DatabaseClient;
 import io.kiw.luxis.web.db.DbAccessor;
 import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.client.CorrelatedAsync;
+import io.kiw.luxis.web.messaging.AsyncPublisher;
+import io.kiw.luxis.web.messaging.Publisher;
 
 import java.util.function.Function;
 
@@ -12,16 +14,22 @@ public final class AsyncRouteContext<IN, APP, SESSION, ERR> extends RouteContext
     private final PendingAsyncResponses pendingAsyncResponses;
     private final Function<HttpErrorResponse, ERR> errorMapper;
     private final DatabaseClient<?, ?, ?> databaseClient;
+    private final Publisher publisher;
 
     public AsyncRouteContext(final IN in, final SESSION session, final APP app, final PendingAsyncResponses pendingAsyncResponses, final Function<HttpErrorResponse, ERR> errorMapper) {
-        this(in, session, app, pendingAsyncResponses, errorMapper, null);
+        this(in, session, app, pendingAsyncResponses, errorMapper, null, null);
     }
 
     public AsyncRouteContext(final IN in, final SESSION session, final APP app, final PendingAsyncResponses pendingAsyncResponses, final Function<HttpErrorResponse, ERR> errorMapper, final DatabaseClient<?, ?, ?> databaseClient) {
+        this(in, session, app, pendingAsyncResponses, errorMapper, databaseClient, null);
+    }
+
+    public AsyncRouteContext(final IN in, final SESSION session, final APP app, final PendingAsyncResponses pendingAsyncResponses, final Function<HttpErrorResponse, ERR> errorMapper, final DatabaseClient<?, ?, ?> databaseClient, final Publisher publisher) {
         super(in, session, app);
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.errorMapper = errorMapper;
         this.databaseClient = databaseClient;
+        this.publisher = publisher;
     }
 
     public <T> CorrelatedAsync<T, ERR> correlated() {
@@ -34,5 +42,9 @@ public final class AsyncRouteContext<IN, APP, SESSION, ERR> extends RouteContext
             return null;
         }
         return new DbAccessor<>((DatabaseClient) databaseClient, null);
+    }
+
+    public AsyncPublisher<ERR> publisher() {
+        return new AsyncPublisher<>(publisher);
     }
 }

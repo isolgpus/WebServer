@@ -8,6 +8,7 @@ import io.kiw.luxis.web.http.HttpErrorResponse;
 import io.kiw.luxis.web.http.HttpResult;
 import io.kiw.luxis.web.http.HttpSession;
 import io.kiw.luxis.web.internal.MapInstruction;
+import io.kiw.luxis.web.internal.MessagingComponents;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RouteContext;
 import io.kiw.luxis.web.internal.ender.Ender;
@@ -21,11 +22,15 @@ import java.util.function.Consumer;
 public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorResponse, HttpSession> {
 
     public HttpStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final Ender ender) {
-        super(instructionChain, applicationState, pendingAsyncResponses, (msg, cause) -> new HttpErrorResponse(msg, statusFor(cause)), ender, null);
+        super(instructionChain, applicationState, pendingAsyncResponses, (msg, cause) -> new HttpErrorResponse(msg, statusFor(cause)), ender, null, MessagingComponents.NONE);
     }
 
     public HttpStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final Ender ender, final DatabaseClient<?, ?, ?> databaseClient) {
-        super(instructionChain, applicationState, pendingAsyncResponses, (msg, cause) -> new HttpErrorResponse(msg, statusFor(cause)), ender, databaseClient);
+        super(instructionChain, applicationState, pendingAsyncResponses, (msg, cause) -> new HttpErrorResponse(msg, statusFor(cause)), ender, databaseClient, MessagingComponents.NONE);
+    }
+
+    public HttpStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final Ender ender, final DatabaseClient<?, ?, ?> databaseClient, final MessagingComponents messaging) {
+        super(instructionChain, applicationState, pendingAsyncResponses, (msg, cause) -> new HttpErrorResponse(msg, statusFor(cause)), ender, databaseClient, messaging);
     }
 
     private static ErrorStatusCode statusFor(final ErrorCause cause) {
@@ -41,7 +46,7 @@ public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorRes
             config.accept(v);
             return v.toResult();
         });
-        return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender, databaseClient);
+        return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender, databaseClient, messaging);
     }
 
     public HttpStream<IN, APP> requireJwt(final JwtProvider jwtProvider) {
@@ -62,7 +67,7 @@ public class HttpStream<IN, APP> extends LuxisStream<IN, APP, Void, HttpErrorRes
         };
         final MapInstruction<IN, IN, APP, HttpSession, HttpErrorResponse> e = MapInstruction.nonBlocking(mapper, false);
         appendInstruction(e);
-        return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender, databaseClient);
+        return new HttpStream<>(instructionChain, applicationState, pendingAsyncResponses, ender, databaseClient, messaging);
     }
 
 }

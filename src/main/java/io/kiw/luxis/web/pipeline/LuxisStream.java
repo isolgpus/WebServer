@@ -7,6 +7,7 @@ import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.kiw.luxis.web.internal.AsyncRouteContext;
 import io.kiw.luxis.web.internal.LuxisPipeline;
 import io.kiw.luxis.web.internal.MapInstruction;
+import io.kiw.luxis.web.internal.MessagingComponents;
 import io.kiw.luxis.web.internal.PendingAsyncResponses;
 import io.kiw.luxis.web.internal.RestrictedBlockingAsyncRouteContext;
 import io.kiw.luxis.web.internal.RestrictedBlockingRouteContext;
@@ -28,22 +29,28 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
     protected final ErrorMessageResponseMapper<ERR> errorMessageResponseMapper;
     protected final Ender ender;
     protected final DatabaseClient<?, ?, ?> databaseClient;
+    protected final MessagingComponents messaging;
 
     public LuxisStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final ErrorMessageResponseMapper<ERR> errorMessageResponseMapper) {
-        this(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, null, null);
+        this(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, null, null, MessagingComponents.NONE);
     }
 
     public LuxisStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final ErrorMessageResponseMapper<ERR> errorMessageResponseMapper, final Ender ender) {
-        this(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, null);
+        this(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, null, MessagingComponents.NONE);
     }
 
     public LuxisStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final ErrorMessageResponseMapper<ERR> errorMessageResponseMapper, final Ender ender, final DatabaseClient<?, ?, ?> databaseClient) {
+        this(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient, MessagingComponents.NONE);
+    }
+
+    public LuxisStream(final List<MapInstruction> instructionChain, final APP applicationState, final PendingAsyncResponses pendingAsyncResponses, final ErrorMessageResponseMapper<ERR> errorMessageResponseMapper, final Ender ender, final DatabaseClient<?, ?, ?> databaseClient, final MessagingComponents messaging) {
         this.instructionChain = instructionChain;
         this.applicationState = applicationState;
         this.pendingAsyncResponses = pendingAsyncResponses;
         this.errorMessageResponseMapper = errorMessageResponseMapper;
         this.ender = ender;
         this.databaseClient = databaseClient;
+        this.messaging = messaging != null ? messaging : MessagingComponents.NONE;
     }
 
     @SuppressWarnings({"rawtypes", "unchecked"})
@@ -66,7 +73,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
             config.accept(v);
             return v.toResult();
         });
-        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient, messaging);
     }
 
     public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> map(final StreamMapper<RouteContext<IN, APP, SESSION>, OUT> flowHandler) {
@@ -76,7 +83,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
     public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> flatMap(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, OUT> mapper) {
         final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlocking(mapper, false);
         appendInstruction(e);
-        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient, messaging);
     }
 
     public LuxisStream<IN, APP, RESP, ERR, SESSION> peek(final StreamPeeker<RouteContext<IN, APP, SESSION>> peeker) {
@@ -101,7 +108,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
         final MapInstruction<IN, OUT, Object, SESSION, ERR> e =
                 MapInstruction.blocking(mapper, (in, session) -> new RestrictedBlockingRouteContext<>(in), false);
         appendInstruction(e);
-        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient, messaging);
     }
 
     public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> asyncMap(final StreamAsyncMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, OUT, ERR> handler) {
@@ -144,7 +151,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
         };
         final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.nonBlockingAsync(wrapper, false, httpErr -> errorMessageResponseMapper.map(httpErr.errorMessageValue(), ErrorCause.HTTP_CLIENT_ERROR));
         appendInstruction(e);
-        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient, messaging);
     }
 
     public <X> LuxisStream<IN, APP, RESP, ERR, SESSION> asyncPeek(final StreamAsyncMapper<AsyncRouteContext<IN, APP, SESSION, ERR>, X, ERR> handler) {
@@ -196,7 +203,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
         final MapInstruction<IN, OUT, Object, SESSION, ERR> e =
                 MapInstruction.blockingAsync(wrapper, (in, session, par) -> new RestrictedBlockingAsyncRouteContext<>(in, par, httpErr -> errorMessageResponseMapper.map(httpErr.errorMessageValue(), ErrorCause.HTTP_CLIENT_ERROR)), false);
         appendInstruction(e);
-        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient, messaging);
     }
 
     public <OUT> LuxisStream<OUT, APP, RESP, ERR, SESSION> inTransaction(
@@ -207,7 +214,7 @@ public class LuxisStream<IN, APP, RESP, ERR, SESSION> {
         final CompletedTransaction<OUT, APP, ERR, SESSION> completed = builder.apply(new TransactionStream<>());
         final MapInstruction<IN, OUT, APP, SESSION, ERR> e = MapInstruction.transactional(completed.subChain(), false);
         appendInstruction(e);
-        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient);
+        return new LuxisStream<>(instructionChain, applicationState, pendingAsyncResponses, errorMessageResponseMapper, ender, databaseClient, messaging);
     }
 
     public <OUT> LuxisPipeline<OUT> complete(final StreamFlatMapper<RouteContext<IN, APP, SESSION>, ERR, OUT> mapper) {

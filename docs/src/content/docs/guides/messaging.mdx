@@ -1,0 +1,107 @@
+---
+title: Messaging
+description: Publish events transactionally via an outbox, or fire-and-forget outside a transaction. Luxis owns the outbox drainer.
+---
+
+Luxis supports event publishing with two modes that share the same call site:
+
+- **Inside `inTransaction`**, `ctx.publisher().publish(...)` is **void**. Events are buffered, batch-inserted into your outbox table immediately before commit (in the same transaction as your business writes), and dispatched after commit succeeds. If the outbox insert fails, the whole transaction rolls back.
+- **Outside a transaction**, `ctx.publisher().publish(...)` returns `LuxisAsync<Void, ERR>` and dispatches via your `Publisher` immediately.
+
+The drainer that reads the outbox and pushes to your broker is **owned by Luxis** — you provide the `OutboxStore` (how to read/append/mark) and `Publisher` (how to send).
+
+## Inside a transaction
+
+```java
+stream
+    .inTransaction(tx -> tx
+        .asyncPeek(ctx -> {
+            ctx.publisher().publish("orders", "{...}");        // String
+            ctx.publisher().publish("orders", payloadBytes);   // byte[]
+            ctx.publisher().publish("orders", buffer);         // ByteBuffer
+            return ctx.db().update("insert into orders ...");
+        })
+        .commit())
+    .complete(...);
+```
+
+`publish` returns void. Events are held in memory until commit time. Order is preserved.
+
+## Outside a transaction
+
+```java
+stream.<Void>asyncMap(ctx ->
+    ctx.publisher().publish("topic", "ping"))
+.complete(...);
+```
+
+Same call shape; this version returns `LuxisAsync<Void, ERR>` so you can chain or await.
+
+## SPIs
+
+### Publisher
+
+```java
+public interface Publisher {
+    Future<Void> publish(String key, String message);
+    Future<Void> publish(String key, byte[] message);
+    Future<Void> publish(String key, ByteBuffer message);
+}
+```
+
+Three overloads — pick whichever your broker speaks natively. The drainer dispatches each event using the matching overload based on what the user originally called.
+
+### OutboxStore
+
+```java
+public interface OutboxStore<TX> {
+    Future<Void> append(TX tx, List<OutboxEvent> events);
+    Future<List<PendingOutboxEvent>> readPending(int limit);
+    Future<Void> markSent(long id);
+    default int batchSize() { return 100; }
+    default long pollIntervalMillis() { return 1000L; }
+    default boolean drainerEnabled() { return true; }
+}
+```
+
+Override `drainerEnabled()` to return `false` if you want to drain the outbox yourself (e.g. via Debezium or a separate worker process). `append` still runs pre-commit; Luxis just won't call `readPending` / `markSent` or schedule the periodic tick.
+
+`append` runs **inside the transaction** (Luxis hands back the `TX` token from your `DatabaseClient`), so outbox rows commit atomically with your business data. `readPending` and `markSent` are called by the Luxis-owned drainer.
+
+`OutboxEvent` is a sealed wrapper with three payload variants (`Str`, `Bytes`, `Buf`) so a single batch can carry mixed payload types.
+
+## Registration
+
+```java
+Luxis.start(routes, config, databaseClient, publisher, outboxStore);
+```
+
+When all three are registered, Luxis starts a periodic drainer (`pollIntervalMillis`, `batchSize`) and kicks it after every successful commit so events ship as soon as possible.
+
+If you don't register a `Publisher` + `OutboxStore`, calls to `ctx.publisher().publish(...)` fail with a clear `IllegalStateException` — no silent dropping.
+
+## What Luxis does for you
+
+- Buffers in-tx events in memory.
+- Calls `OutboxStore.append(tx, events)` immediately before `DatabaseClient.commit(tx)`.
+- Rolls back if either append or commit fails (events are lost together with the data — atomic outcome).
+- Owns a periodic drainer (one per Luxis instance, started on `Luxis.start`, stopped on `close`).
+- Re-entrancy guard: only one drain pass at a time per instance.
+- Kicks the drainer after every commit.
+
+## What's yours
+
+- Designing the outbox table (Luxis doesn't prescribe a schema — your `OutboxStore` knows how to read/write it).
+- Deduplication / idempotency on the consumer side. The drainer retries on the next tick when `Publisher.publish` fails, so your broker may see duplicates.
+- Backoff and dead-lettering policy if you want them — wrap your `Publisher` and `OutboxStore` accordingly.
+
+## Error semantics
+
+| When | What happens |
+|---|---|
+| `Publisher.publish` throws (sync) outside tx | Surfaces as `LuxisAsync` failure to the caller. |
+| `Publisher.publish` returns failed `Future` outside tx | Same — caller sees the `Future` failure. |
+| `ctx.publisher()` inside tx with no `OutboxStore` registered | Sub-chain throws `IllegalStateException` → rollback → `exceptionHandler` invoked. |
+| `OutboxStore.append` fails | Rollback → `exceptionHandler` invoked. |
+| `Publisher.publish` fails during a drain pass | Event stays pending; next tick retries. Exception forwarded to the configured handler. |
+| `OutboxStore.markSent` fails | Logged via `exceptionHandler`; event may be re-published on the next tick. Plan for at-least-once on the consumer side. |

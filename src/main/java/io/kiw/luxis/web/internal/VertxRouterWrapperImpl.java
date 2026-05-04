@@ -17,11 +17,15 @@ public class VertxRouterWrapperImpl extends RouterWrapper {
     private final int defaultTimeoutMillis;
 
     public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor) {
-        this(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses, transactionExecutor, null);
+        this(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses, transactionExecutor, null, MessagingComponents.NONE);
     }
 
     public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor, final DatabaseClient<?, ?, ?> databaseClient) {
-        super(exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient);
+        this(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient, MessagingComponents.NONE);
+    }
+
+    public VertxRouterWrapperImpl(final Router router, final int defaultTimeoutMillis, final Consumer<Exception> exceptionHandler, final PendingAsyncResponses pendingAsyncResponses, final TransactionExecutor transactionExecutor, final DatabaseClient<?, ?, ?> databaseClient, final MessagingComponents messaging) {
+        super(exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient, messaging);
         this.router = router;
         this.defaultTimeoutMillis = defaultTimeoutMillis;
     }

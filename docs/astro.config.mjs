@@ -31,6 +31,7 @@ export default defineConfig({
                         { label: 'Filters', slug: 'guides/filters' },
                         { label: 'Error Handling', slug: 'guides/error-handling' },
                         { label: 'Transactions', slug: 'guides/transactions' },
+                        { label: 'Messaging', slug: 'guides/messaging' },
                         { label: 'File Upload & Download', slug: 'guides/file-upload-download' },
                         { label: 'WebSockets', slug: 'guides/websockets' },
                         { label: 'HTTP Client', slug: 'guides/http-client' },

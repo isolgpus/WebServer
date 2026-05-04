@@ -22,7 +22,7 @@ public final class VertxRoutesRegistrar {
                                  final Optional<CorsConfig> corsConfig,
                                  final VertxExecutionDispatcher executionDispatcher,
                                  final PendingAsyncResponses pendingAsyncResponses) {
-        return register(router, routesRegisterConsumer, defaultTimeoutMillis, exceptionHandler, maxBodySize, corsConfig, executionDispatcher, pendingAsyncResponses, null);
+        return register(router, routesRegisterConsumer, defaultTimeoutMillis, exceptionHandler, maxBodySize, corsConfig, executionDispatcher, pendingAsyncResponses, null, MessagingComponents.NONE);
     }
 
     public static <R> R register(final Router router,
@@ -34,8 +34,22 @@ public final class VertxRoutesRegistrar {
                                  final VertxExecutionDispatcher executionDispatcher,
                                  final PendingAsyncResponses pendingAsyncResponses,
                                  final DatabaseClient<?, ?, ?> databaseClient) {
-        final TransactionExecutor transactionExecutor = databaseClient == null ? null : new TransactionExecutor(databaseClient, executionDispatcher);
-        final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient);
+        return register(router, routesRegisterConsumer, defaultTimeoutMillis, exceptionHandler, maxBodySize, corsConfig, executionDispatcher, pendingAsyncResponses, databaseClient, MessagingComponents.NONE);
+    }
+
+    public static <R> R register(final Router router,
+                                 final ApplicationRoutesRegister<R> routesRegisterConsumer,
+                                 final int defaultTimeoutMillis,
+                                 final Consumer<Exception> exceptionHandler,
+                                 final OptionalLong maxBodySize,
+                                 final Optional<CorsConfig> corsConfig,
+                                 final VertxExecutionDispatcher executionDispatcher,
+                                 final PendingAsyncResponses pendingAsyncResponses,
+                                 final DatabaseClient<?, ?, ?> databaseClient,
+                                 final MessagingComponents messaging) {
+        final MessagingComponents resolved = messaging != null ? messaging : MessagingComponents.NONE;
+        final TransactionExecutor transactionExecutor = databaseClient == null ? null : new TransactionExecutor(databaseClient, executionDispatcher, resolved);
+        final VertxRouterWrapperImpl routerWrapper = new VertxRouterWrapperImpl(router, defaultTimeoutMillis, exceptionHandler, pendingAsyncResponses, transactionExecutor, databaseClient, resolved);
         corsConfig.ifPresent(routerWrapper::configureCors);
 
         final BodyHandler handler = BodyHandler.create()
@@ -43,7 +57,7 @@ public final class VertxRoutesRegistrar {
         maxBodySize.ifPresent(handler::setBodyLimit);
         router.route().handler(handler);
 
-        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, executionDispatcher, pendingAsyncResponses, databaseClient);
+        final RoutesRegister routesRegister = new RoutesRegister(routerWrapper, executionDispatcher, pendingAsyncResponses, databaseClient, resolved);
         return routesRegisterConsumer.registerRoutes(routesRegister);
 
     }
