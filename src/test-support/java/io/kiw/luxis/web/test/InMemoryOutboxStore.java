@@ -73,8 +73,8 @@ public class InMemoryOutboxStore implements OutboxStore<Integer> {
     }
 
     @Override
-    public Future<Void> markSent(final long id) {
-        events.add("markSent:" + id);
+    public Future<Void> markBatchSent(final List<Long> ids) {
+        events.add("markBatchSent:" + ids.size());
         return Future.succeededFuture();
     }
 

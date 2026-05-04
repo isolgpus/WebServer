@@ -7,6 +7,7 @@ import io.kiw.luxis.web.messaging.Publisher;
 import io.vertx.core.Future;
 import io.vertx.core.Vertx;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -64,7 +65,7 @@ public final class OutboxDrainer {
                 draining.set(false);
                 return;
             }
-            dispatch(pending, 0, () -> {
+            dispatchBatch(pending, () -> {
                 draining.set(false);
                 if (pending.size() >= batch) {
                     kick();
@@ -73,40 +74,33 @@ public final class OutboxDrainer {
         });
     }
 
-    private void dispatch(final List<PendingOutboxEvent> pending, final int idx, final Runnable done) {
-        if (idx >= pending.size()) {
-            done.run();
-            return;
+    private void dispatchBatch(final List<PendingOutboxEvent> pending, final Runnable done) {
+        final List<OutboxEvent> events = new ArrayList<>(pending.size());
+        final List<Long> ids = new ArrayList<>(pending.size());
+        for (final PendingOutboxEvent pe : pending) {
+            events.add(pe.event());
+            ids.add(pe.id());
         }
-        final PendingOutboxEvent pe = pending.get(idx);
         final Future<Void> sent;
         try {
-            sent = publishOne(pe.event());
+            sent = publisher.publish(events);
         } catch (final Exception e) {
             exceptionHandler.accept(e);
-            dispatch(pending, idx + 1, done);
+            done.run();
             return;
         }
         sent.onComplete(ar -> {
             if (ar.succeeded()) {
-                store.markSent(pe.id()).onComplete(mark -> {
+                store.markBatchSent(ids).onComplete(mark -> {
                     if (mark.failed()) {
                         exceptionHandler.accept(mark.cause());
                     }
-                    dispatch(pending, idx + 1, done);
+                    done.run();
                 });
             } else {
                 exceptionHandler.accept(ar.cause());
-                dispatch(pending, idx + 1, done);
+                done.run();
             }
         });
-    }
-
-    private Future<Void> publishOne(final OutboxEvent event) {
-        return switch (event.payload()) {
-            case OutboxEvent.Payload.Str s -> publisher.publish(event.key(), s.value());
-            case OutboxEvent.Payload.Bytes b -> publisher.publish(event.key(), b.value());
-            case OutboxEvent.Payload.Buf b -> publisher.publish(event.key(), b.value());
-        };
     }
 }

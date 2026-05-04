@@ -5,6 +5,7 @@ import io.kiw.luxis.web.http.client.LuxisAsync;
 import io.vertx.core.Future;
 
 import java.nio.ByteBuffer;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
 public final class AsyncPublisher<ERR> {
@@ -16,25 +17,23 @@ public final class AsyncPublisher<ERR> {
     }
 
     public LuxisAsync<Void, ERR> publish(final String key, final String message) {
-        require();
-        return wrap(publisher.publish(key, message));
+        return dispatch(OutboxEvent.of(key, message));
     }
 
     public LuxisAsync<Void, ERR> publish(final String key, final byte[] message) {
-        require();
-        return wrap(publisher.publish(key, message));
+        return dispatch(OutboxEvent.of(key, message));
     }
 
     public LuxisAsync<Void, ERR> publish(final String key, final ByteBuffer message) {
-        require();
-        return wrap(publisher.publish(key, message));
+        return dispatch(OutboxEvent.of(key, message));
     }
 
-    private void require() {
+    private LuxisAsync<Void, ERR> dispatch(final OutboxEvent event) {
         if (publisher == null) {
             throw new IllegalStateException(
                     "Cannot publish — no Publisher registered at Luxis.start(...) / Luxis.test(...).");
         }
+        return wrap(publisher.publish(List.of(event)));
     }
 
     private static <ERR> LuxisAsync<Void, ERR> wrap(final Future<Void> future) {

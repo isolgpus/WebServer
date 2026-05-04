@@ -43,13 +43,13 @@ Same call shape; this version returns `LuxisAsync<Void, ERR>` so you can chain o
 
 ```java
 public interface Publisher {
-    Future<Void> publish(String key, String message);
-    Future<Void> publish(String key, byte[] message);
-    Future<Void> publish(String key, ByteBuffer message);
+    Future<Void> publish(List<OutboxEvent> events);
 }
 ```
 
-Three overloads — pick whichever your broker speaks natively. The drainer dispatches each event using the matching overload based on what the user originally called.
+Treated as **all-or-nothing**: if the returned future fails, Luxis assumes the entire batch failed and retries the whole batch on the next drain pass. Implementations should fail the future on any partial failure rather than reporting "some sent". Inside the batch, each `OutboxEvent` carries a sealed `Payload` — `Str`, `Bytes`, or `Buf` — so a single batch can mix payload types; the implementation matches on the variant to dispatch each event.
+
+The non-transactional `ctx.publisher().publish("key", value)` overloads (`String`, `byte[]`, `ByteBuffer`) wrap into a single-element batch under the hood.
 
 ### OutboxStore
 
@@ -57,14 +57,14 @@ Three overloads — pick whichever your broker speaks natively. The drainer disp
 public interface OutboxStore<TX> {
     Future<Void> append(TX tx, List<OutboxEvent> events);
     Future<List<PendingOutboxEvent>> readPending(int limit);
-    Future<Void> markSent(long id);
+    Future<Void> markBatchSent(List<Long> ids);
     default int batchSize() { return 100; }
     default long pollIntervalMillis() { return 1000L; }
     default boolean drainerEnabled() { return true; }
 }
 ```
 
-Override `drainerEnabled()` to return `false` if you want to drain the outbox yourself (e.g. via Debezium or a separate worker process). `append` still runs pre-commit; Luxis just won't call `readPending` / `markSent` or schedule the periodic tick.
+Override `drainerEnabled()` to return `false` if you want to drain the outbox yourself (e.g. via Debezium or a separate worker process). `append` still runs pre-commit; Luxis just won't call `readPending` / `markBatchSent` or schedule the periodic tick.
 
 `append` runs **inside the transaction** (Luxis hands back the `TX` token from your `DatabaseClient`), so outbox rows commit atomically with your business data. `readPending` and `markSent` are called by the Luxis-owned drainer.
 
@@ -103,5 +103,5 @@ If you don't register a `Publisher` + `OutboxStore`, calls to `ctx.publisher().p
 | `Publisher.publish` returns failed `Future` outside tx | Same — caller sees the `Future` failure. |
 | `ctx.publisher()` inside tx with no `OutboxStore` registered | Sub-chain throws `IllegalStateException` → rollback → `exceptionHandler` invoked. |
 | `OutboxStore.append` fails | Rollback → `exceptionHandler` invoked. |
-| `Publisher.publish` fails during a drain pass | Event stays pending; next tick retries. Exception forwarded to the configured handler. |
-| `OutboxStore.markSent` fails | Logged via `exceptionHandler`; event may be re-published on the next tick. Plan for at-least-once on the consumer side. |
+| `Publisher.publish` fails during a drain pass | Whole batch stays pending; next tick retries the entire batch. Exception forwarded to the configured handler. |
+| `OutboxStore.markBatchSent` fails | Logged via `exceptionHandler`; the batch may be re-published on the next tick. Plan for at-least-once on the consumer side. |

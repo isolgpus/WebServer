@@ -10,7 +10,11 @@ public interface OutboxStore<TX> {
 
     Future<List<PendingOutboxEvent>> readPending(int limit);
 
-    Future<Void> markSent(long id);
+    /**
+     * Mark an entire drained batch as sent. Called once per successful batch publish, never per event.
+     * If the batch publish fails, this is not called and the batch is retried on the next drain pass.
+     */
+    Future<Void> markBatchSent(List<Long> ids);
 
     default int batchSize() {
         return 100;

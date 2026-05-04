@@ -88,11 +88,10 @@ public class HttpTransactionalMessagingTest {
         Assert.assertEquals(Arrays.asList(
                 "append:1:3",
                 "readPending:3",
-                "markSent:1",
-                "markSent:2",
-                "markSent:3"), outbox.events());
+                "markBatchSent:3"), outbox.events());
 
         Assert.assertEquals(Arrays.asList(
+                "publishBatch:3",
                 "publish:str:order:hello-str",
                 "publish:bytes:order:hello-bytes",
                 "publish:buf:order:hello-buf"), publisher.events());
@@ -144,7 +143,9 @@ public class HttpTransactionalMessagingTest {
 
         Assert.assertEquals(200, response.statusCode);
 
-        Assert.assertEquals(List.of("publish:str:topic:outside"), publisher.events());
+        Assert.assertEquals(Arrays.asList(
+                "publishBatch:1",
+                "publish:str:topic:outside"), publisher.events());
 
         client.assertNoMoreExceptions();
     }

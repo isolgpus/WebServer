@@ -1,5 +1,6 @@
 package io.kiw.luxis.web.test;
 
+import io.kiw.luxis.web.messaging.OutboxEvent;
 import io.kiw.luxis.web.messaging.Publisher;
 import io.vertx.core.Future;
 
@@ -26,31 +27,28 @@ public class InMemoryPublisher implements Publisher {
     }
 
     @Override
-    public Future<Void> publish(final String key, final String message) {
+    public Future<Void> publish(final List<OutboxEvent> batch) {
         if (shouldFail) {
             return Future.failedFuture(new RuntimeException("publish failed"));
         }
-        events.add("publish:str:" + key + ":" + message);
+        events.add("publishBatch:" + batch.size());
+        for (final OutboxEvent event : batch) {
+            events.add(formatLine(event));
+        }
         return Future.succeededFuture();
     }
 
-    @Override
-    public Future<Void> publish(final String key, final byte[] message) {
-        if (shouldFail) {
-            return Future.failedFuture(new RuntimeException("publish failed"));
-        }
-        events.add("publish:bytes:" + key + ":" + new String(message, StandardCharsets.UTF_8));
-        return Future.succeededFuture();
+    private static String formatLine(final OutboxEvent event) {
+        return switch (event.payload()) {
+            case OutboxEvent.Payload.Str s -> "publish:str:" + event.key() + ":" + s.value();
+            case OutboxEvent.Payload.Bytes b -> "publish:bytes:" + event.key() + ":" + new String(b.value(), StandardCharsets.UTF_8);
+            case OutboxEvent.Payload.Buf b -> "publish:buf:" + event.key() + ":" + readBuffer(b.value());
+        };
     }
 
-    @Override
-    public Future<Void> publish(final String key, final ByteBuffer message) {
-        if (shouldFail) {
-            return Future.failedFuture(new RuntimeException("publish failed"));
-        }
-        final byte[] bytes = new byte[message.remaining()];
-        message.duplicate().get(bytes);
-        events.add("publish:buf:" + key + ":" + new String(bytes, StandardCharsets.UTF_8));
-        return Future.succeededFuture();
+    private static String readBuffer(final ByteBuffer source) {
+        final byte[] bytes = new byte[source.remaining()];
+        source.duplicate().get(bytes);
+        return new String(bytes, StandardCharsets.UTF_8);
     }
 }
